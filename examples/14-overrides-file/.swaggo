@@ -1,0 +1,11 @@
+{
+  "types": {
+    "database/sql.NullInt64": "integer",
+    "database/sql.NullString": "string",
+    "database/sql.NullBool": "boolean",
+    "database/sql.NullFloat64": "number",
+    "database/sql.NullTime": "string",
+    "github.com/google/uuid.UUID": "string",
+    "github.com/shopspring/decimal.Decimal": "number"
+  }
+}
