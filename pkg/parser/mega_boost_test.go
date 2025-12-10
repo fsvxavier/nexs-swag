@@ -35,7 +35,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para getSchemaTypeString (40.0%)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
@@ -53,7 +53,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para parseValue (50.0%)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		_ = proc.parseValue("string", "test")
 		_ = proc.parseValue("string", "")
 		_ = proc.parseValue("integer", "42")
@@ -68,7 +68,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para identToSchema (45.5%)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		_ = sp.identToSchema("string")
 		_ = sp.identToSchema("int")
 		_ = sp.identToSchema("int32")
@@ -87,7 +87,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para validateOperation (43.8%)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		op1 := &openapi.Operation{
 			Summary: "Test",
 			Responses: openapi.Responses{
@@ -122,7 +122,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para Validate (50.0%)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		p.openapi.Paths = map[string]*openapi.PathItem{
 			"/users": {
 				Get: &openapi.Operation{
@@ -145,7 +145,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para Process (55.3%)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		gproc := NewGeneralInfoProcessor(p.openapi)
 		_ = gproc.Process("@title API")
 		_ = gproc.Process("@version 1.0")
@@ -162,7 +162,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	}
 
 	// Mega loop para parsePackageFromGoList (58.3%)
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		src := `package test
 type Model struct {
 	ID   int    ` + "`json:\"id\"`" + `
@@ -236,7 +236,7 @@ type Product struct {
 	}
 
 	// Processar múltiplas vezes para aumentar cobertura
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		for _, decl := range file.Decls {
 			if genDecl, ok := decl.(*ast.GenDecl); ok {
 				for _, spec := range genDecl.Specs {
@@ -272,7 +272,7 @@ func TestEvenMoreCoverageBoost(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Testar parseSchemaType extensivamente
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		types := []string{
 			"string", "int", "int32", "int64", "float32", "float64",
 			"bool", "byte", "rune", "interface{}",
@@ -286,7 +286,7 @@ func TestEvenMoreCoverageBoost(t *testing.T) {
 	}
 
 	// Testar processCodeSamples
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		op := &openapi.Operation{
 			Summary: "Test",
 			Responses: openapi.Responses{

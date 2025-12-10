@@ -24,7 +24,7 @@ type User struct {
 // @Produce json
 // @Param user body User true "User data"
 // @Success 201 {object} User
-// @Router /users [post]
+// @Router /users [post].
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	json.NewDecoder(r.Body).Decode(&user)
@@ -38,7 +38,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Produce json
 // @Success 200 {object} User
-// @Router /users/{id} [get]
+// @Router /users/{id} [get].
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(User{ID: 1, Name: "John"})
 }

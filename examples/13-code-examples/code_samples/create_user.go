@@ -13,7 +13,7 @@ func main() {
 	}
 
 	body, _ := json.Marshal(user)
-	req, _ := http.NewRequest("POST", "http://localhost:8080/api/users", bytes.NewBuffer(body))
+	req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/api/users", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

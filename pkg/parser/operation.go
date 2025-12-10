@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"go/ast"
 	"regexp"
 	"strconv"
@@ -33,7 +32,7 @@ func NewOperationProcessor(p *Parser, spec *openapi.OpenAPI, typeCache map[strin
 }
 
 var (
-	// Operation-level annotations
+	// Operation-level annotations.
 	summaryOpRegex     = regexp.MustCompile(`^@Summary\s+(.+)$`)
 	descriptionOpRegex = regexp.MustCompile(`^@Description\s+(.+)$`)
 	idRegex            = regexp.MustCompile(`^@ID\s+(.+)$`)
@@ -43,27 +42,27 @@ var (
 	deprecatedOpRegex  = regexp.MustCompile(`^@Deprecated\s*$`)
 	stateRegex         = regexp.MustCompile(`^@State\s+(.+)$`)
 
-	// Router annotation
+	// Router annotation.
 	routerRegex = regexp.MustCompile(`^@Router\s+(\S+)\s+\[(\w+)\]`)
 
-	// Parameter annotations
+	// Parameter annotations.
 	paramRegex = regexp.MustCompile(`^@Param\s+(\S+)\s+(\w+)\s+(\S+)\s+(true|false)\s+"([^"]*)"(?:\s+(.+))?`)
 
-	// Response annotations
+	// Response annotations.
 	successRegex  = regexp.MustCompile(`^@Success\s+(\d+)\s+\{(\w+)\}\s+(\S+)(?:\s+"([^"]*)")?`)
 	failureRegex  = regexp.MustCompile(`^@Failure\s+(\d+)\s+\{(\w+)\}\s+(\S+)(?:\s+"([^"]*)")?`)
 	responseRegex = regexp.MustCompile(`^@Response\s+(\d+)\s+\{(\w+)\}\s+(\S+)(?:\s+"([^"]*)")?`)
 
-	// Header annotation
+	// Header annotation.
 	headerRegex = regexp.MustCompile(`^@Header\s+(\d+)\s+\{(\w+)\}\s+(\S+)\s+"([^"]*)"`)
 
-	// Security annotation - capture name before [ and scopes inside []
+	// Security annotation - capture name before [ and scopes inside [].
 	securityOpRegex = regexp.MustCompile(`^@Security\s+([^\[\s]+)(?:\[([^\]]+)\])?`)
 
-	// Callback annotation
+	// Callback annotation.
 	callbackRegex = regexp.MustCompile(`^@Callback\s+(\S+)\s+(\S+)\s+\[(\w+)\]`)
 
-	// Extension annotations
+	// Extension annotations.
 	xCodeSamplesRegex = regexp.MustCompile(`^@x-codeSamples\s+(.+)$`)
 )
 
@@ -160,7 +159,7 @@ func (o *OperationProcessor) processSummary(text string, op *openapi.Operation) 
 }
 
 // processDescription processes @Description annotation.
-// Supports markdown file substitution: @Description file(docs/endpoint.md)
+// Supports markdown file substitution: @Description file(docs/endpoint.md).
 func (o *OperationProcessor) processDescription(text string, op *openapi.Operation) {
 	matches := descriptionOpRegex.FindStringSubmatch(text)
 	description := matches[1]
@@ -197,7 +196,7 @@ func (o *OperationProcessor) processTags(text string, op *openapi.Operation) {
 }
 
 // processAccept processes @Accept annotation (consumes).
-// Supports multiple MIME types: @Accept json,xml,plain
+// Supports multiple MIME types: @Accept json,xml,plain.
 func (o *OperationProcessor) processAccept(text string, op *openapi.Operation) {
 	matches := acceptRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
@@ -231,7 +230,7 @@ func (o *OperationProcessor) processAccept(text string, op *openapi.Operation) {
 }
 
 // processProduce processes @Produce annotation (produces).
-// Supports multiple MIME types: @Produce json,xml,plain
+// Supports multiple MIME types: @Produce json,xml,plain.
 func (o *OperationProcessor) processProduce(text string, op *openapi.Operation) {
 	matches := produceRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
@@ -324,7 +323,7 @@ func (o *OperationProcessor) processParameter(text string, op *openapi.Operation
 	name := matches[1]
 	in := matches[2]
 	schemaType := matches[3]
-	required := matches[4] == "true"
+	required := matches[4] == valueTrue
 	description := matches[5]
 
 	// Parse additional attributes if present
@@ -398,13 +397,13 @@ func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, 
 	}
 
 	// Add content if schema is specified
-	if responseType == "object" || responseType == "array" {
+	if responseType == typeObject || responseType == typeArray {
 		content := make(map[string]*openapi.MediaType)
 
 		schema := o.parseSchemaType(schemaRef)
-		if responseType == "array" {
+		if responseType == typeArray {
 			schema = &openapi.Schema{
-				Type:  "array",
+				Type:  typeArray,
 				Items: schema,
 			}
 		}
@@ -433,7 +432,7 @@ func (o *OperationProcessor) processHeader(text string, op *openapi.Operation) {
 	response := op.Responses[statusCode]
 	if response == nil {
 		response = &openapi.Response{
-			Description: fmt.Sprintf("Response %s", statusCode),
+			Description: "Response " + statusCode,
 			Headers:     make(map[string]*openapi.Header),
 		}
 		op.Responses[statusCode] = response
@@ -475,7 +474,7 @@ func (o *OperationProcessor) processSecurity(text string, op *openapi.Operation)
 
 // parseAttributes parses additional parameter attributes.
 // Supports: minimum(10), maximum(100), minLength(1), maxLength(255), pattern(^[a-z]+$),
-// enum(A,B,C), default(value), example(value), format(email), collectionFormat(multi)
+// enum(A,B,C), default(value), example(value), format(email), collectionFormat(multi).
 func (o *OperationProcessor) parseAttributes(attrStr string) map[string]string {
 	attrs := make(map[string]string)
 
@@ -501,25 +500,25 @@ func (o *OperationProcessor) applyParameterAttributes(param *openapi.Parameter, 
 	for key, value := range attrs {
 		switch key {
 		case "minimum", "min":
-			if min, err := strconv.ParseFloat(value, 64); err == nil {
-				param.Schema.Minimum = min
+			if minVal, err := strconv.ParseFloat(value, 64); err == nil {
+				param.Schema.Minimum = minVal
 			}
 
 		case "maximum", "max":
-			if max, err := strconv.ParseFloat(value, 64); err == nil {
-				param.Schema.Maximum = max
+			if maxVal, err := strconv.ParseFloat(value, 64); err == nil {
+				param.Schema.Maximum = maxVal
 			}
 
 		case "exclusiveminimum":
 			// In JSON Schema 2020-12, exclusiveMinimum is a number
-			if min, err := strconv.ParseFloat(value, 64); err == nil {
-				param.Schema.ExclusiveMinimum = min
+			if minVal, err := strconv.ParseFloat(value, 64); err == nil {
+				param.Schema.ExclusiveMinimum = minVal
 			}
 
 		case "exclusivemaximum":
 			// In JSON Schema 2020-12, exclusiveMaximum is a number
-			if max, err := strconv.ParseFloat(value, 64); err == nil {
-				param.Schema.ExclusiveMaximum = max
+			if maxVal, err := strconv.ParseFloat(value, 64); err == nil {
+				param.Schema.ExclusiveMaximum = maxVal
 			}
 
 		case "minlength":
@@ -551,7 +550,7 @@ func (o *OperationProcessor) applyParameterAttributes(param *openapi.Parameter, 
 			}
 
 		case "uniqueitems":
-			param.Schema.UniqueItems = value == "true"
+			param.Schema.UniqueItems = value == valueTrue
 
 		case "enum", "enums":
 			// Parse enum values, handling different types
@@ -579,19 +578,19 @@ func (o *OperationProcessor) applyParameterAttributes(param *openapi.Parameter, 
 			// TODO: Convert to proper style/explode based on format
 
 		case "readonly":
-			param.Schema.ReadOnly = value == "true"
+			param.Schema.ReadOnly = value == valueTrue
 
 		case "writeonly":
-			param.Schema.WriteOnly = value == "true"
+			param.Schema.WriteOnly = value == valueTrue
 
 		case "nullable":
-			param.Schema.Nullable = value == "true"
+			param.Schema.Nullable = value == valueTrue
 
 		case "deprecated":
-			param.Deprecated = value == "true"
+			param.Deprecated = value == valueTrue
 
 		case "allowemptyvalue":
-			param.AllowEmptyValue = value == "true"
+			param.AllowEmptyValue = value == valueTrue
 		}
 	}
 }
@@ -600,7 +599,7 @@ func (o *OperationProcessor) applyParameterAttributes(param *openapi.Parameter, 
 // Schema.Type can be string or []string in JSON Schema 2020-12.
 func (o *OperationProcessor) getSchemaTypeString(schema *openapi.Schema) string {
 	if schema == nil || schema.Type == nil {
-		return "string"
+		return typeString
 	}
 
 	switch v := schema.Type.(type) {
@@ -618,7 +617,7 @@ func (o *OperationProcessor) getSchemaTypeString(schema *openapi.Schema) string 
 		}
 	}
 
-	return "string"
+	return typeString
 }
 
 // parseEnumValues parses enum values based on the schema type.
@@ -639,22 +638,22 @@ func (o *OperationProcessor) parseValue(value string, schemaType string) interfa
 	value = strings.TrimSpace(value)
 
 	switch schemaType {
-	case "integer":
+	case typeInteger:
 		if i, err := strconv.ParseInt(value, 10, 64); err == nil {
 			return i
 		}
 
-	case "number":
+	case typeNumber:
 		if f, err := strconv.ParseFloat(value, 64); err == nil {
 			return f
 		}
 
-	case "boolean":
+	case typeBoolean:
 		if b, err := strconv.ParseBool(value); err == nil {
 			return b
 		}
 
-	case "array":
+	case typeArray:
 		// For arrays, split by comma
 		parts := strings.Split(value, ",")
 		var arr []interface{}
@@ -674,7 +673,7 @@ func (o *OperationProcessor) parseSchemaType(typeName string) *openapi.Schema {
 
 	// Handle array types
 	if strings.HasPrefix(typeName, "[]") {
-		schema.Type = "array"
+		schema.Type = typeArray
 		itemType := strings.TrimPrefix(typeName, "[]")
 		schema.Items = o.parseSchemaType(itemType)
 		return schema
@@ -682,7 +681,7 @@ func (o *OperationProcessor) parseSchemaType(typeName string) *openapi.Schema {
 
 	// Handle map types: map[string]Type
 	if strings.HasPrefix(typeName, "map[") {
-		schema.Type = "object"
+		schema.Type = typeObject
 		// Extract value type from map[keyType]valueType
 		re := regexp.MustCompile(`map\[[^\]]+\](.+)`)
 		if matches := re.FindStringSubmatch(typeName); len(matches) > 1 {
@@ -697,40 +696,40 @@ func (o *OperationProcessor) parseSchemaType(typeName string) *openapi.Schema {
 
 	// Handle primitive types
 	switch typeName {
-	case "string":
-		schema.Type = "string"
-	case "int", "int8", "int16", "int32", "integer":
-		schema.Type = "integer"
-		schema.Format = "int32"
-	case "int64":
-		schema.Type = "integer"
-		schema.Format = "int64"
-	case "uint", "uint8", "uint16", "uint32":
-		schema.Type = "integer"
-		schema.Format = "int32"
-	case "uint64":
-		schema.Type = "integer"
-		schema.Format = "int64"
-	case "float32":
-		schema.Type = "number"
-		schema.Format = "float"
-	case "float64", "float", "number", "double":
-		schema.Type = "number"
-		schema.Format = "double"
-	case "bool", "boolean":
-		schema.Type = "boolean"
-	case "byte":
-		schema.Type = "string"
-		schema.Format = "byte"
-	case "date":
-		schema.Type = "string"
-		schema.Format = "date"
-	case "datetime", "time.Time":
-		schema.Type = "string"
-		schema.Format = "date-time"
+	case typeString:
+		schema.Type = typeString
+	case formatInt, formatInt8, formatInt16, formatInt32, formatInteger:
+		schema.Type = typeInteger
+		schema.Format = formatInt32
+	case formatInt64:
+		schema.Type = typeInteger
+		schema.Format = formatInt64
+	case formatUInt, formatUInt8, formatUInt16, formatUInt32:
+		schema.Type = typeInteger
+		schema.Format = formatInt32
+	case formatUInt64:
+		schema.Type = typeInteger
+		schema.Format = formatInt64
+	case formatFloat32:
+		schema.Type = typeNumber
+		schema.Format = formatFloat32
+	case formatFloat64, formatFloat, typeNumber, formatDouble:
+		schema.Type = typeNumber
+		schema.Format = formatDouble
+	case formatBoolean, formatBool:
+		schema.Type = typeBoolean
+	case formatByte:
+		schema.Type = typeString
+		schema.Format = formatByte
+	case formatDate:
+		schema.Type = typeString
+		schema.Format = formatDate
+	case formatDateTime, "time.Time":
+		schema.Type = typeString
+		schema.Format = formatDateTime
 	case "file":
-		schema.Type = "string"
-		schema.Format = "binary"
+		schema.Type = typeString
+		schema.Format = formatBinary
 	default:
 		// Assume it's a reference to a schema
 		schema.Ref = "#/components/schemas/" + typeName
@@ -756,7 +755,7 @@ func (o *OperationProcessor) processState(text string, op *openapi.Operation) {
 
 // processCodeSamples processes @x-codeSamples annotation.
 // Format: @x-codeSamples lang:filename
-// Example: @x-codeSamples go:examples/create_user.go
+// Example: @x-codeSamples go:examples/create_user.go.
 func (o *OperationProcessor) processCodeSamples(text string, op *openapi.Operation) {
 	matches := xCodeSamplesRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
@@ -802,7 +801,7 @@ func (o *OperationProcessor) processCodeSamples(text string, op *openapi.Operati
 }
 
 // TransToValidCollectionFormat validates and normalizes collection format.
-// Valid formats: csv, multi, pipes, tsv, ssv
+// Valid formats: csv, multi, pipes, tsv, ssv.
 func TransToValidCollectionFormat(format string) string {
 	format = strings.ToLower(strings.TrimSpace(format))
 	validFormats := map[string]bool{

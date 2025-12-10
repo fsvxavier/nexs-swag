@@ -19,7 +19,7 @@ type Response struct {
 // @Tags data
 // @Produce json
 // @Success 200 {object} Response
-// @Router /data [get]
+// @Router /data [get].
 func GetData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Response{Data: "Hello"})
 }

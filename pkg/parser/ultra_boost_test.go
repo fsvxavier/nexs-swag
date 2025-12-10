@@ -17,7 +17,7 @@ func TestUltraBoost1(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// getSchemaTypeString - testar TODOS os casos
-	for x := 0; x < 200; x++ {
+	for range 200 {
 		_ = proc.getSchemaTypeString(nil)
 		_ = proc.getSchemaTypeString(&openapi.Schema{})
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
@@ -53,7 +53,7 @@ func TestUltraBoost2(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// parseValue - testar TODOS os casos
-	for x := 0; x < 200; x++ {
+	for range 200 {
 		_ = proc.parseValue("", "")
 		_ = proc.parseValue("string", "")
 		_ = proc.parseValue("string", "test")
@@ -99,7 +99,7 @@ func TestUltraBoost3(t *testing.T) {
 	}
 
 	// identToSchema - testar TODOS os casos
-	for x := 0; x < 200; x++ {
+	for range 200 {
 		_ = sp.identToSchema("")
 		_ = sp.identToSchema("string")
 		_ = sp.identToSchema("int")
@@ -136,7 +136,7 @@ func TestUltraBoost4(t *testing.T) {
 	p := New()
 
 	// validateOperation - testar TODOS os cenários
-	for x := 0; x < 100; x++ {
+	for range 100 {
 		op1 := &openapi.Operation{}
 		_ = p.validateOperation(op1, "/path")
 
@@ -199,7 +199,7 @@ func TestUltraBoost5(t *testing.T) {
 	p := New()
 
 	// Validate - testar múltiplas configurações
-	for x := 0; x < 100; x++ {
+	for range 100 {
 		p.openapi.Paths = nil
 		_ = p.Validate()
 
@@ -252,7 +252,7 @@ func TestUltraBoost6(t *testing.T) {
 	gproc := NewGeneralInfoProcessor(p.openapi)
 
 	// Process - testar TODAS as anotações
-	for x := 0; x < 100; x++ {
+	for range 100 {
 		_ = gproc.Process("")
 		_ = gproc.Process("@title API")
 		_ = gproc.Process("@title Extended API Title")
@@ -316,7 +316,7 @@ type NestedStruct struct {
 	}
 
 	// Processar múltiplas vezes
-	for x := 0; x < 50; x++ {
+	for range 50 {
 		for _, decl := range file.Decls {
 			if genDecl, ok := decl.(*ast.GenDecl); ok {
 				for _, spec := range genDecl.Specs {
@@ -374,7 +374,7 @@ type Model3 struct {
 	}
 
 	// Processar múltiplas vezes
-	for x := 0; x < 50; x++ {
+	for range 50 {
 		for _, decl := range file.Decls {
 			if genDecl, ok := decl.(*ast.GenDecl); ok {
 				if genDecl.Doc != nil {

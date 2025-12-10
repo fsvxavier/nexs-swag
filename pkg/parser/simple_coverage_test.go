@@ -332,7 +332,7 @@ func TestCoverageBoost(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Aumentar cobertura de getSchemaTypeString
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
@@ -342,7 +342,7 @@ func TestCoverageBoost(t *testing.T) {
 	}
 
 	// Aumentar cobertura de validateOperation
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		op := &openapi.Operation{
 			Summary: "Test",
 			Responses: openapi.Responses{

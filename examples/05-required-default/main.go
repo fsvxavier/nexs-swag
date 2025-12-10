@@ -11,21 +11,21 @@ import (
 // @host localhost:8080
 // @BasePath /api
 
-// Product demonstrates required fields
+// Product demonstrates required fields.
 type Product struct {
 	// Campos normais - tornam-se REQUIRED com flag
-	ID    int     `json:"id" example:"1"`
-	Name  string  `json:"name" example:"Laptop"`
-	Price float64 `json:"price" example:"999.99"`
+	ID    int     `example:"1"      json:"id"`
+	Name  string  `example:"Laptop" json:"name"`
+	Price float64 `example:"999.99" json:"price"`
 
 	// Campo com omitempty - continua OPTIONAL
-	Description string `json:"description,omitempty" example:"High-end laptop"`
+	Description string `example:"High-end laptop" json:"description,omitempty"`
 
 	// Campo pointer - continua OPTIONAL
-	Discount *float64 `json:"discount" example:"10.5"`
+	Discount *float64 `example:"10.5" json:"discount"`
 
 	// Campo com binding omitempty - continua OPTIONAL
-	Category string `json:"category" binding:"omitempty" example:"Electronics"`
+	Category string `binding:"omitempty" example:"Electronics" json:"category"`
 }
 
 // CreateProduct creates a product
@@ -37,7 +37,7 @@ type Product struct {
 // @Param product body Product true "Product object"
 // @Success 201 {object} Product
 // @Failure 400 {string} string "Validation error"
-// @Router /products [post]
+// @Router /products [post].
 func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var product Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {

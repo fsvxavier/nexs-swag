@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// Product represents a product in models subpackage
+// Product represents a product in models subpackage.
 type Product struct {
 	ID    int     `json:"id"`
 	Name  string  `json:"name"`
@@ -22,7 +22,7 @@ type Product struct {
 // @Tags products
 // @Produce json
 // @Success 200 {object} Product
-// @Router /products/{id} [get]
+// @Router /products/{id} [get].
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	product := Product{
 		ID:    1,

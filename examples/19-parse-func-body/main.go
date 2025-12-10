@@ -22,7 +22,7 @@ type Item struct {
 // @Param item body Item true "Item data"
 // @Success 201 {object} Item
 // @Failure 400 {object} map[string]string
-// @Router /items [post]
+// @Router /items [post].
 func CreateItem(w http.ResponseWriter, r *http.Request) {
 	var item Item
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {

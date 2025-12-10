@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Test helper to verify JSON marshaling
+// Test helper to verify JSON marshaling.
 func verifyJSONMarshal(t *testing.T, v interface{}) {
 	t.Helper()
 	data, err := json.Marshal(v)

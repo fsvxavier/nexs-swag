@@ -9,6 +9,45 @@ import (
 	"github.com/fsvxavier/nexs-swag/pkg/openapi"
 )
 
+// JSON Schema type constants.
+const (
+	typeString  = "string"
+	typeInteger = "integer"
+	typeNumber  = "number"
+	typeBoolean = "boolean"
+	typeArray   = "array"
+	typeObject  = "object"
+
+	formatUInt     = "uint"
+	formatUInt8    = "uint8"
+	formatUInt16   = "uint16"
+	formatUInt32   = "uint32"
+	formatUInt64   = "uint64"
+	formatInt      = "int"
+	formatInt8     = "int8"
+	formatInt16    = "int16"
+	formatInt32    = "int32"
+	formatInt64    = "int64"
+	formatFloat    = "float"
+	formatFloat32  = "float32"
+	formatFloat64  = "float64"
+	formatDouble   = "double"
+	formatByte     = "byte"
+	formatBinary   = "binary"
+	formatRune     = "rune"
+	formatBoolean  = "boolean"
+	formatBool     = "bool"
+	formatInteger  = "integer"
+	formatEmail    = "email"
+	formatURI      = "uri"
+	formatUUID     = "uuid"
+	formatDateTime = "date-time"
+	formatDate     = "date"
+
+	valueTrue  = "true"
+	valueFalse = "false"
+)
+
 // SchemaProcessor processes struct type definitions to generate OpenAPI schemas.
 type SchemaProcessor struct {
 	parser    *Parser
@@ -133,10 +172,8 @@ func (s *SchemaProcessor) processField(field *ast.Field, schema *openapi.Schema)
 
 	// Check if field type is a pointer
 	isPointer := false
-	fieldType := field.Type
-	if starExpr, ok := fieldType.(*ast.StarExpr); ok {
+	if _, ok := field.Type.(*ast.StarExpr); ok {
 		isPointer = true
-		fieldType = starExpr.X
 	}
 
 	// Create field schema
@@ -292,10 +329,10 @@ func (s *SchemaProcessor) parseStructTags(field *ast.Field) StructTags {
 	tags.Pattern = extractTag(tagStr, "pattern")
 
 	// Check for readonly/writeonly
-	if extractTag(tagStr, "readonly") == "true" {
+	if extractTag(tagStr, "readonly") == valueTrue {
 		tags.ReadOnly = true
 	}
-	if extractTag(tagStr, "writeonly") == "true" {
+	if extractTag(tagStr, "writeonly") == valueTrue {
 		tags.WriteOnly = true
 	}
 
@@ -335,14 +372,14 @@ func (s *SchemaProcessor) applyStructTagAttributes(tags StructTags, schema *open
 	}
 
 	if tags.Minimum != "" {
-		if min, err := strconv.ParseFloat(tags.Minimum, 64); err == nil {
-			schema.Minimum = min
+		if minVal, err := strconv.ParseFloat(tags.Minimum, 64); err == nil {
+			schema.Minimum = minVal
 		}
 	}
 
 	if tags.Maximum != "" {
-		if max, err := strconv.ParseFloat(tags.Maximum, 64); err == nil {
-			schema.Maximum = max
+		if maxVal, err := strconv.ParseFloat(tags.Maximum, 64); err == nil {
+			schema.Maximum = maxVal
 		}
 	}
 
@@ -396,7 +433,7 @@ func (s *SchemaProcessor) applyBindingValidations(binding string, schema *openap
 
 		// Handle email validation
 		if rule == "email" {
-			schema.Format = "email"
+			schema.Format = formatEmail
 		}
 
 		// Handle url validation
@@ -407,34 +444,38 @@ func (s *SchemaProcessor) applyBindingValidations(binding string, schema *openap
 		// Handle min/max with values: min=1, max=100
 		if strings.HasPrefix(rule, "min=") {
 			value := strings.TrimPrefix(rule, "min=")
-			if schema.Type == "string" || schema.Type == "array" {
+			switch schema.Type {
+			case typeString, typeArray:
 				if minLen, err := strconv.Atoi(value); err == nil {
-					if schema.Type == "string" {
+					switch schema.Type {
+					case typeString:
 						schema.MinLength = minLen
-					} else if schema.Type == "array" {
+					case typeArray:
 						schema.MinItems = minLen
 					}
 				}
-			} else if schema.Type == "integer" || schema.Type == "number" {
-				if min, err := strconv.ParseFloat(value, 64); err == nil {
-					schema.Minimum = min
+			case typeInteger, typeNumber:
+				if minVal, err := strconv.ParseFloat(value, 64); err == nil {
+					schema.Minimum = minVal
 				}
 			}
 		}
 
 		if strings.HasPrefix(rule, "max=") {
 			value := strings.TrimPrefix(rule, "max=")
-			if schema.Type == "string" || schema.Type == "array" {
+			switch schema.Type {
+			case typeString, typeArray:
 				if maxLen, err := strconv.Atoi(value); err == nil {
-					if schema.Type == "string" {
+					switch schema.Type {
+					case typeString:
 						schema.MaxLength = maxLen
-					} else if schema.Type == "array" {
+					case typeArray:
 						schema.MaxItems = maxLen
 					}
 				}
-			} else if schema.Type == "integer" || schema.Type == "number" {
-				if max, err := strconv.ParseFloat(value, 64); err == nil {
-					schema.Maximum = max
+			case typeInteger, typeNumber:
+				if maxVal, err := strconv.ParseFloat(value, 64); err == nil {
+					schema.Maximum = maxVal
 				}
 			}
 		}
@@ -451,32 +492,32 @@ func (s *SchemaProcessor) applyBindingValidations(binding string, schema *openap
 		// Handle gte (greater than or equal)
 		if strings.HasPrefix(rule, "gte=") {
 			value := strings.TrimPrefix(rule, "gte=")
-			if min, err := strconv.ParseFloat(value, 64); err == nil {
-				schema.Minimum = min
+			if minVal, err := strconv.ParseFloat(value, 64); err == nil {
+				schema.Minimum = minVal
 			}
 		}
 
 		// Handle lte (less than or equal)
 		if strings.HasPrefix(rule, "lte=") {
 			value := strings.TrimPrefix(rule, "lte=")
-			if max, err := strconv.ParseFloat(value, 64); err == nil {
-				schema.Maximum = max
+			if maxVal, err := strconv.ParseFloat(value, 64); err == nil {
+				schema.Maximum = maxVal
 			}
 		}
 
 		// Handle gt (greater than)
 		if strings.HasPrefix(rule, "gt=") {
 			value := strings.TrimPrefix(rule, "gt=")
-			if min, err := strconv.ParseFloat(value, 64); err == nil {
-				schema.ExclusiveMinimum = min
+			if minVal, err := strconv.ParseFloat(value, 64); err == nil {
+				schema.ExclusiveMinimum = minVal
 			}
 		}
 
 		// Handle lt (less than)
 		if strings.HasPrefix(rule, "lt=") {
 			value := strings.TrimPrefix(rule, "lt=")
-			if max, err := strconv.ParseFloat(value, 64); err == nil {
-				schema.ExclusiveMaximum = max
+			if maxVal, err := strconv.ParseFloat(value, 64); err == nil {
+				schema.ExclusiveMaximum = maxVal
 			}
 		}
 
@@ -506,17 +547,17 @@ func (s *SchemaProcessor) applyValidateRules(validate string, schema *openapi.Sc
 
 		// Handle uuid validation
 		if rule == "uuid" || rule == "uuid4" {
-			schema.Format = "uuid"
+			schema.Format = formatUUID
 		}
 
 		// Handle datetime validation
 		if rule == "datetime" {
-			schema.Format = "date-time"
+			schema.Format = formatDateTime
 		}
 
 		// Handle date validation
 		if rule == "date" {
-			schema.Format = "date"
+			schema.Format = formatDate
 		}
 
 		// Handle numeric validation
@@ -554,7 +595,7 @@ func (s *SchemaProcessor) processFieldType(expr ast.Expr) *openapi.Schema {
 
 	case *ast.ArrayType:
 		// Array type
-		schema.Type = "array"
+		schema.Type = typeArray
 		s.depth++
 		schema.Items = s.processFieldType(t.Elt)
 		s.depth--
@@ -562,7 +603,7 @@ func (s *SchemaProcessor) processFieldType(expr ast.Expr) *openapi.Schema {
 
 	case *ast.MapType:
 		// Map type
-		schema.Type = "object"
+		schema.Type = typeObject
 		s.depth++
 		valueSchema := s.processFieldType(t.Value)
 		s.depth--
@@ -609,34 +650,34 @@ func (s *SchemaProcessor) identToSchema(name string) *openapi.Schema {
 
 	// Check for primitive types
 	switch name {
-	case "string":
-		schema.Type = "string"
-	case "int", "int8", "int16", "int32":
-		schema.Type = "integer"
-		schema.Format = "int32"
-	case "int64":
-		schema.Type = "integer"
-		schema.Format = "int64"
+	case typeString:
+		schema.Type = typeString
+	case "int", "int8", "int16", formatInt32:
+		schema.Type = typeInteger
+		schema.Format = formatInt32
+	case formatInt64:
+		schema.Type = typeInteger
+		schema.Format = formatInt64
 	case "uint", "uint8", "uint16", "uint32":
-		schema.Type = "integer"
-		schema.Format = "int32"
+		schema.Type = typeInteger
+		schema.Format = formatInt32
 	case "uint64":
-		schema.Type = "integer"
-		schema.Format = "int64"
+		schema.Type = typeInteger
+		schema.Format = formatInt64
 	case "float32":
-		schema.Type = "number"
-		schema.Format = "float"
+		schema.Type = typeNumber
+		schema.Format = formatFloat
 	case "float64":
-		schema.Type = "number"
-		schema.Format = "double"
+		schema.Type = typeNumber
+		schema.Format = formatDouble
 	case "bool":
-		schema.Type = "boolean"
-	case "byte":
-		schema.Type = "string"
-		schema.Format = "byte"
+		schema.Type = typeBoolean
+	case formatByte:
+		schema.Type = typeString
+		schema.Format = formatByte
 	case "rune":
-		schema.Type = "integer"
-		schema.Format = "int32"
+		schema.Type = typeInteger
+		schema.Format = formatInt32
 	default:
 		// Reference to another schema
 		schema.Ref = "#/components/schemas/" + name
@@ -649,7 +690,7 @@ func (s *SchemaProcessor) identToSchema(name string) *openapi.Schema {
 // Supports formats:
 // - "integer", "string", "number", "boolean", "object", "array"
 // - "primitive,integer" - convert struct to primitive type
-// - "array,number" - convert to array of numbers
+// - "array,number" - convert to array of numbers.
 func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.Schema) {
 	if swaggerType == "" {
 		return
@@ -661,7 +702,7 @@ func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.S
 		// Simple type override: swaggertype:"integer"
 		typeStr := strings.TrimSpace(parts[0])
 		switch typeStr {
-		case "string", "integer", "number", "boolean", "object", "array":
+		case typeString, typeInteger, typeNumber, typeBoolean, typeObject, typeArray:
 			schema.Type = typeStr
 			// Clear Ref when overriding type
 			schema.Ref = ""
@@ -670,19 +711,20 @@ func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.S
 		modifier := strings.TrimSpace(parts[0])
 		typeStr := strings.TrimSpace(parts[1])
 
-		if modifier == "primitive" {
+		switch modifier {
+		case "primitive":
 			// Primitive type: swaggertype:"primitive,integer"
 			switch typeStr {
-			case "string", "integer", "number", "boolean":
+			case typeString, typeInteger, typeNumber, typeBoolean:
 				schema.Type = typeStr
 				schema.Ref = ""
 			}
-		} else if modifier == "array" {
+		case typeArray:
 			// Array type: swaggertype:"array,number"
-			schema.Type = "array"
+			schema.Type = typeArray
 			schema.Ref = ""
 			switch typeStr {
-			case "string", "integer", "number", "boolean", "object":
+			case typeString, typeInteger, typeNumber, typeBoolean, typeObject:
 				schema.Items = &openapi.Schema{
 					Type: typeStr,
 				}
@@ -696,7 +738,7 @@ func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.S
 // - "x-nullable" - boolean true
 // - "x-abc=def" - string value
 // - "!x-omitempty" - boolean false (negation)
-// - "x-nullable,x-abc=def,!x-omitempty" - multiple extensions
+// - "x-nullable,x-abc=def,!x-omitempty" - multiple extensions.
 func (s *SchemaProcessor) applyExtensions(extensionsTag string, schema *openapi.Schema) {
 	if extensionsTag == "" {
 		return
@@ -714,13 +756,14 @@ func (s *SchemaProcessor) applyExtensions(extensionsTag string, schema *openapi.
 			continue
 		}
 
-		if strings.HasPrefix(ext, "!") {
+		switch {
+		case strings.HasPrefix(ext, "!"):
 			// Negation: !x-omitempty → x-omitempty: false
 			key := strings.TrimPrefix(ext, "!")
 			if strings.HasPrefix(key, "x-") {
 				schema.Extensions[key] = false
 			}
-		} else if strings.Contains(ext, "=") {
+		case strings.Contains(ext, "="):
 			// With value: x-abc=def
 			parts := strings.SplitN(ext, "=", 2)
 			key := strings.TrimSpace(parts[0])
@@ -729,15 +772,15 @@ func (s *SchemaProcessor) applyExtensions(extensionsTag string, schema *openapi.
 				// Try to parse as number, otherwise string
 				if numValue, err := strconv.ParseFloat(value, 64); err == nil {
 					schema.Extensions[key] = numValue
-				} else if value == "true" {
+				} else if value == valueTrue {
 					schema.Extensions[key] = true
-				} else if value == "false" {
+				} else if value == valueFalse {
 					schema.Extensions[key] = false
 				} else {
 					schema.Extensions[key] = value
 				}
 			}
-		} else {
+		default:
 			// Boolean true: x-nullable
 			if strings.HasPrefix(ext, "x-") {
 				schema.Extensions[ext] = true
@@ -764,17 +807,17 @@ func (s *SchemaProcessor) parseOverrideType(override string) *openapi.Schema {
 	schema := &openapi.Schema{}
 
 	switch override {
-	case "string":
-		schema.Type = "string"
-	case "number":
-		schema.Type = "number"
-	case "integer":
-		schema.Type = "integer"
-	case "boolean":
-		schema.Type = "boolean"
+	case typeString:
+		schema.Type = typeString
+	case typeNumber:
+		schema.Type = typeNumber
+	case typeInteger:
+		schema.Type = typeInteger
+	case typeBoolean:
+		schema.Type = typeBoolean
 	case "time.Time":
-		schema.Type = "string"
-		schema.Format = "date-time"
+		schema.Type = typeString
+		schema.Format = formatDateTime
 	default:
 		// If not a primitive, treat as a reference
 		schema.Ref = "#/components/schemas/" + override

@@ -1,6 +1,6 @@
 package internal
 
-// Config is internal configuration
+// Config is internal configuration.
 type Config struct {
 	APIKey string `json:"api_key"`
 	Secret string `json:"secret"`
@@ -10,5 +10,5 @@ type Config struct {
 // @Summary Get internal config
 // @Tags internal
 // @Success 200 {object} Config
-// @Router /internal/config [get]
+// @Router /internal/config [get].
 func GetConfig() {}

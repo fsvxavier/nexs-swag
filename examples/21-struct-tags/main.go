@@ -11,22 +11,22 @@ import (
 // @host localhost:8080
 // @BasePath /api
 
-// User demonstrates various struct tags
+// User demonstrates various struct tags.
 type User struct {
 	// ID with basic tags
-	ID int `json:"id" example:"123"`
+	ID int `example:"123" json:"id"`
 
 	// Name with validation
-	Name string `json:"name" example:"John Doe" minLength:"2" maxLength:"50"`
+	Name string `example:"John Doe" json:"name" maxLength:"50" minLength:"2"`
 
 	// Email with format and validation
-	Email string `json:"email" example:"john@example.com" format:"email"`
+	Email string `example:"john@example.com" format:"email" json:"email"`
 
 	// Age with range validation
-	Age int `json:"age" example:"25" minimum:"0" maximum:"150"`
+	Age int `example:"25" json:"age" maximum:"150" minimum:"0"`
 
 	// Custom type override
-	Birthday time.Time `json:"birthday" swaggertype:"string" format:"date" example:"2000-01-01"`
+	Birthday time.Time `example:"2000-01-01" format:"date" json:"birthday" swaggertype:"string"`
 
 	// Ignored field
 	Password string `json:"-" swaggerignore:"true"`
@@ -35,19 +35,19 @@ type User struct {
 	Metadata map[string]interface{} `json:"metadata" x-nullable:"true"`
 }
 
-// Config with advanced tags
+// Config with advanced tags.
 type Config struct {
 	// Read-only field
 	CreatedAt time.Time `json:"created_at" readonly:"true"`
 
 	// Default value
-	Timeout int `json:"timeout" default:"30" example:"60"`
+	Timeout int `default:"30" example:"60" json:"timeout"`
 
 	// Enum values
-	Status string `json:"status" enums:"active,inactive,pending" example:"active"`
+	Status string `enums:"active,inactive,pending" example:"active" json:"status"`
 
 	// Array with validation
-	Tags []string `json:"tags" minItems:"1" maxItems:"10"`
+	Tags []string `json:"tags" maxItems:"10" minItems:"1"`
 
 	// Nested with swaggertype
 	Settings interface{} `json:"settings" swaggertype:"object"`
@@ -58,7 +58,7 @@ type Config struct {
 // @Tags users
 // @Produce json
 // @Success 200 {object} User
-// @Router /users/{id} [get]
+// @Router /users/{id} [get].
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	user := User{
 		ID:    123,
@@ -74,7 +74,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 // @Tags config
 // @Produce json
 // @Success 200 {object} Config
-// @Router /config [get]
+// @Router /config [get].
 func GetConfig(w http.ResponseWriter, r *http.Request) {
 	config := Config{
 		CreatedAt: time.Now(),

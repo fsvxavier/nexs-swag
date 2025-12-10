@@ -25,7 +25,7 @@ type Product struct {
 // @Param        id   path      int  true  "Product ID"
 // @Success      200  {object}  Product
 // @Failure      404  {object}  map[string]string
-// @Router       /products/{id} [get]
+// @Router       /products/{id} [get].
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	product := Product{
 		ID:    1,

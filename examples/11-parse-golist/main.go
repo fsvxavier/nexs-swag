@@ -20,7 +20,7 @@ type Data struct {
 // @Tags data
 // @Produce json
 // @Success 200 {object} Data
-// @Router /data [get]
+// @Router /data [get].
 func GetData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Data{ID: 1, Value: "test"})
 }

@@ -10,20 +10,20 @@ import (
 // @host localhost:8080
 // @BasePath /api
 
-// Meta represents metadata (Level 3)
+// Meta represents metadata (Level 3).
 type Meta struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
 
-// Item represents an item (Level 2)
+// Item represents an item (Level 2).
 type Item struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Metadata Meta   `json:"metadata"`
 }
 
-// Order represents an order (Level 1)
+// Order represents an order (Level 1).
 type Order struct {
 	ID     int    `json:"id"`
 	Status string `json:"status"`
@@ -35,7 +35,7 @@ type Order struct {
 // @Tags orders
 // @Produce json
 // @Success 200 {object} Order
-// @Router /orders/{id} [get]
+// @Router /orders/{id} [get].
 func GetOrder(w http.ResponseWriter, r *http.Request) {
 	order := Order{
 		ID:     1,

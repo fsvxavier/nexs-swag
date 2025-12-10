@@ -12,7 +12,7 @@ import (
 // @host localhost:8080
 // @BasePath /api
 
-// Account demonstrates type overrides
+// Account demonstrates type overrides.
 type Account struct {
 	ID        sql.NullInt64  `json:"id"`         // Will be overridden to integer
 	Balance   sql.NullString `json:"balance"`    // Will be overridden to string
@@ -25,7 +25,7 @@ type Account struct {
 // @Tags accounts
 // @Produce json
 // @Success 200 {object} Account
-// @Router /accounts/{id} [get]
+// @Router /accounts/{id} [get].
 func GetAccount(w http.ResponseWriter, r *http.Request) {
 	account := Account{
 		ID:        sql.NullInt64{Int64: 123, Valid: true},

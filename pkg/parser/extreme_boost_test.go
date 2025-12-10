@@ -82,7 +82,7 @@ func CreateUser() {}
 	}
 
 	// Testar parsePackageFromGoList múltiplas vezes com arquivo real
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		pkg := &GoListPackage{
 			Dir:        tmpDir,
 			ImportPath: "github.com/test/testpkg",
@@ -93,7 +93,7 @@ func CreateUser() {}
 	}
 
 	// Testar ParseDir com o diretório real
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		pp := New()
 		_ = pp.ParseDir(tmpDir)
 	}
@@ -102,7 +102,7 @@ func CreateUser() {}
 	fset := token.NewFileSet()
 	astFile, err := parser.ParseFile(fset, mainFile, nil, parser.ParseComments)
 	if err == nil {
-		for i := 0; i < 30; i++ {
+		for range 30 {
 			pp := New()
 			_ = pp.parseOperations(astFile)
 		}
@@ -114,7 +114,7 @@ func TestMassiveGetSchemaTypeString(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Criar 300 iterações com todos os possíveis tipos
-	for i := 0; i < 300; i++ {
+	for range 300 {
 		// Tipos básicos
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
 		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
@@ -151,7 +151,7 @@ func TestMassiveParseValue(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// 300 iterações com todos os valores possíveis
-	for i := 0; i < 300; i++ {
+	for range 300 {
 		_ = proc.parseValue("string", "test")
 		_ = proc.parseValue("string", "")
 		_ = proc.parseValue("string", "test value")
@@ -175,7 +175,7 @@ func TestMassiveValidateOperation(t *testing.T) {
 	p := New()
 
 	// 150 iterações com diferentes operações
-	for i := 0; i < 150; i++ {
+	for range 150 {
 		op1 := &openapi.Operation{
 			Summary: "Test",
 			Responses: openapi.Responses{
@@ -225,7 +225,7 @@ func TestMassiveValidateOperation(t *testing.T) {
 
 func TestMassiveValidate(t *testing.T) {
 	// 150 iterações de Validate com configurações diferentes
-	for i := 0; i < 150; i++ {
+	for range 150 {
 		p := New()
 
 		p.openapi.Info.Title = "Test API"
@@ -270,7 +270,7 @@ func TestMassiveValidate(t *testing.T) {
 
 func TestMassiveProcess(t *testing.T) {
 	// 150 iterações de Process com todas as anotações
-	for i := 0; i < 150; i++ {
+	for range 150 {
 		p := New()
 		gproc := NewGeneralInfoProcessor(p.openapi)
 

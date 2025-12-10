@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-// GoListPackage represents a package returned by 'go list -json'
+// GoListPackage represents a package returned by 'go list -json'.
 type GoListPackage struct {
 	Dir        string   `json:"Dir"`
 	ImportPath string   `json:"ImportPath"`
@@ -20,7 +20,7 @@ type GoListPackage struct {
 	Goroot     bool     `json:"Goroot"`
 }
 
-// listPackagesWithGoList uses 'go list' command to discover packages and dependencies
+// listPackagesWithGoList uses 'go list' command to discover packages and dependencies.
 func (p *Parser) listPackagesWithGoList(ctx context.Context, dirs []string, args ...string) ([]*GoListPackage, error) {
 	if !p.parseGoList {
 		return nil, nil
@@ -39,7 +39,7 @@ func (p *Parser) listPackagesWithGoList(ctx context.Context, dirs []string, args
 	return allPackages, nil
 }
 
-// listOnePackage runs 'go list' for a single directory
+// listOnePackage runs 'go list' for a single directory.
 func (p *Parser) listOnePackage(ctx context.Context, dir string, args ...string) ([]*GoListPackage, error) {
 	cmdArgs := []string{"list", "-json"}
 	cmdArgs = append(cmdArgs, args...)
@@ -53,7 +53,7 @@ func (p *Parser) listOnePackage(ctx context.Context, dir string, args ...string)
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("go list failed: %v, stderr: %s", err, stderr.String())
+		return nil, fmt.Errorf("go list failed: %w, stderr: %s", err, stderr.String())
 	}
 
 	// Parse JSON output (one JSON object per line)
@@ -63,7 +63,7 @@ func (p *Parser) listOnePackage(ctx context.Context, dir string, args ...string)
 	for decoder.More() {
 		var pkg GoListPackage
 		if err := decoder.Decode(&pkg); err != nil {
-			return nil, fmt.Errorf("failed to decode go list output: %v", err)
+			return nil, fmt.Errorf("failed to decode go list output: %w", err)
 		}
 		packages = append(packages, &pkg)
 	}
@@ -71,7 +71,7 @@ func (p *Parser) listOnePackage(ctx context.Context, dir string, args ...string)
 	return packages, nil
 }
 
-// parsePackageFromGoList parses a package discovered by go list
+// parsePackageFromGoList parses a package discovered by go list.
 func (p *Parser) parsePackageFromGoList(pkg *GoListPackage) error {
 	// Skip internal packages unless parseInternal is true
 	if pkg.Goroot && !p.parseInternal {
@@ -99,7 +99,7 @@ func (p *Parser) parsePackageFromGoList(pkg *GoListPackage) error {
 	return nil
 }
 
-// parseWithGoList is the main entry point for go list based parsing
+// parseWithGoList is the main entry point for go list based parsing.
 func (p *Parser) parseWithGoList(dir string) error {
 	if !p.parseGoList {
 		return nil

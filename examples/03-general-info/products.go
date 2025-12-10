@@ -18,7 +18,7 @@ type Product struct {
 // @Tags products
 // @Produce json
 // @Success 200 {array} Product
-// @Router /products [get]
+// @Router /products [get].
 func GetProducts(w http.ResponseWriter, r *http.Request) {
 	products := []Product{{ID: 1, Name: "Book"}, {ID: 2, Name: "Pen"}}
 	json.NewEncoder(w).Encode(products)

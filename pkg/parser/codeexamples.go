@@ -8,17 +8,17 @@ import (
 	"sync"
 )
 
-// CodeExample represents a code sample for x-codeSamples extension
+// CodeExample represents a code sample for x-codeSamples extension.
 type CodeExample struct {
 	Lang   string `json:"lang"`
 	Source string `json:"source"`
 }
 
-// codeExamplesCache stores loaded code examples
+// codeExamplesCache stores loaded code examples.
 var codeExamplesCache map[string]string
 var codeExamplesCacheMutex sync.RWMutex
 
-// loadCodeExamplesFromDir loads code example files from directory
+// loadCodeExamplesFromDir loads code example files from directory.
 func (p *Parser) loadCodeExamplesFromDir() error {
 	if p.codeExampleFilesDir == "" {
 		return nil
@@ -56,7 +56,7 @@ func (p *Parser) loadCodeExamplesFromDir() error {
 	})
 }
 
-// GetCodeExample returns a code example by filename
+// GetCodeExample returns a code example by filename.
 func (p *Parser) GetCodeExample(filename string) string {
 	codeExamplesCacheMutex.RLock()
 	defer codeExamplesCacheMutex.RUnlock()
@@ -66,7 +66,7 @@ func (p *Parser) GetCodeExample(filename string) string {
 	return codeExamplesCache[filename]
 }
 
-// detectLanguageFromExtension returns language identifier from file extension
+// detectLanguageFromExtension returns language identifier from file extension.
 func detectLanguageFromExtension(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
 	languageMap := map[string]string{

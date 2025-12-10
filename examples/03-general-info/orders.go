@@ -18,7 +18,7 @@ type Order struct {
 // @Tags orders
 // @Produce json
 // @Success 200 {array} Order
-// @Router /orders [get]
+// @Router /orders [get].
 func GetOrders(w http.ResponseWriter, r *http.Request) {
 	orders := []Order{{ID: 1, UserID: 1}, {ID: 2, UserID: 2}}
 	json.NewEncoder(w).Encode(orders)

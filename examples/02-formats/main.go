@@ -12,9 +12,9 @@ import (
 // @BasePath /api/v1
 
 type Product struct {
-	ID    int     `json:"id" example:"1"`
-	Name  string  `json:"name" example:"Laptop"`
-	Price float64 `json:"price" example:"999.99"`
+	ID    int     `example:"1"      json:"id"`
+	Name  string  `example:"Laptop" json:"name"`
+	Price float64 `example:"999.99" json:"price"`
 }
 
 // GetProduct returns a product
@@ -23,7 +23,7 @@ type Product struct {
 // @Produce json
 // @Param id path int true "Product ID"
 // @Success 200 {object} Product
-// @Router /products/{id} [get]
+// @Router /products/{id} [get].
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	product := Product{ID: 1, Name: "Laptop", Price: 999.99}
 	json.NewEncoder(w).Encode(product)

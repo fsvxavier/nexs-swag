@@ -34,7 +34,7 @@ func main() {
 // @Tags system
 // @Produce json
 // @Success 200 {object} map[string]string
-// @Router /health [get]
+// @Router /health [get].
 func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }

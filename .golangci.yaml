@@ -1,0 +1,133 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  go: '1.22'
+  allow-parallel-runners: true
+  concurrency: 4
+
+linters:
+  enable:
+    # Erros e bugs
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+    - bodyclose
+    
+    # Qualidade de código
+    - revive
+    - gocritic
+    - gosec
+    - goconst
+    - gocyclo
+    
+    # Melhorias modernas
+    - copyloopvar      # Detecta cópias de loop variables
+    - errorlint        # Wrapping de erros Go 1.13+
+    - exptostd         # Usa stdlib ao invés de x/exp
+    - intrange         # Usa integer ranges
+    - mirror           # Mirror patterns
+    - perfsprint       # Performance de sprintf
+    - usestdlibvars    # Usa constantes da stdlib
+    - usetesting       # Usa funções do testing package
+    
+    # Formatação e estilo
+    - whitespace
+    - nolintlint       # Valida diretivas nolint
+    - dupword          # Palavras duplicadas
+    - godot            # Pontuação em comentários
+    
+    # Autofix disponível
+    - canonicalheader  # HTTP headers canônicos
+    - fatcontext       # Contextos em loops
+    - iface            # Interface pollution
+    - importas         # Import aliases consistentes
+    - nakedret         # Naked returns
+    - tagalign         # Alinhamento de tags
+
+  disable:
+    - exhaustruct      # Muito restritivo
+    - varnamelen       # Muito restritivo
+    - nlreturn         # Muito opinativo
+    - wrapcheck        # Muito restritivo
+    - lll              # Line length (configurável separadamente)
+    - wsl_v5           # Whitespace muito opinativo
+    - ginkgolinter     # Framework específico não usado
+    - testifylint      # Framework específico não usado  
+    - protogetter      # Protobuf específico não usado
+    - goheader         # Headers de arquivo específicos
+
+  settings:
+    errcheck:
+      check-type-assertions: false
+      check-blank: false
+      exclude-functions:
+        - 'fmt.Fprintf'
+        - 'fmt.Fprintln'
+        - '(*text/tabwriter.Writer).Flush'
+
+    gocyclo:
+      min-complexity: 35  # Increased for parser complexity
+
+    dupl:
+      threshold: 100
+
+    goconst:
+      min-len: 3
+      min-occurrences: 5  # Increased to reduce noise
+
+    gosec:
+      excludes:
+        - G104  # Unhandled errors
+        - G304  # File inclusion via variable
+        - G306  # WriteFile permissions
+        - G301  # Directory permissions
+
+    revive:
+      rules:
+        - name: unused-parameter
+          disabled: true
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - dupl
+          - gosec
+          - errcheck
+          - goconst
+          - revive
+          - unused
+
+      - path: examples/
+        linters:
+          - errcheck
+          - gosec
+          - goconst
+          - revive
+
+      - path: pkg/parser/general_info\.go
+        linters:
+          - unused  # Future use variables
+
+      - path: pkg/parser/operation\.go
+        linters:
+          - unused  # Future use variables
+
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  fix: true  # Habilita autofix para linters que suportam
+
+output:
+  formats:
+    text:
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+  show-stats: true

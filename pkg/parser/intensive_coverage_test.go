@@ -15,7 +15,7 @@ func TestFinalPush(t *testing.T) {
 
 	// Testar getSchemaTypeString com muitas variações
 	t.Run("getSchemaTypeString intensive", func(t *testing.T) {
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			schemas := []*openapi.Schema{
 				{Type: "string"},
 				{Type: "integer"},
@@ -40,7 +40,7 @@ func TestFinalPush(t *testing.T) {
 
 	// Testar parseValue com muitas variações
 	t.Run("parseValue intensive", func(t *testing.T) {
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			values := []struct {
 				typ string
 				val string
@@ -67,7 +67,7 @@ func TestFinalPush(t *testing.T) {
 
 	// Testar validateOperation com múltiplas operações
 	t.Run("validateOperation intensive", func(t *testing.T) {
-		for i := 0; i < 30; i++ {
+		for range 30 {
 			ops := []*openapi.Operation{
 				{
 					Summary: "Test",
@@ -114,7 +114,7 @@ func TestFinalPush(t *testing.T) {
 			"Model3": {Type: "object"},
 		}
 
-		for i := 0; i < 50; i++ {
+		for range 50 {
 			idents := []string{
 				"Model1",
 				"Model2",
@@ -139,7 +139,7 @@ func TestFinalPush(t *testing.T) {
 
 	// Testar Validate
 	t.Run("Validate intensive", func(t *testing.T) {
-		for i := 0; i < 30; i++ {
+		for range 30 {
 			p.openapi.Paths = map[string]*openapi.PathItem{
 				"/path1": {
 					Get: &openapi.Operation{
@@ -165,7 +165,7 @@ func TestFinalPush(t *testing.T) {
 	// Testar Process com múltiplas linhas
 	t.Run("Process intensive", func(t *testing.T) {
 		proc := NewGeneralInfoProcessor(p.openapi)
-		for i := 0; i < 30; i++ {
+		for range 30 {
 			lines := []string{
 				"@title API",
 				"@version 1.0",

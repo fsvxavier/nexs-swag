@@ -21,7 +21,7 @@ type SearchRequest struct {
 // @Produce json
 // @Param tags query []string true "Tags to search" collectionFormat(multi)
 // @Success 200 {array} string
-// @Router /search [get]
+// @Router /search [get].
 func SearchItems(w http.ResponseWriter, r *http.Request) {
 	tags := r.URL.Query()["tags"]
 	json.NewEncoder(w).Encode(tags)
@@ -32,7 +32,7 @@ func SearchItems(w http.ResponseWriter, r *http.Request) {
 // @Tags search
 // @Param ids query []int true "IDs" collectionFormat(csv)
 // @Success 200 {array} int
-// @Router /filter [get]
+// @Router /filter [get].
 func FilterItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode([]int{1, 2, 3})
 }
@@ -42,7 +42,7 @@ func FilterItems(w http.ResponseWriter, r *http.Request) {
 // @Tags search
 // @Param statuses query []string true "Statuses" collectionFormat(pipes)
 // @Success 200 {array} string
-// @Router /pipe [get]
+// @Router /pipe [get].
 func PipeItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode([]string{"active", "pending"})
 }

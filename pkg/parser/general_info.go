@@ -21,51 +21,53 @@ func NewGeneralInfoProcessor(spec *openapi.OpenAPI) *GeneralInfoProcessor {
 }
 
 var (
-	// General Info regex patterns
+	// General Info regex patterns.
 	titleRegex       = regexp.MustCompile(`^@title\s+(.+)$`)
 	versionRegex     = regexp.MustCompile(`^@version\s+(.+)$`)
 	descriptionRegex = regexp.MustCompile(`^@description\s+(.+)$`)
 	summaryRegex     = regexp.MustCompile(`^@summary\s+(.+)$`)
 	tosRegex         = regexp.MustCompile(`^@termsOfService\s+(.+)$`)
 
-	// Contact regex patterns
+	// Contact regex patterns.
 	contactNameRegex  = regexp.MustCompile(`^@contact\.name\s+(.+)$`)
 	contactURLRegex   = regexp.MustCompile(`^@contact\.url\s+(.+)$`)
 	contactEmailRegex = regexp.MustCompile(`^@contact\.email\s+(.+)$`)
 
-	// License regex patterns
+	// License regex patterns.
 	licenseNameRegex = regexp.MustCompile(`^@license\.name\s+(.+)$`)
 	licenseURLRegex  = regexp.MustCompile(`^@license\.url\s+(.+)$`)
 	licenseIDRegex   = regexp.MustCompile(`^@license\.identifier\s+(.+)$`)
 
-	// Server regex patterns
+	// Server regex patterns.
 	hostRegex       = regexp.MustCompile(`^@host\s+(\S+)$`)
 	basePathRegex   = regexp.MustCompile(`^@basePath\s+(\S+)$`)
 	schemesRegex    = regexp.MustCompile(`^@schemes\s+(.+)$`)
 	serverRegex     = regexp.MustCompile(`^@server\s+(\S+)\s*(.*)$`)
 	serverDescRegex = regexp.MustCompile(`^@server\.description\s+(.+)$`)
 
-	// Tag regex patterns
+	// Tag regex patterns.
 	tagNameRegex     = regexp.MustCompile(`^@tag\.name\s+(.+)$`)
 	tagDescRegex     = regexp.MustCompile(`^@tag\.description\s+(.+)$`)
 	tagDocsURLRegex  = regexp.MustCompile(`^@tag\.docs\.url\s+(.+)$`)
 	tagDocsDescRegex = regexp.MustCompile(`^@tag\.docs\.description\s+(.+)$`)
 
-	// Security regex patterns
+	// Security regex patterns.
 	securityRegex       = regexp.MustCompile(`^@securityDefinitions\.(\w+)\s+(\S+)\s+(.+)$`)
 	securityBasicRegex  = regexp.MustCompile(`^@securityDefinitions\.basic\s+(\S+)\s*(.*)$`)
 	securityAPIKeyRegex = regexp.MustCompile(`^@securityDefinitions\.apikey\s+(\S+)\s+(\w+)\s+(\w+)\s*(.*)$`)
 	securityOAuth2Regex = regexp.MustCompile(`^@securityDefinitions\.oauth2\.(\w+)\s+(\S+)\s*(.*)$`)
 
-	// External docs regex patterns
+	// External docs regex patterns.
 	externalDocsURLRegex  = regexp.MustCompile(`^@externalDocs\.url\s+(.+)$`)
 	externalDocsDescRegex = regexp.MustCompile(`^@externalDocs\.description\s+(.+)$`)
 
-	// Webhook regex patterns
+	// Webhook regex patterns.
 	webhookRegex = regexp.MustCompile(`^@webhook\s+(\S+)\s+(.+)$`)
 )
 
 // Process processes a single general API annotation.
+//
+//nolint:gocyclo // Complex switch for many annotation types is acceptable
 func (g *GeneralInfoProcessor) Process(text string) error {
 	switch {
 	// Info object

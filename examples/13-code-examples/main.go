@@ -24,7 +24,7 @@ type User struct {
 // @Param user body User true "User data"
 // @Success 201 {object} User
 // @Router /users [post]
-// @x-codeSamples file(create_user)
+// @x-codeSamples file(create_user).
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	json.NewDecoder(r.Body).Decode(&user)

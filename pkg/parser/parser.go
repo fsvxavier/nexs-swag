@@ -2,6 +2,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -20,7 +21,6 @@ type Parser struct {
 	files           map[string]*ast.File
 	fset            *token.FileSet
 	generalInfoFile string
-	packages        map[string]*ast.Package
 	typeCache       map[string]*TypeInfo
 
 	// Configuration options
@@ -79,7 +79,6 @@ func New() *Parser {
 		},
 		files:                make(map[string]*ast.File),
 		fset:                 token.NewFileSet(),
-		packages:             make(map[string]*ast.Package),
 		typeCache:            make(map[string]*TypeInfo),
 		propertyStrategy:     "camelcase",
 		parseDepth:           100,
@@ -158,8 +157,7 @@ func (p *Parser) shouldExclude(path string, info os.FileInfo) bool {
 
 		// Check if it's a wildcard pattern
 		if strings.Contains(pattern, "*") {
-			matched, _ := filepath.Match(pattern, name)
-			if matched {
+			if matched, err := filepath.Match(pattern, name); err == nil && matched {
 				return true
 			}
 		} else if strings.Contains(path, pattern) || name == pattern {
@@ -184,9 +182,11 @@ func (p *Parser) ParseFile(path string) error {
 
 	if p.generalInfoFile != "" {
 		// If generalInfo flag is set, only parse that specific file
-		absGeneralInfo, _ := filepath.Abs(p.generalInfoFile)
-		absPath, _ := filepath.Abs(path)
-		shouldParseGeneralInfo = (absGeneralInfo == absPath)
+		if absGeneralInfo, err := filepath.Abs(p.generalInfoFile); err == nil {
+			if absPath, err := filepath.Abs(path); err == nil {
+				shouldParseGeneralInfo = (absGeneralInfo == absPath)
+			}
+		}
 	} else {
 		// Auto-detect general info file
 		if p.hasGeneralInfo(file) {
@@ -369,11 +369,11 @@ func (p *Parser) parseSchemas(file *ast.File) error {
 // Validate performs validation on the parsed OpenAPI specification.
 func (p *Parser) Validate() error {
 	if p.openapi.Info.Title == "" {
-		return fmt.Errorf("API title is required (@title)")
+		return errors.New("API title is required (@title)")
 	}
 
 	if p.openapi.Info.Version == "" {
-		return fmt.Errorf("API version is required (@version)")
+		return errors.New("API version is required (@version)")
 	}
 
 	// Validate that all schema references exist

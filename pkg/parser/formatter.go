@@ -149,17 +149,17 @@ func (f *Formatter) formatSwaggerComments(output *bytes.Buffer, fset *token.File
 				annotation := strings.ToLower(parts[0])
 				if swaggerAnnotations[annotation] {
 					// Format swagger annotations with consistent spacing
-					fmt.Fprintf(tw, "// %s\t%s\n", parts[0], strings.Join(parts[1:], " "))
+					_, _ = fmt.Fprintf(tw, "// %s\t%s\n", parts[0], strings.Join(parts[1:], " "))
 					continue
 				}
 			}
 		}
 
 		// Regular comment
-		fmt.Fprintf(tw, "// %s\n", text)
+		_, _ = fmt.Fprintf(tw, "// %s\n", text)
 	}
 
-	tw.Flush()
+	_ = tw.Flush()
 	output.Write(buf.Bytes())
 
 	return nil

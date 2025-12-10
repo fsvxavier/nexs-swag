@@ -405,7 +405,7 @@ func TestShouldIncludeOperation(t *testing.T) {
 	}
 }
 
-// Mock FileInfo for testing
+// Mock FileInfo for testing.
 type mockFileInfo struct {
 	name  string
 	isDir bool

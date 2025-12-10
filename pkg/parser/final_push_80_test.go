@@ -13,7 +13,7 @@ func TestFinalPush80Percent(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Super loop getSchemaTypeString com todos os edge cases
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		// Nil e nil Type
 		_ = proc.getSchemaTypeString(nil)
 		_ = proc.getSchemaTypeString(&openapi.Schema{})
@@ -59,7 +59,7 @@ func TestValidateOperation80(t *testing.T) {
 	p := New()
 
 	// Super loop validateOperation
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		// Operação vazia
 		op1 := &openapi.Operation{}
 		_ = p.validateOperation(op1, "/")
@@ -140,7 +140,7 @@ func TestValidateOperation80(t *testing.T) {
 
 func TestProcess80(t *testing.T) {
 	// Super loop Process
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		p := New()
 		gproc := NewGeneralInfoProcessor(p.openapi)
 
@@ -175,7 +175,7 @@ func TestMiscCoverage80(t *testing.T) {
 	}
 
 	// identToSchema
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		_ = sp.identToSchema("string")
 		_ = sp.identToSchema("int")
 		_ = sp.identToSchema("bool")
@@ -185,7 +185,7 @@ func TestMiscCoverage80(t *testing.T) {
 	}
 
 	// Validate
-	for i := 0; i < 500; i++ {
+	for range 500 {
 		pp := New()
 		pp.openapi.Paths = map[string]*openapi.PathItem{
 			"/test": {

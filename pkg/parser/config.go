@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// markdownCache stores loaded markdown files
+// markdownCache stores loaded markdown files.
 var markdownCache map[string]string
 var markdownCacheMutex sync.RWMutex
 
@@ -25,7 +25,7 @@ func (p *Parser) SetExcludePatterns(patterns []string) {
 }
 
 // SetPropertyStrategy sets the property naming strategy.
-// Valid values: "camelcase", "snakecase", "pascalcase"
+// Valid values: "camelcase", "snakecase", "pascalcase".
 func (p *Parser) SetPropertyStrategy(strategy string) {
 	p.propertyStrategy = strategy
 }
@@ -113,7 +113,7 @@ func (p *Parser) loadMarkdownFiles() {
 		return
 	}
 
-	filepath.Walk(p.markdownFilesDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(p.markdownFilesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
@@ -157,7 +157,7 @@ func (p *Parser) GetParseDepth() int {
 }
 
 // GetTypeOverride returns the override type for a given type name.
-// Supports both exact matches and partial matches (e.g., "NullInt64" matches "database/sql.NullInt64")
+// Supports both exact matches and partial matches (e.g., "NullInt64" matches "database/sql.NullInt64").
 func (p *Parser) GetTypeOverride(typeName string) (string, bool) {
 	if p.typeOverrides == nil {
 		return "", false
@@ -218,7 +218,8 @@ func (p *Parser) SetParseDependencyLevel(level int) {
 func (p *Parser) SetCodeExampleFilesDir(dir string) {
 	p.codeExampleFilesDir = dir
 	if dir != "" {
-		p.loadCodeExamplesFromDir()
+		// Ignore error as code examples are optional
+		_ = p.loadCodeExamplesFromDir()
 	}
 }
 
@@ -316,7 +317,7 @@ func (p *Parser) parseDependencies() error {
 	return nil
 }
 
-// parseDependencyPackage parses a single dependency package based on the level
+// parseDependencyPackage parses a single dependency package based on the level.
 func (p *Parser) parseDependencyPackage(modulePath string) error {
 	// Find dependency in vendor or GOPATH/GOMODCACHE
 	var depDir string
@@ -327,14 +328,8 @@ func (p *Parser) parseDependencyPackage(modulePath string) error {
 		depDir = vendorDir
 	} else {
 		// Try GOMODCACHE
-		goModCache := os.Getenv("GOMODCACHE")
-		if goModCache == "" {
-			goPath := os.Getenv("GOPATH")
-			if goPath == "" {
-				goPath = filepath.Join(os.Getenv("HOME"), "go")
-			}
-			goModCache = filepath.Join(goPath, "pkg", "mod")
-		}
+		_ = os.Getenv("GOMODCACHE")
+		// Note: Module cache lookup would be implemented here in a full solution
 
 		// Find the module in cache (this is simplified - real impl would need version matching)
 		// For now, skip if not in vendor
@@ -354,7 +349,7 @@ func (p *Parser) parseDependencyPackage(modulePath string) error {
 	return nil
 }
 
-// parseDependencyModels parses only model definitions from a dependency
+// parseDependencyModels parses only model definitions from a dependency.
 func (p *Parser) parseDependencyModels(dir string) error {
 	// Parse Go files and extract only type definitions
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -372,7 +367,7 @@ func (p *Parser) parseDependencyModels(dir string) error {
 	})
 }
 
-// parseDependencyOperations parses only operations from a dependency
+// parseDependencyOperations parses only operations from a dependency.
 func (p *Parser) parseDependencyOperations(dir string) error {
 	// Parse Go files and extract only operation annotations
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

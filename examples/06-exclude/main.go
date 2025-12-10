@@ -20,7 +20,7 @@ type User struct {
 // @Summary Get user
 // @Tags users
 // @Success 200 {object} User
-// @Router /users/{id} [get]
+// @Router /users/{id} [get].
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(User{ID: 1, Name: "John"})
 }

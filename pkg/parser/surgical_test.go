@@ -14,7 +14,7 @@ func TestSchemaTypeInterface(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Testar schema.Type como []interface{}
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		schema1 := &openapi.Schema{
 			Type: []interface{}{"string"},
 		}
@@ -52,7 +52,7 @@ func TestSchemaTypeInterface(t *testing.T) {
 	}
 
 	// Testar schema.Type como []string
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		schema1 := &openapi.Schema{
 			Type: []string{"string"},
 		}
@@ -76,7 +76,7 @@ func TestParseValueErrors(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Testar valores inválidos que causam erro no parse
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		// Integer inválido - deve retornar como string
 		result := proc.parseValue("invalid", "integer")
 		if _, ok := result.(string); !ok {
@@ -106,7 +106,7 @@ func TestParseValueErrors(t *testing.T) {
 	}
 
 	// Testar arrays
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		result := proc.parseValue("a,b,c", "array")
 		if arr, ok := result.([]interface{}); ok {
 			if len(arr) != 3 {
@@ -125,7 +125,7 @@ func TestValidateOperationPaths(t *testing.T) {
 	p := New()
 
 	// Testar validateOperation com diferentes Response tipos
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		op1 := &openapi.Operation{
 			Summary: "Test",
 			Responses: openapi.Responses{
@@ -217,7 +217,7 @@ func TestComplexSchemaProcessing(t *testing.T) {
 	}
 
 	// Testar parseSchemaType com tipos complexos
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		_ = proc.parseSchemaType("ComplexModel")
 		_ = proc.parseSchemaType("RelatedModel")
 		_ = proc.parseSchemaType("[]ComplexModel")
@@ -233,7 +233,7 @@ func TestComplexSchemaProcessing(t *testing.T) {
 
 func TestExhaustiveProcessAnnotations(t *testing.T) {
 	// Não usar parallel para garantir execução sequencial
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		p := New()
 		gproc := NewGeneralInfoProcessor(p.openapi)
 

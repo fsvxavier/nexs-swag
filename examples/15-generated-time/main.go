@@ -19,7 +19,7 @@ type Status struct {
 // @Tags system
 // @Produce json
 // @Success 200 {object} Status
-// @Router /status [get]
+// @Router /status [get].
 func GetStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Status{Message: "OK"})
 }

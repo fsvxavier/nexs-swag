@@ -21,7 +21,7 @@ type Message struct {
 // @Tags messages
 // @Produce json
 // @Success 200 {object} Message
-// @Router /message [get]
+// @Router /message [get].
 func GetMessage(w http.ResponseWriter, r *http.Request) {
 	// Template com delimiters customizados
 	tmpl := template.New("msg")

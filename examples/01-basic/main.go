@@ -11,11 +11,11 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1
 
-// User represents a user in the system
+// User represents a user in the system.
 type User struct {
-	ID   int    `json:"id" example:"1"`
-	Name string `json:"name" example:"John Doe"`
-	Age  int    `json:"age" example:"30"`
+	ID   int    `example:"1"        json:"id"`
+	Name string `example:"John Doe" json:"name"`
+	Age  int    `example:"30"       json:"age"`
 }
 
 // GetUser returns a user by ID
@@ -27,7 +27,7 @@ type User struct {
 // @Param id path int true "User ID"
 // @Success 200 {object} User
 // @Failure 404 {string} string "User not found"
-// @Router /users/{id} [get]
+// @Router /users/{id} [get].
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	user := User{ID: 1, Name: "John Doe", Age: 30}
 	json.NewEncoder(w).Encode(user)
@@ -42,7 +42,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 // @Param user body User true "User object"
 // @Success 201 {object} User
 // @Failure 400 {string} string "Invalid input"
-// @Router /users [post]
+// @Router /users [post].
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	json.NewDecoder(r.Body).Decode(&user)

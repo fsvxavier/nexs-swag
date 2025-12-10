@@ -1,3 +1,4 @@
+// Package format provides utilities for formatting Swagger annotations in Go source files.
 package format
 
 import (
@@ -10,26 +11,26 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-// Config holds format configuration
+// Config holds format configuration.
 type Config struct {
 	SearchDir string
 	Excludes  string
 	MainFile  string // Deprecated: no longer needed
 }
 
-// Format handles swagger comment formatting
+// Format handles swagger comment formatting.
 type Format struct {
 	excludes map[string]struct{}
 }
 
-// New creates a new Format instance
+// New creates a new Format instance.
 func New() *Format {
 	return &Format{
 		excludes: make(map[string]struct{}),
 	}
 }
 
-// Build formats swagger comments in all Go files in the search directory
+// Build formats swagger comments in all Go files in the search directory.
 func (f *Format) Build(config *Config) error {
 	if config.SearchDir == "" {
 		config.SearchDir = "./"
@@ -75,7 +76,7 @@ func (f *Format) Build(config *Config) error {
 	})
 }
 
-// excludeDir checks if a directory should be excluded
+// excludeDir checks if a directory should be excluded.
 func (f *Format) excludeDir(path string) bool {
 	// Skip hidden directories
 	base := filepath.Base(path)
@@ -88,7 +89,7 @@ func (f *Format) excludeDir(path string) bool {
 	return excluded
 }
 
-// formatFile formats swagger comments in a single Go file
+// formatFile formats swagger comments in a single Go file.
 func (f *Format) formatFile(path string) error {
 	// Read file
 	content, err := os.ReadFile(path)

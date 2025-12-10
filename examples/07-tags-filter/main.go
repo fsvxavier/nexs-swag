@@ -21,7 +21,7 @@ type User struct {
 // @Tags users
 // @Produce json
 // @Success 200 {array} User
-// @Router /users [get]
+// @Router /users [get].
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode([]User{{ID: 1, Name: "John"}})
 }
@@ -31,7 +31,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 // @Tags users,admin
 // @Accept json
 // @Success 201 {object} User
-// @Router /users [post]
+// @Router /users [post].
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(User{ID: 1, Name: "New User"})
 }
@@ -40,7 +40,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 // @Summary Delete user (admin only)
 // @Tags admin
 // @Success 204
-// @Router /users/{id} [delete]
+// @Router /users/{id} [delete].
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -49,7 +49,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 // @Summary Get internal config
 // @Tags internal
 // @Success 200 {object} map[string]string
-// @Router /internal/config [get]
+// @Router /internal/config [get].
 func GetInternalConfig(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"key": "value"})
 }

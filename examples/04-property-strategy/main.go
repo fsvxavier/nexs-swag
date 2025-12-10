@@ -11,10 +11,10 @@ import (
 // @host localhost:8080
 // @BasePath /api
 
-// UserProfile demonstrates field naming
+// UserProfile demonstrates field naming.
 type UserProfile struct {
 	// Campo COM tag json explícita - SEMPRE usa a tag
-	UserID int `json:"user_id" example:"123"`
+	UserID int `example:"123" json:"user_id"`
 
 	// Campos SEM tag json - usa propertyStrategy
 	FirstName string `example:"John"` // snake_case: first_name | camelCase: firstName | PascalCase: FirstName
@@ -22,7 +22,7 @@ type UserProfile struct {
 	IsActive  bool   `example:"true"` // snake_case: is_active  | camelCase: isActive  | PascalCase: IsActive
 
 	// Campo com omitempty - mantém comportamento
-	MiddleName string `json:",omitempty" example:"Smith"`
+	MiddleName string `example:"Smith" json:",omitempty"`
 }
 
 // GetProfile returns user profile
@@ -31,7 +31,7 @@ type UserProfile struct {
 // @Tags users
 // @Produce json
 // @Success 200 {object} UserProfile
-// @Router /profile [get]
+// @Router /profile [get].
 func GetProfile(w http.ResponseWriter, r *http.Request) {
 	profile := UserProfile{
 		UserID:    123,
