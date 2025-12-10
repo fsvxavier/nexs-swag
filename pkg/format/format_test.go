@@ -78,11 +78,7 @@ func TestExcludeDir(t *testing.T) {
 }
 
 func TestBuildWithDefaultConfig(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "format-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "test.go")
 	testContent := `package main
@@ -100,7 +96,7 @@ func main() {}
 		SearchDir: tmpDir,
 	}
 
-	err = f.Build(config)
+	err := f.Build(config)
 	if err != nil {
 		t.Errorf("Build() returned error: %v", err)
 	}
@@ -115,11 +111,7 @@ func main() {}
 }
 
 func TestBuildWithCustomExcludes(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "format-test-excludes-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "main.go")
 	if err := os.WriteFile(testFile, []byte("package main\n\nfunc main() {}"), 0644); err != nil {
@@ -202,11 +194,7 @@ func TestBuildWithInvalidDir(t *testing.T) {
 }
 
 func TestBuildSkipsExcludedDirs(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "format-test-skip-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create vendor directory
 	vendorDir := filepath.Join(tmpDir, "vendor")
@@ -230,18 +218,13 @@ func TestBuildSkipsExcludedDirs(t *testing.T) {
 		SearchDir: tmpDir,
 	}
 
-	err = f.Build(config)
-	if err != nil {
+	if err := f.Build(config); err != nil {
 		t.Errorf("Build() returned error: %v", err)
 	}
 }
 
 func TestBuildSkipsNonGoFiles(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "format-test-nongo-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create non-Go files
 	txtFile := filepath.Join(tmpDir, "readme.txt")
@@ -259,19 +242,14 @@ func TestBuildSkipsNonGoFiles(t *testing.T) {
 		SearchDir: tmpDir,
 	}
 
-	err = f.Build(config)
-	if err != nil {
+	if err := f.Build(config); err != nil {
 		t.Errorf("Build() should not fail with non-Go files: %v", err)
 	}
 }
 
 func TestFormatFileSuccess(t *testing.T) {
 	t.Parallel()
-	tmpDir, err := os.MkdirTemp("", "format-test-file-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "test.go")
 	testContent := `package main
@@ -291,8 +269,8 @@ func GetUser() {}
 	}
 
 	f := New()
-	err = f.formatFile(testFile)
-	if err != nil {
+
+	if err := f.formatFile(testFile); err != nil {
 		t.Errorf("formatFile() returned error: %v", err)
 	}
 
@@ -317,11 +295,7 @@ func TestFormatFileInvalidPath(t *testing.T) {
 
 func TestFormatFileInvalidGoSyntax(t *testing.T) {
 	t.Parallel()
-	tmpDir, err := os.MkdirTemp("", "format-test-invalid-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "invalid.go")
 	invalidContent := `package main
@@ -334,20 +308,16 @@ func InvalidFunc( {
 	}
 
 	f := New()
-	err = f.formatFile(testFile)
+
 	// Should return error for invalid Go syntax
-	if err == nil {
+	if err := f.formatFile(testFile); err == nil {
 		t.Error("formatFile() with invalid Go syntax should return error")
 	}
 }
 
 func TestBuildWithNestedDirectories(t *testing.T) {
 	t.Parallel()
-	tmpDir, err := os.MkdirTemp("", "format-test-nested-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create nested directory structure
 	subDir1 := filepath.Join(tmpDir, "api")
@@ -378,8 +348,7 @@ func Test() {}
 		SearchDir: tmpDir,
 	}
 
-	err = f.Build(config)
-	if err != nil {
+	if err := f.Build(config); err != nil {
 		t.Errorf("Build() with nested directories returned error: %v", err)
 	}
 }
@@ -444,11 +413,7 @@ func TestConfigMainFileDeprecated(t *testing.T) {
 
 func TestBuildWithHiddenDirectories(t *testing.T) {
 	t.Parallel()
-	tmpDir, err := os.MkdirTemp("", "format-test-hidden-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create hidden directory
 	hiddenDir := filepath.Join(tmpDir, ".hidden")
@@ -467,19 +432,14 @@ func TestBuildWithHiddenDirectories(t *testing.T) {
 	}
 
 	// Build should skip hidden directory
-	err = f.Build(config)
-	if err != nil {
+	if err := f.Build(config); err != nil {
 		t.Errorf("Build() with hidden directories returned error: %v", err)
 	}
 }
 
 func TestFormatFileWithValidSwaggerComments(t *testing.T) {
 	t.Parallel()
-	tmpDir, err := os.MkdirTemp("", "format-test-swagger-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "swagger.go")
 	testContent := `package api
@@ -515,8 +475,8 @@ type Error struct {
 	}
 
 	f := New()
-	err = f.formatFile(testFile)
-	if err != nil {
+
+	if err := f.formatFile(testFile); err != nil {
 		t.Errorf("formatFile() with valid swagger comments returned error: %v", err)
 	}
 }

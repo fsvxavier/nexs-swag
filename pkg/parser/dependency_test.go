@@ -7,7 +7,6 @@ import (
 )
 
 func TestParseDependencyPackage(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a mock vendor directory
@@ -31,9 +30,7 @@ type User struct {
 	}
 
 	// Change to tmpDir so vendor is found
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	t.Chdir(tmpDir)
 
 	tests := []struct {
 		name  string
@@ -59,7 +56,6 @@ type User struct {
 }
 
 func TestParseDependencyModels(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a simple Go file with model
@@ -91,7 +87,6 @@ type Category struct {
 }
 
 func TestParseDependencyOperations(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a simple Go file with operation
@@ -125,7 +120,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestParseDependencyPackageNotFound(t *testing.T) {
-	t.Parallel()
 	p := New()
 	p.SetParseDependencyLevel(1)
 
@@ -137,7 +131,6 @@ func TestParseDependencyPackageNotFound(t *testing.T) {
 }
 
 func TestParseDependenciesWithGoMod(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a mock go.mod file
@@ -156,9 +149,7 @@ require (
 	}
 
 	// Change to tmpDir so go.mod is found
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	t.Chdir(tmpDir)
 
 	tests := []struct {
 		name            string
@@ -213,13 +204,10 @@ require (
 }
 
 func TestParseDependenciesNoGoMod(t *testing.T) {
-	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Change to tmpDir where there's no go.mod
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(tmpDir)
+	t.Chdir(tmpDir)
 
 	p := New()
 	p.SetParseDependency(true)

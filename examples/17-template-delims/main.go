@@ -27,7 +27,7 @@ func GetMessage(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.New("msg")
 	tmpl.Delims("[[", "]]")
 
-	tmpl, _ = tmpl.Parse("Hello [[.Name]]!")
+	_, _ = tmpl.Parse("Hello [[.Name]]!")
 
 	json.NewEncoder(w).Encode(Message{Text: "Templated response"})
 }

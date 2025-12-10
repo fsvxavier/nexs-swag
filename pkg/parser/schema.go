@@ -770,13 +770,15 @@ func (s *SchemaProcessor) applyExtensions(extensionsTag string, schema *openapi.
 			value := strings.TrimSpace(parts[1])
 			if strings.HasPrefix(key, "x-") {
 				// Try to parse as number, otherwise string
-				if numValue, err := strconv.ParseFloat(value, 64); err == nil {
+				switch {
+				case func() bool { n, e := strconv.ParseFloat(value, 64); return e == nil && n == n }():
+					numValue, _ := strconv.ParseFloat(value, 64)
 					schema.Extensions[key] = numValue
-				} else if value == valueTrue {
+				case value == valueTrue:
 					schema.Extensions[key] = true
-				} else if value == valueFalse {
+				case value == valueFalse:
 					schema.Extensions[key] = false
-				} else {
+				default:
 					schema.Extensions[key] = value
 				}
 			}
