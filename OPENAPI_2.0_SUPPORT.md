@@ -581,3 +581,11 @@ nexs-swag init --openapi-version 3.1.0 -o docs --format json
 **Autor:** Análise técnica gerada para nexs-swag
 **Data:** 10 de dezembro de 2025
 **Versão:** 1.0
+
+
+
+Fase 1: Criar estruturas base pkg/openapi/v2/
+Fase 2: Implementar conversor básico
+Fase 3: Adicionar flag --openapi-version no CLI
+Fase 4: Testes com APIs reais
+Fase 5: Documentação e exemplos
