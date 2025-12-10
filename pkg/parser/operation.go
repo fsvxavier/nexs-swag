@@ -57,8 +57,8 @@ var (
 	// Header annotation
 	headerRegex = regexp.MustCompile(`^@Header\s+(\d+)\s+\{(\w+)\}\s+(\S+)\s+"([^"]*)"`)
 
-	// Security annotation
-	securityOpRegex = regexp.MustCompile(`^@Security\s+(\S+)(?:\[([^\]]+)\])?`)
+	// Security annotation - capture name before [ and scopes inside []
+	securityOpRegex = regexp.MustCompile(`^@Security\s+([^\[\s]+)(?:\[([^\]]+)\])?`)
 
 	// Callback annotation
 	callbackRegex = regexp.MustCompile(`^@Callback\s+(\S+)\s+(\S+)\s+\[(\w+)\]`)

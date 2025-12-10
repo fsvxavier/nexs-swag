@@ -432,7 +432,7 @@ func TestProcessSecurity(t *testing.T) {
 		},
 		{
 			name:           "security with scopes",
-			text:           "@Security OAuth2 read:users,write:users",
+			text:           "@Security OAuth2[read:users,write:users]",
 			expectedName:   "OAuth2",
 			expectedScopes: 2,
 		},

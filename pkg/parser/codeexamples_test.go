@@ -547,7 +547,7 @@ func TestDetectLanguageFromExtension(t *testing.T) {
 }
 
 func TestGetCodeExampleWithMultipleFiles(t *testing.T) {
-	t.Parallel()
+	// Not using t.Parallel() to avoid cache conflicts with other tests
 	p := New()
 
 	// Create temp directory with multiple files
