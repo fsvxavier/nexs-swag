@@ -1,0 +1,426 @@
+# nexs-swag
+
+🌍 [English](README.md) • **Português (Brasil)** • [Español](README_es.md)
+
+[![Versão Go](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
+[![Licença](https://img.shields.io/badge/Licença-MIT-blue.svg)](LICENSE)
+[![Cobertura](https://img.shields.io/badge/Cobertura-86.1%25-brightgreen.svg)](/)
+[![Exemplos](https://img.shields.io/badge/Exemplos-21-blue.svg)](examples/)
+
+**Gere automaticamente documentação OpenAPI 3.1.0 a partir de anotações no código Go.**
+
+nexs-swag converte anotações Go para especificação OpenAPI 3.1.0. Foi projetado como uma evolução do [swaggo/swag](https://github.com/swaggo/swag) com suporte completo para a especificação OpenAPI mais recente, mantendo 100% de compatibilidade retroativa.
+
+## Índice
+
+- [Visão Geral](#visão-geral)
+- [Primeiros Passos](#primeiros-passos)
+  - [Instalação](#instalação)
+  - [Início Rápido](#início-rápido)
+- [Frameworks Web Suportados](#frameworks-web-suportados)
+- [Como usar com Gin](#como-usar-com-gin)
+- [Referência CLI](#referência-cli)
+  - [Comando init](#comando-init)
+  - [Comando fmt](#comando-fmt)
+- [Status de Implementação](#status-de-implementação)
+- [Formato de Comentários Declarativos](#formato-de-comentários-declarativos)
+  - [Informações Gerais da API](#informações-gerais-da-api)
+  - [Operação de API](#operação-de-api)
+  - [Tags de Struct](#tags-de-struct)
+- [Exemplos](#exemplos)
+- [Qualidade e Testes](#qualidade-e-testes)
+- [Compatibilidade com swaggo/swag](#compatibilidade-com-swaggoswag)
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Contribuindo](#contribuindo)
+- [Licença](#licença)
+
+## Visão Geral
+
+### Recursos Principais
+
+- ✅ **100% compatível com swaggo/swag** - Substituto direto com todas as anotações e tags
+- ✅ **OpenAPI 3.1.0** - Suporte completo para JSON Schema 2020-12, webhooks e recursos modernos
+- ✅ **20+ atributos de validação** - minimum, maximum, pattern, enum, format e mais
+- ✅ **Validação de frameworks** - Suporte nativo para Gin (binding) e go-playground/validator
+- ✅ **Headers de resposta** - Documentação completa de headers
+- ✅ **Múltiplos tipos de conteúdo** - JSON, XML, YAML, CSV, PDF e tipos MIME customizados
+- ✅ **Extensões customizadas** - Suporte completo para x-*
+- ✅ **86.1% de cobertura de testes** - Pronto para produção com suite de testes abrangente
+- ✅ **21 exemplos funcionais** - Aprenda com exemplos completos e executáveis
+
+### Por que nexs-swag?
+
+| Recurso | swaggo/swag | nexs-swag |
+|---------|-------------|-----------|
+| Versão OpenAPI | 2.0 | 3.1.0 |
+| JSON Schema | Draft 4 | 2020-12 |
+| Webhooks | ❌ | ✅ |
+| Headers de Resposta | Limitado | Suporte Completo |
+| Suporte a Nullable | `x-nullable` | Nativo `type: [string, null]` |
+| Cobertura de Testes | ~70% | 86.1% |
+| Exemplos | ~10 | 21 |
+| Versão Go | 1.19+ | 1.23+ |
+
+## Primeiros Passos
+
+### Instalação
+
+#### Usando go install (Recomendado)
+
+```bash
+go install github.com/fsvxavier/nexs-swag/cmd/nexs-swag@latest
+```
+
+Para verificar a instalação:
+
+```bash
+nexs-swag --version
+```
+
+#### Compilando do Código Fonte
+
+Requer [Go 1.23 ou superior](https://go.dev/dl/).
+
+```bash
+git clone https://github.com/fsvxavier/nexs-swag.git
+cd nexs-swag
+go build -o nexs-swag ./cmd/nexs-swag
+```
+
+#### Usando Docker
+
+```bash
+docker pull ghcr.io/fsvxavier/nexs-swag:latest
+docker run --rm -v $(pwd):/app ghcr.io/fsvxavier/nexs-swag:latest init
+```
+
+### Início Rápido
+
+#### 1. Adicionar Anotações da API
+
+Adicione anotações gerais da API ao seu `main.go`:
+
+```go
+package main
+
+import (
+    "database/sql"
+    "github.com/gin-gonic/gin"
+)
+
+// @title           API de Gerenciamento de Usuários
+// @version         1.0.0
+// @description     Uma API de gerenciamento de usuários com documentação OpenAPI 3.1.0 completa
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   Suporte da API
+// @contact.url    http://www.example.com/suporte
+// @contact.email  suporte@example.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+
+func main() {
+    r := gin.Default()
+    // Configuração da sua aplicação
+    r.Run(":8080")
+}
+
+// User representa um usuário do sistema
+type User struct {
+    // ID do usuário (sql.NullInt64 → integer no OpenAPI)
+    ID sql.NullInt64 `json:"id" swaggertype:"integer" extensions:"x-primary-key=true"`
+    
+    // Nome completo (3-100 caracteres obrigatório)
+    Name string `json:"name" binding:"required" minLength:"3" maxLength:"100" example:"João Silva"`
+    
+    // Endereço de email (validado)
+    Email string `json:"email" binding:"required,email" format:"email" extensions:"x-unique=true"`
+    
+    // Senha (oculta da documentação)
+    Password string `json:"password" swaggerignore:"true"`
+    
+    // Status da conta
+    Status string `json:"status" enum:"active,inactive,pending" default:"active"`
+    
+    // Saldo da conta
+    Balance float64 `json:"balance" minimum:"0" extensions:"x-currency=BRL"`
+}
+
+// CreateUser cria um novo usuário
+// @Summary      Criar usuário
+// @Description  Cria um novo usuário no sistema
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        user  body      User  true  "Dados do usuário"
+// @Success      201   {object}  User
+// @Header       201   {string}  X-Request-ID  "Identificador da requisição"
+// @Header       201   {string}  Location      "URL do recurso do usuário"
+// @Failure      400   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Router       /users [post]
+// @Security     ApiKeyAuth
+func CreateUser(c *gin.Context) {
+    // Implementação
+}
+```
+
+#### 2. Gerar Documentação
+
+Execute `nexs-swag init` na pasta raiz do seu projeto:
+
+```bash
+nexs-swag init
+```
+
+Ou especifique os diretórios:
+
+```bash
+nexs-swag init -d ./cmd/api -o ./docs
+```
+
+#### 3. Arquivos Gerados
+
+Os seguintes arquivos serão criados no seu diretório de saída (padrão: `./docs`):
+
+- **`docs/openapi.json`** - Especificação OpenAPI 3.1.0 em formato JSON
+- **`docs/openapi.yaml`** - Especificação OpenAPI 3.1.0 em formato YAML
+- **`docs/docs.go`** - Arquivo de documentação Go embarcado
+
+#### 4. Integrar com Sua Aplicação
+
+Importe o pacote docs gerado:
+
+```go
+import _ "seu-modulo/docs"  // Importar docs gerado
+
+func main() {
+    r := gin.Default()
+    
+    // Servir Swagger UI
+    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    
+    r.Run(":8080")
+}
+```
+
+Acesse http://localhost:8080/swagger/index.html para ver sua documentação API!
+
+## Frameworks Web Suportados
+
+nexs-swag funciona com todos os frameworks web Go populares através de pacotes middleware swagger:
+
+- [gin](https://github.com/swaggo/gin-swagger) - `github.com/swaggo/gin-swagger`
+- [echo](https://github.com/swaggo/echo-swagger) - `github.com/swaggo/echo-swagger`
+- [fiber](https://github.com/gofiber/swagger) - `github.com/gofiber/swagger`
+- [net/http](https://github.com/swaggo/http-swagger) - `github.com/swaggo/http-swagger`
+- [gorilla/mux](https://github.com/swaggo/http-swagger) - `github.com/swaggo/http-swagger`
+- [go-chi/chi](https://github.com/swaggo/http-swagger) - `github.com/swaggo/http-swagger`
+- [hertz](https://github.com/hertz-contrib/swagger) - `github.com/hertz-contrib/swagger`
+- [buffalo](https://github.com/swaggo/buffalo-swagger) - `github.com/swaggo/buffalo-swagger`
+
+## Como usar com Gin
+
+Exemplo completo usando framework Gin. Encontre o código completo em [examples/03-general-info](examples/03-general-info).
+
+Veja a [versão em inglês](README.md#how-to-use-with-gin) para detalhes completos.
+
+## Referência CLI
+
+### Comando init
+
+Gera documentação OpenAPI a partir do código fonte.
+
+```bash
+nexs-swag init [opções]
+```
+
+**Opções Principais:**
+
+- `--dir, -d` - Diretórios para analisar (padrão: `./`)
+- `--output, -o` - Diretório de saída (padrão: `./docs`)
+- `--outputTypes, --ot` - Tipos de arquivo de saída (padrão: `go,json,yaml`)
+- `--parseDependency, --pd` - Analisar dependências (padrão: `false`)
+- `--parseInternal` - Analisar pacotes internos (padrão: `false`)
+- `--propertyStrategy, -p` - Estratégia de nomenclatura: `snakecase`, `camelcase`, `pascalcase`
+- `--validate` - Validar especificação gerada (padrão: `true`)
+
+**Exemplos:**
+
+```bash
+# Uso básico
+nexs-swag init
+
+# Especificar diretórios
+nexs-swag init -d ./cmd/api,./internal/handlers -o ./api-docs
+
+# Analisar dependências (nível 1 - apenas modelos)
+nexs-swag init --parseDependency --parseDependencyLevel 1
+
+# Apenas saída JSON
+nexs-swag init --outputTypes json
+
+# Nomes de propriedade em snake_case
+nexs-swag init --propertyStrategy snakecase
+```
+
+### Comando fmt
+
+Formata comentários swagger automaticamente.
+
+```bash
+nexs-swag fmt [opções]
+```
+
+**Exemplo:**
+
+```bash
+# Formatar diretório atual
+nexs-swag fmt
+
+# Formatar diretório específico
+nexs-swag fmt -d ./internal/api
+```
+
+## Formato de Comentários Declarativos
+
+Para documentação completa de todas as anotações, parâmetros, tags de struct e exemplos, consulte a [versão em inglês](README.md#declarative-comments-format).
+
+### Resumo Rápido
+
+**Informações Gerais da API:**
+- `@title` - Título da API (obrigatório)
+- `@version` - Versão da API (obrigatório)
+- `@description` - Descrição da API
+- `@host` - Host da API
+- `@BasePath` - Caminho base
+- `@securityDefinitions.*` - Definições de segurança
+
+**Operação de API:**
+- `@Summary` - Resumo curto
+- `@Description` - Descrição detalhada
+- `@Tags` - Tags da operação
+- `@Param` - Definição de parâmetro
+- `@Success` - Resposta de sucesso
+- `@Failure` - Resposta de erro
+- `@Router` - Caminho e método da rota
+
+**Tags de Struct:**
+- `json` - Serialização JSON
+- `binding` - Validação Gin
+- `validate` - Validação go-playground
+- `swaggertype` - Override de tipo
+- `swaggerignore` - Ocultar campo
+- `extensions` - Extensões customizadas
+
+## Exemplos
+
+nexs-swag inclui 21 exemplos abrangentes e executáveis. Veja a [seção de exemplos](README.md#examples) na versão em inglês para a lista completa.
+
+### Executando Exemplos
+
+Cada exemplo inclui um script `run.sh`:
+
+```bash
+cd examples/01-basic
+./run.sh
+```
+
+## Qualidade e Testes
+
+### Cobertura de Testes
+
+| Pacote | Cobertura | Testes |
+|---------|----------|--------|
+| pkg/format | 95.1% | 15 testes |
+| pkg/generator | 71.6% | 12 testes |
+| pkg/openapi | 83.3% | 18 testes |
+| pkg/parser | 82.1% | 45 testes |
+| **Geral** | **86.1%** | **90 testes** |
+
+### Métricas de Qualidade
+
+- ✅ **0 avisos de linter** (golangci-lint com 20+ linters)
+- ✅ **0 condições de corrida** (testado com flag `-race`)
+- ✅ **21 testes de integração** (exemplos executáveis)
+- ✅ **~5.000 linhas de código de teste**
+- ✅ **Pronto para produção** (mantido ativamente)
+
+## Compatibilidade com swaggo/swag
+
+nexs-swag é projetado como um **substituto direto** para swaggo/swag com recursos aprimorados.
+
+### Migração do swaggo/swag
+
+**Nenhuma mudança necessária!** Simplesmente substitua o binário:
+
+```bash
+# Ao invés de
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Use
+go install github.com/fsvxavier/nexs-swag/cmd/nexs-swag@latest
+
+# Os mesmos comandos funcionam
+nexs-swag init
+nexs-swag fmt
+```
+
+## Sobre o Projeto
+
+### Estatísticas do Projeto
+
+- **Linhas de Código:** ~3.854 (pkg/ excluindo testes)
+- **Código de Teste:** ~5.000 linhas
+- **Arquivos Go:** 33 arquivos de implementação
+- **Arquivos de Teste:** 21 arquivos de teste
+- **Pacotes:** 4 (format, generator, openapi, parser)
+- **Exemplos:** 21 exemplos completos
+- **Cobertura de Testes:** 86.1%
+- **Dependências:** 3 dependências diretas
+
+### Inspiração e Créditos
+
+Este projeto foi inspirado pelo [swaggo/swag](https://github.com/swaggo/swag) e construído para estender suas capacidades com suporte completo ao OpenAPI 3.1.0, mantendo 100% de compatibilidade retroativa.
+
+## Contribuindo
+
+Contribuições são bem-vindas! Veja a [versão em inglês](README.md#contributing) para diretrizes detalhadas.
+
+### Como Contribuir
+
+1. **Fork** o repositório
+2. **Crie** uma branch de feature (`git checkout -b feature/recurso-incrivel`)
+3. **Faça** suas mudanças
+4. **Adicione** testes para nova funcionalidade
+5. **Execute** os testes (`go test ./...`)
+6. **Execute** o linter (`golangci-lint run`)
+7. **Commit** suas mudanças (`git commit -m 'Adiciona recurso incrível'`)
+8. **Push** para a branch (`git push origin feature/recurso-incrivel`)
+9. **Abra** um Pull Request
+
+## Licença
+
+Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## Suporte e Comunidade
+
+- **Issues:** [GitHub Issues](https://github.com/fsvxavier/nexs-swag/issues)
+- **Discussões:** [GitHub Discussions](https://github.com/fsvxavier/nexs-swag/discussions)
+- **Documentação:** [Wiki](https://github.com/fsvxavier/nexs-swag/wiki)
+- **Exemplos:** [examples/](examples/)
+
+---
+
+**Feito com ❤️ para a comunidade Go**
+
+[⬆ Voltar ao topo](#nexs-swag)
