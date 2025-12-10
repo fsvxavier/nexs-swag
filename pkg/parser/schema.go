@@ -52,6 +52,8 @@ func (s *SchemaProcessor) ProcessStruct(structType *ast.StructType, doc *ast.Com
 func (s *SchemaProcessor) parseStructDoc(doc *ast.CommentGroup, schema *openapi.Schema) {
 	for _, comment := range doc.List {
 		text := strings.TrimSpace(strings.TrimPrefix(comment.Text, "//"))
+		text = strings.TrimSpace(strings.TrimPrefix(text, "/*"))
+		text = strings.TrimSpace(strings.TrimSuffix(text, "*/"))
 
 		// @Description annotation
 		if strings.HasPrefix(text, "@Description ") {
@@ -61,16 +63,19 @@ func (s *SchemaProcessor) parseStructDoc(doc *ast.CommentGroup, schema *openapi.
 			} else {
 				schema.Description += "\n" + desc
 			}
+			continue
 		}
 
 		// @Title annotation
 		if strings.HasPrefix(text, "@Title ") {
 			schema.Title = strings.TrimPrefix(text, "@Title ")
+			continue
 		}
 
 		// @Deprecated annotation
 		if strings.TrimSpace(text) == "@Deprecated" {
 			schema.Deprecated = true
+			continue
 		}
 
 		// @Example annotation
@@ -78,6 +83,16 @@ func (s *SchemaProcessor) parseStructDoc(doc *ast.CommentGroup, schema *openapi.
 			// Example would need JSON parsing
 			// For now, store as string
 			schema.Example = strings.TrimPrefix(text, "@Example ")
+			continue
+		}
+
+		// If no annotation prefix, treat as description (common Go doc style)
+		if text != "" && !strings.HasPrefix(text, "@") {
+			if schema.Description == "" {
+				schema.Description = text
+			} else {
+				schema.Description += "\n" + text
+			}
 		}
 	}
 }

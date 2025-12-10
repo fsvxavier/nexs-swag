@@ -39,6 +39,9 @@ var (
 	licenseIDRegex   = regexp.MustCompile(`^@license\.identifier\s+(.+)$`)
 
 	// Server regex patterns
+	hostRegex       = regexp.MustCompile(`^@host\s+(\S+)$`)
+	basePathRegex   = regexp.MustCompile(`^@basePath\s+(\S+)$`)
+	schemesRegex    = regexp.MustCompile(`^@schemes\s+(.+)$`)
 	serverRegex     = regexp.MustCompile(`^@server\s+(\S+)\s*(.*)$`)
 	serverDescRegex = regexp.MustCompile(`^@server\.description\s+(.+)$`)
 
@@ -135,6 +138,41 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 		g.openapi.Info.License.Identifier = matches[1]
 
 	// Server object
+	case hostRegex.MatchString(text):
+		matches := hostRegex.FindStringSubmatch(text)
+		// @host defines the base server URL
+		// If no servers exist yet, create one with the host
+		if len(g.openapi.Servers) == 0 {
+			g.openapi.Servers = append(g.openapi.Servers, openapi.Server{
+				URL: "https://" + matches[1],
+			})
+		} else {
+			// Update the first server's URL
+			g.openapi.Servers[0].URL = "https://" + matches[1]
+		}
+
+	case basePathRegex.MatchString(text):
+		matches := basePathRegex.FindStringSubmatch(text)
+		// Append basePath to existing server URL
+		if len(g.openapi.Servers) > 0 {
+			g.openapi.Servers[0].URL += matches[1]
+		}
+
+	case schemesRegex.MatchString(text):
+		// @schemes is handled differently in OpenAPI 3.x
+		// Schemes are part of the server URL
+		matches := schemesRegex.FindStringSubmatch(text)
+		schemes := strings.Fields(matches[1])
+		if len(schemes) > 0 && len(g.openapi.Servers) > 0 {
+			// Use the first scheme to update server URL scheme
+			scheme := schemes[0]
+			if strings.HasPrefix(g.openapi.Servers[0].URL, "https://") {
+				g.openapi.Servers[0].URL = strings.Replace(g.openapi.Servers[0].URL, "https://", scheme+"://", 1)
+			} else if strings.HasPrefix(g.openapi.Servers[0].URL, "http://") {
+				g.openapi.Servers[0].URL = strings.Replace(g.openapi.Servers[0].URL, "http://", scheme+"://", 1)
+			}
+		}
+
 	case serverRegex.MatchString(text):
 		matches := serverRegex.FindStringSubmatch(text)
 		server := openapi.Server{

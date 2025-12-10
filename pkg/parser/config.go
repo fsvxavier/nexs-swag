@@ -7,10 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 // markdownCache stores loaded markdown files
 var markdownCache map[string]string
+var markdownCacheMutex sync.RWMutex
 
 // SetGeneralInfoFile sets the file path for general API info.
 func (p *Parser) SetGeneralInfoFile(path string) {
@@ -129,7 +131,10 @@ func (p *Parser) loadMarkdownFiles() {
 		// Use filename without extension as key
 		filename := filepath.Base(path)
 		key := strings.TrimSuffix(filename, ".md")
+
+		markdownCacheMutex.Lock()
 		markdownCache[key] = string(content)
+		markdownCacheMutex.Unlock()
 
 		return nil
 	})
@@ -137,6 +142,9 @@ func (p *Parser) loadMarkdownFiles() {
 
 // GetMarkdownContent retrieves markdown content by filename.
 func (p *Parser) GetMarkdownContent(filename string) string {
+	markdownCacheMutex.RLock()
+	defer markdownCacheMutex.RUnlock()
+
 	if markdownCache == nil {
 		return ""
 	}
