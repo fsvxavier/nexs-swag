@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 // CodeExample represents a code sample for x-codeSamples extension
@@ -15,6 +16,7 @@ type CodeExample struct {
 
 // codeExamplesCache stores loaded code examples
 var codeExamplesCache map[string]string
+var codeExamplesCacheMutex sync.RWMutex
 
 // loadCodeExamplesFromDir loads code example files from directory
 func (p *Parser) loadCodeExamplesFromDir() error {
@@ -22,7 +24,9 @@ func (p *Parser) loadCodeExamplesFromDir() error {
 		return nil
 	}
 
+	codeExamplesCacheMutex.Lock()
 	codeExamplesCache = make(map[string]string)
+	codeExamplesCacheMutex.Unlock()
 
 	return filepath.Walk(p.codeExampleFilesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -45,13 +49,17 @@ func (p *Parser) loadCodeExamplesFromDir() error {
 			relPath = filepath.Base(path)
 		}
 
+		codeExamplesCacheMutex.Lock()
 		codeExamplesCache[relPath] = string(content)
+		codeExamplesCacheMutex.Unlock()
 		return nil
 	})
 }
 
 // GetCodeExample returns a code example by filename
 func (p *Parser) GetCodeExample(filename string) string {
+	codeExamplesCacheMutex.RLock()
+	defer codeExamplesCacheMutex.RUnlock()
 	if codeExamplesCache == nil {
 		return ""
 	}

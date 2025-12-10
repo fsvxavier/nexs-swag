@@ -2,8 +2,13 @@ package parser
 
 import (
 	"bytes"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"strings"
 	"testing"
+
+	"github.com/fsvxavier/nexs-swag/pkg/openapi"
 )
 
 func TestNewFormatter(t *testing.T) {
@@ -217,5 +222,102 @@ func Test() {}`
 	buf.Write(result)
 	if buf.Len() == 0 {
 		t.Error("Buffer should not be empty after formatting")
+	}
+}
+
+func TestFormatCommentGroup(t *testing.T) {
+	t.Parallel()
+
+	content := `package main
+
+// @Summary Get user
+// @Description Get user by ID
+func GetUser() {}
+`
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "test.go", content, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("Failed to parse file: %v", err)
+	}
+
+	f := NewFormatter()
+
+	// Find function and format its comments
+	ast.Inspect(file, func(n ast.Node) bool {
+		if fn, ok := n.(*ast.FuncDecl); ok {
+			if fn.Doc != nil {
+				var buf bytes.Buffer
+				f.formatCommentGroup(&buf, fset, fn.Doc)
+				if buf.Len() == 0 {
+					t.Error("Expected formatted comments in buffer")
+				}
+			}
+			return false
+		}
+		return true
+	})
+}
+
+func TestValidateOperation(t *testing.T) {
+	t.Parallel()
+	p := New()
+
+	// Test with valid operation
+	op := &openapi.Operation{
+		Summary: "Test",
+		Responses: openapi.Responses{
+			"200": &openapi.Response{
+				Description: "Success",
+			},
+		},
+	}
+	err := p.validateOperation(op, "/api/test")
+	if err != nil {
+		t.Errorf("Expected no error for valid operation, got: %v", err)
+	}
+
+	// Test with operation without responses - should also validate successfully
+	opNoResp := &openapi.Operation{
+		Summary: "Test",
+	}
+	// Just verify it doesn't panic
+	_ = p.validateOperation(opNoResp, "/api/test")
+}
+
+func TestHasExtension(t *testing.T) {
+	t.Parallel()
+	p := New()
+
+	tests := []struct {
+		name      string
+		operation *openapi.Operation
+		expectExt bool
+	}{
+		{
+			name: "operation without extensions",
+			operation: &openapi.Operation{
+				Summary: "Test",
+			},
+			expectExt: false,
+		},
+		{
+			name: "operation with extensions",
+			operation: &openapi.Operation{
+				Summary: "Test",
+				Extensions: map[string]interface{}{
+					"x-custom": "value",
+				},
+			},
+			expectExt: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := p.hasExtension(tt.operation)
+			if result != tt.expectExt {
+				t.Errorf("Expected %v, got %v", tt.expectExt, result)
+			}
+		})
 	}
 }
