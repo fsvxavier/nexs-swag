@@ -1,185 +1,125 @@
-# Exemplo 17 - Template Delimiters
+# Example 17 - Template Delims
 
-Demonstra o uso de `--templateDelims` para customizar delimitadores de template.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `--templateDelims` to customize template delimiters.
 
 ## Flag
 
 ```bash
---templateDelims "<left> <right>"
---td "<left> <right>"
+--templateDelims "<left>,<right>"
 ```
 
-Default: `"{{ }}"`
+Default: `"{{,}}"`
 
-## Problema
+## Problem
 
-Templates Go usam `{{ }}`, mas isso pode conflitar com:
-- Frontend frameworks (Vue, Angular, Svelte)
-- Template engines (Mustache, Handlebars)
-- Documentation systems
-
-## Solução
-
-Customizar os delimitadores:
-
-```bash
-nexs-swag init --templateDelims "[[ ]]"
-```
-
-## Delimitadores Suportados
-
-### Recomendados
-
-```bash
---templateDelims "[[ ]]"     # Melhor para evitar conflitos
---templateDelims "{{{ }}}"   # Mustache style
---templateDelims "<< >>"     # Shell style
-```
-
-### Outros
-
-```bash
---templateDelims "<% %>"     # ERB style
---templateDelims "{% %}"     # Jinja2/Twig style
---templateDelims "${ }"      # ES6 style
-```
-
-## Caso de Uso: Vue.js Conflict
-
-### Problema
-
-```html
-<!-- index.html -->
-<div id="app">
-  <!-- Vue usa {{ }} -->
-  <p>{{ message }}</p>
-  
-  <!-- Swagger também usa {{ }} -->
-  <script>
-    const spec = {{ .SwaggerJSON }}; // CONFLITO!
-  </script>
-</div>
-```
-
-### Solução
-
-```bash
-nexs-swag init --templateDelims "[[ ]]"
-```
-
-```html
-<!-- index.html -->
-<div id="app">
-  <!-- Vue continua com {{ }} -->
-  <p>{{ message }}</p>
-  
-  <!-- Swagger usa [[ ]] -->
-  <script>
-    const spec = [[ .SwaggerJSON ]]; // SEM conflito!
-  </script>
-</div>
-```
-
-## No Código Go
+Default delimiters `{{` and `}}` conflict with Go templates:
 
 ```go
-package main
-
-import (
-    "text/template"
-)
-
-func main() {
-    // Template padrão
-    tmpl1 := template.Must(template.New("t1").Parse("Hello {{.Name}}"))
-    
-    // Template com delimiters customizados
-    tmpl2 := template.New("t2")
-    tmpl2.Delims("[[", "]]")
-    tmpl2 = template.Must(tmpl2.Parse("Hello [[.Name]]"))
-}
+const template = `
+    API Docs: {{.BasePath}}  // ❌ Conflict!
+`
 ```
 
-## Como Executar
+## Solution
+
+```bash
+nexs-swag init --templateDelims "[[,]]"
+```
+
+Now in your code:
+```go
+const template = `
+    API Docs: {{.BasePath}}  // ✅ OK! Not parsed by nexs-swag
+    Swagger: [[.Version]]     // ✅ Parsed by nexs-swag
+`
+```
+
+## Usage Examples
+
+### Square Brackets
+```bash
+nexs-swag init --templateDelims "[[,]]"
+```
+
+### Angle Brackets
+```bash
+nexs-swag init --templateDelims "<<,>>"
+```
+
+### Custom
+```bash
+nexs-swag init --templateDelims "{%,%}"
+```
+
+## Generated docs.go
+
+### Default Delimiters
+```go
+const docTemplate = `{
+    "swagger": "2.0",
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}"
+}`
+```
+
+### Custom Delimiters [[,]]
+```go
+const docTemplate = `{
+    "swagger": "2.0",
+    "host": "[[.Host]]",
+    "basePath": "[[.BasePath]]"
+}`
+```
+
+## When to Use
+
+**Use custom delimiters when:**
+- Using Go text/template
+- Conflicts with other template engines
+- Code has `{{` and `}}` in strings
+- Embedding documentation in templates
+
+**Keep default when:**
+- No conflicts
+- Standard project
+- Following conventions
+
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Exemplo Completo: Swagger UI Custom
+## Common Conflicts
 
-### 1. Gerar com delimiters customizados
-
-```bash
-nexs-swag init --templateDelims "[[ ]]"
-```
-
-### 2. Template HTML
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>API Docs</title>
-</head>
-<body>
-    <!-- Frontend framework pode usar {{ }} -->
-    <div id="vue-app">{{ vueMessage }}</div>
-    
-    <!-- Swagger usa [[ ]] -->
-    <script>
-        const swaggerSpec = [[ .SwaggerJSON ]];
-        SwaggerUIBundle({
-            spec: swaggerSpec,
-            dom_id: '#swagger-ui'
-        });
-    </script>
-</body>
-</html>
-```
-
-### 3. Servir o HTML
-
+### Go Templates
 ```go
-package main
+// ❌ Conflict with default {{,}}
+tmpl := template.Must(template.New("").Parse(`
+    <h1>{{.Title}}</h1>
+`))
 
-import (
-    "html/template"
-    "net/http"
-    
-    _ "myapp/docs"
-)
-
-func swaggerHandler(w http.ResponseWriter, r *http.Request) {
-    tmpl := template.New("swagger")
-    tmpl.Delims("[[", "]]")  // Mesmos delimiters!
-    
-    tmpl, _ = tmpl.ParseFiles("swagger.html")
-    tmpl.Execute(w, nil)
-}
-
-func main() {
-    http.HandleFunc("/swagger/", swaggerHandler)
-    http.ListenAndServe(":8080", nil)
-}
+// ✅ Solution: use different delimiters
+// nexs-swag init --templateDelims "[[,]]"
 ```
 
-## Benefícios
+### Vue.js/Angular in Comments
+```go
+// Documentation: {{variable}}  // ❌ Parsed by nexs-swag
+// With [[,]]: {{variable}}     // ✅ Ignored by nexs-swag
+```
 
-- **Sem conflitos:** Frontend frameworks funcionam normalmente
-- **Flexibilidade:** Escolha os delimiters que preferir
-- **Compatibilidade:** Funciona com qualquer template engine
-- **Clareza:** Código mais legível
+### String Literals
+```go
+const json = `{"key": "{{value}}"}`  // ❌ May cause issues
+// Use [[,]] delimiters to avoid
+```
 
-## Quando Usar
+## Best Practices
 
-**Use --templateDelims quando:**
-- Usar Vue.js, Angular, Svelte
-- Integrar com Mustache, Handlebars
-- Ter conflitos de sintaxe
-- Preferir outro estilo
-
-**NÃO precisa quando:**
-- API pura sem frontend
-- Servir JSON direto
-- Usar Swagger UI standalone
+1. Choose delimiters that won't conflict
+2. Document the choice in README
+3. Be consistent across the project
+4. Add to build scripts/Makefile

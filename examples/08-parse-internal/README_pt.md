@@ -1,5 +1,7 @@
 # Example 08 - Parse Internal Packages
 
+🌍 [English](README.md) • **Português (Brasil)** • [Español](README_es.md)
+
 🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
 
 Demonstrates the use of `--parseInternal` to include `internal/` packages.

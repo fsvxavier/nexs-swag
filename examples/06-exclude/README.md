@@ -1,6 +1,8 @@
-# Exemplo 06 - Exclude Patterns
+# Example 06 - Exclude Patterns
 
-Demonstra como excluir diretórios e arquivos do parsing.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates how to exclude directories and files from parsing.
 
 ## Flag
 
@@ -8,50 +10,50 @@ Demonstra como excluir diretórios e arquivos do parsing.
 --exclude pattern1,pattern2,pattern3
 ```
 
-## Uso
+## Usage
 
 ```bash
-# Excluir um diretório
+# Exclude one directory
 nexs-swag init --exclude mock
 
-# Excluir múltiplos
+# Exclude multiple
 nexs-swag init --exclude mock,testdata,vendor
 
-# Excluir com wildcards
+# Exclude with wildcards
 nexs-swag init --exclude "*.test.go,*_mock.go"
 ```
 
-## Exclusões Automáticas
+## Automatic Exclusions
 
-Sempre excluídos (não precisa especificar):
-- `vendor/` - Dependências
-- `testdata/` - Dados de teste
-- `docs/` - Documentação gerada
-- `.git/` - Repositório Git
-- `*_test.go` - Arquivos de teste
+Always excluded (no need to specify):
+- `vendor/` - Dependencies
+- `testdata/` - Test data
+- `docs/` - Generated documentation
+- `.git/` - Git repository
+- `*_test.go` - Test files
 
-## Estrutura do Exemplo
+## Example Structure
 
 ```
 06-exclude/
-├── main.go           # ✅ Será parseado
-├── main_test.go      # ❌ Excluído (test)
+├── main.go           # ✅ Will be parsed
+├── main_test.go      # ❌ Excluded (test)
 ├── mock/
-│   └── mock.go       # ❌ Excluído (com flag)
+│   └── mock.go       # ❌ Excluded (with flag)
 └── testdata/
-    └── data.go       # ❌ Excluído (automático)
+    └── data.go       # ❌ Excluded (automatic)
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Casos de Uso
+## Use Cases
 
-- **mock:** Código de mocking para testes
-- **testdata:** Fixtures e dados de teste
-- **vendor:** Dependências (se usar vendor)
-- **examples:** Código de exemplo
-- **internal:** Pacotes internos (use --parseInternal para incluir)
+- **mock:** Mocking code for tests
+- **testdata:** Fixtures and test data
+- **vendor:** Dependencies (if using vendor)
+- **examples:** Example code
+- **internal:** Internal packages (use --parseInternal to include)

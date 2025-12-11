@@ -1,6 +1,6 @@
-# Example 22 - OpenAPI 2.0 / Swagger 2.0
+# OpenAPI 2.0 / Swagger 2.0 Example
 
-🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+🌍 [English](README.md) • **Português (Brasil)** • [Español](README_es.md)
 
 This example demonstrates how to generate both OpenAPI 3.1.0 and Swagger 2.0 specifications from the same Go code.
 

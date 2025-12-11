@@ -1,8 +1,8 @@
-# Example 12 - Markdown Files
+# Exemplo 12 - Markdown Files
 
-🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+🌍 [English](README.md) • **Português (Brasil)** • [Español](README_es.md)
 
-Demonstrates how to use markdown files for detailed descriptions.
+Demonstra como usar arquivos markdown para descriptions detalhadas.
 
 ## Flag
 
@@ -11,15 +11,15 @@ Demonstrates how to use markdown files for detailed descriptions.
 --md <directory>
 ```
 
-## Usage
+## Uso
 
 ```bash
 nexs-swag init --markdownFiles ./docs
 ```
 
-## Syntax
+## Sintaxe
 
-In Go code, use `file(name.md)` in the description:
+No código Go, use `file(nome.md)` na description:
 
 ```go
 // @Description file(create-user.md)
@@ -27,24 +27,24 @@ In Go code, use `file(name.md)` in the description:
 func CreateUser() {}
 ```
 
-nexs-swag will:
-1. Read `docs/create-user.md`
-2. Replace `file(create-user.md)` with file content
-3. Add content to OpenAPI description
+O nexs-swag vai:
+1. Ler `docs/create-user.md`
+2. Substituir `file(create-user.md)` pelo conteúdo do arquivo
+3. Adicionar o conteúdo na description do OpenAPI
 
-## Structure
+## Estrutura
 
 ```
 12-markdown-files/
-├── main.go                   # API with file() references
+├── main.go                   # API com file() references
 └── docs/
-    ├── create-user.md        # Detailed description
-    └── get-user.md           # Another description
+    ├── create-user.md        # Description detalhada
+    └── get-user.md           # Outra description
 ```
 
-## Benefits
+## Benefícios
 
-### 1. Detailed Descriptions
+### 1. Descriptions Detalhadas
 ```markdown
 # Create User
 
@@ -58,14 +58,14 @@ Creates a new user with validation.
 ...
 ```
 
-### 2. Separation of Concerns
-- Go code: application logic
-- Markdown: detailed documentation
-- Easier to maintain
+### 2. Separação de Concerns
+- Código Go: lógica da aplicação
+- Markdown: documentação detalhada
+- Mais fácil de manter
 
-### 3. Reusability
+### 3. Reutilização
 ```go
-// Multiple endpoints can use same markdown
+// Múltiplos endpoints podem usar o mesmo markdown
 // @Description file(auth-required.md)
 func Endpoint1() {}
 
@@ -73,14 +73,14 @@ func Endpoint1() {}
 func Endpoint2() {}
 ```
 
-### 4. Rich Formatting
+### 4. Formatação Rica
 - Headers
-- Lists
+- Listas
 - Code blocks
-- Tables
+- Tabelas
 - Links
 
-## Real Example
+## Exemplo Real
 
 ```go
 // @Description file(user-endpoints.md)
@@ -106,31 +106,31 @@ All user endpoints require Bearer token.
 | 429  | Rate limit exceeded |
 ```
 
-## How to Run
+## Como Executar
 
 ```bash
 ./run.sh
 ```
 
-## Comparison
+## Comparação
 
-### Without Markdown
+### Sem Markdown
 ```json
 {
   "description": "file(create-user.md)"
 }
 ```
 
-### With Markdown
+### Com Markdown
 ```json
 {
   "description": "# Create User Endpoint\n\nCreates a new user in the system...\n\n## Request Body\n..."
 }
 ```
 
-## Use Cases
+## Casos de Uso
 
-- Complex APIs with lots of documentation
-- Collaborative documentation (tech writers)
-- Documentation versioning separate from code
-- Documentation generation from Wiki
+- APIs complexas com muita documentação
+- Documentação colaborativa (tech writers)
+- Versionamento de docs separado do código
+- Geração de documentação a partir de Wiki

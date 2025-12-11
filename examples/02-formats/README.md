@@ -1,50 +1,52 @@
-# Exemplo 02 - Múltiplos Formatos
+# Example 02 - Multiple Formats
 
-Demonstra como gerar documentação em diferentes formatos.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
 
-## Flags Utilizadas
+Demonstrates how to generate documentation in different formats.
 
-- `--format json` - Gera apenas openapi.json
-- `--format yaml` - Gera apenas openapi.yaml
-- `--format go` - Gera apenas docs.go
-- `--format json,yaml,go` - Gera todos os formatos
+## Flags Used
 
-## Como Executar
+- `--format json` - Generates only openapi.json
+- `--format yaml` - Generates only openapi.yaml
+- `--format go` - Generates only docs.go
+- `--format json,yaml,go` - Generates all formats
+
+## How to Run
 
 ```bash
 chmod +x run.sh
 ./run.sh
 ```
 
-## Formatos Disponíveis
+## Available Formats
 
 ### JSON (`--format json`)
 ```bash
 nexs-swag init --format json
-# Gera: docs/openapi.json
+# Generates: docs/openapi.json
 ```
 
 ### YAML (`--format yaml`)
 ```bash
 nexs-swag init --format yaml
-# Gera: docs/openapi.yaml
+# Generates: docs/openapi.yaml
 ```
 
 ### Go (`--format go`)
 ```bash
 nexs-swag init --format go
-# Gera: docs/docs.go
+# Generates: docs/docs.go
 ```
 
-### Múltiplos
+### Multiple
 ```bash
 nexs-swag init --format json,yaml
-# Gera: docs/openapi.json + docs/openapi.yaml
+# Generates: docs/openapi.json + docs/openapi.yaml
 ```
 
-## Casos de Uso
+## Use Cases
 
-- **JSON only:** Para servir via HTTP endpoint
-- **YAML only:** Para documentação legível por humanos
-- **Go only:** Para embedding na aplicação
-- **Todos:** Para máxima compatibilidade
+- **JSON only:** To serve via HTTP endpoint
+- **YAML only:** For human-readable documentation
+- **Go only:** For embedding in application
+- **All:** For maximum compatibility
