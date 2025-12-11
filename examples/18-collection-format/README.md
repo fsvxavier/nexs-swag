@@ -1,6 +1,8 @@
-# Exemplo 18 - Collection Format
+# Example 18 - Collection Format
 
-Demonstra diferentes formatos para arrays em query parameters.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates different formats for arrays in query parameters.
 
 ## Flag
 
