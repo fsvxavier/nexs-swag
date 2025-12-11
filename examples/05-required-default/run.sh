@@ -1,36 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 05: Required By Default ==="
+# Exemplo 05 - required-default
+
+echo "=== Exemplo 05: required-default ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem flag (default: campos opcionais)
-echo "1. SEM --requiredByDefault (campos opcionais)..."
-../../nexs-swag init --dir . --output ./docs-optional --quiet
-echo "   Required fields:"
-grep -A 20 '"Product"' docs-optional/openapi.json | grep -A 2 '"required"' || echo "   (nenhum)"
-
-echo ""
-
-# Com flag (campos required por padrão)
-echo "2. COM --requiredByDefault (campos required)..."
-../../nexs-swag init --dir . --output ./docs-required --requiredByDefault --quiet
-echo "   Required fields:"
-grep -A 20 '"Product"' docs-required/openapi.json | grep -A 5 '"required"'
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --requiredByDefault
 
 echo ""
-echo "✓ Comparar os schemas gerados:"
-echo ""
-echo "Campos REQUIRED com a flag:"
-echo "  - id, name, price (campos normais)"
-echo ""
-echo "Campos OPTIONAL mesmo com a flag:"
-echo "  - description (tem omitempty)"
-echo "  - discount (é pointer)"
-echo "  - category (tem binding:omitempty)"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --requiredByDefault
 
 echo ""
-echo "Arquivos gerados:"
-echo "  - docs-optional/openapi.json  (sem flag)"
-echo "  - docs-required/openapi.json  (com flag)"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

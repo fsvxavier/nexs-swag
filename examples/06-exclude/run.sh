@@ -1,31 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 06: Exclude Patterns ==="
+# Exemplo 06 - exclude
+
+echo "=== Exemplo 06: exclude ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem exclude - parseia tudo
-echo "1. SEM --exclude (parseia tudo)..."
-../../nexs-swag init --dir . --output ./docs-all --quiet
-echo "   Endpoints encontrados:"
-grep -o '"\/[^"]*"' docs-all/openapi.json 2>/dev/null | wc -l
-
-# Com exclude
-echo ""
-echo "2. COM --exclude mock,testdata..."
-../../nexs-swag init --dir . --output ./docs-excluded --exclude mock,testdata --quiet
-echo "   Endpoints encontrados:"
-grep -o '"\/[^"]*"' docs-excluded/openapi.json 2>/dev/null | wc -l
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --exclude mock,testdata
 
 echo ""
-echo "✓ Documentação gerada!"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --exclude mock,testdata
+
 echo ""
-echo "Nota: *_test.go sempre são excluídos automaticamente"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "Diretórios excluídos por padrão:"
-echo "  - vendor/"
-echo "  - testdata/"
-echo "  - docs/"
-echo "  - .git/"
-echo "  - *_test.go files"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

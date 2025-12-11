@@ -11,7 +11,8 @@ import (
 
 	"github.com/fsvxavier/nexs-swag/pkg/converter"
 	pkgformat "github.com/fsvxavier/nexs-swag/pkg/format"
-	"github.com/fsvxavier/nexs-swag/pkg/generator"
+	generatorv2 "github.com/fsvxavier/nexs-swag/pkg/generator/v2"
+	generatorv3 "github.com/fsvxavier/nexs-swag/pkg/generator/v3"
 	"github.com/fsvxavier/nexs-swag/pkg/parser"
 )
 
@@ -407,8 +408,15 @@ func initAction(c *cli.Context) error {
 	state := c.String("state")
 	openapiVersion := c.String("openapi-version")
 
-	// Validate openapi-version
-	if openapiVersion != "2.0" && openapiVersion != "3.0" && openapiVersion != "3.1" {
+	// Validate and normalize openapi-version
+	switch openapiVersion {
+	case "2.0", "2", "2.0.0":
+		openapiVersion = "2.0"
+	case "3.0", "3", "3.0.0":
+		openapiVersion = "3.0"
+	case "3.1", "3.1.0":
+		openapiVersion = "3.1"
+	default:
 		return fmt.Errorf("invalid openapi-version: %s (must be 2.0, 3.0, or 3.1)", openapiVersion)
 	}
 
@@ -529,7 +537,7 @@ func initAction(c *cli.Context) error {
 		if !quiet {
 			fmt.Printf("Generating Swagger %s documentation in: %s\n", openapiVersion, outputDir)
 		}
-		gen := generator.NewV2(swagger2, outputDir, formats)
+		gen := generatorv2.New(swagger2, outputDir, formats)
 		gen.SetInstanceName(instanceName)
 		gen.SetGeneratedTime(generatedTime)
 		if err := gen.Generate(); err != nil {
@@ -540,7 +548,7 @@ func initAction(c *cli.Context) error {
 		if !quiet {
 			fmt.Printf("Generating OpenAPI %s documentation in: %s\n", openapiVersion, outputDir)
 		}
-		gen := generator.New(spec, outputDir, formats)
+		gen := generatorv3.New(spec, outputDir, formats)
 		gen.SetInstanceName(instanceName)
 		gen.SetGeneratedTime(generatedTime)
 		gen.SetTemplateDelims(templateDelims)

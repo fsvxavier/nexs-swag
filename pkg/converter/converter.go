@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	v2 "github.com/fsvxavier/nexs-swag/pkg/openapi/v2"
-	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
+	swagger "github.com/fsvxavier/nexs-swag/pkg/openapi/v2"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Converter handles conversion between OpenAPI versions.
@@ -33,12 +33,12 @@ func (c *Converter) ClearWarnings() {
 }
 
 // ConvertToV2 converts an OpenAPI 3.1.0 specification to Swagger 2.0.
-func (c *Converter) ConvertToV2(spec *v3.OpenAPI) (*v2.Swagger, error) {
+func (c *Converter) ConvertToV2(spec *openapi.OpenAPI) (*swagger.Swagger, error) {
 	if spec == nil {
 		return nil, fmt.Errorf("input specification is nil")
 	}
 
-	swagger := &v2.Swagger{
+	swagger := &swagger.Swagger{
 		Swagger:      "2.0",
 		Info:         c.convertInfo(spec.Info),
 		Paths:        c.convertPaths(spec.Paths),
@@ -79,8 +79,8 @@ func (c *Converter) ConvertToV2(spec *v3.OpenAPI) (*v2.Swagger, error) {
 }
 
 // convertInfo converts OpenAPI Info to Swagger Info.
-func (c *Converter) convertInfo(info v3.Info) v2.Info {
-	v2Info := v2.Info{
+func (c *Converter) convertInfo(info openapi.Info) swagger.Info {
+	v2Info := swagger.Info{
 		Title:          info.Title,
 		Description:    info.Description,
 		TermsOfService: info.TermsOfService,
@@ -88,7 +88,7 @@ func (c *Converter) convertInfo(info v3.Info) v2.Info {
 	}
 
 	if info.Contact != nil {
-		v2Info.Contact = &v2.Contact{
+		v2Info.Contact = &swagger.Contact{
 			Name:  info.Contact.Name,
 			URL:   info.Contact.URL,
 			Email: info.Contact.Email,
@@ -96,7 +96,7 @@ func (c *Converter) convertInfo(info v3.Info) v2.Info {
 	}
 
 	if info.License != nil {
-		v2Info.License = &v2.License{
+		v2Info.License = &swagger.License{
 			Name: info.License.Name,
 			URL:  info.License.URL,
 		}
@@ -144,12 +144,12 @@ func (c *Converter) replaceServerVariables(serverURL string) string {
 }
 
 // convertPaths converts OpenAPI Paths to Swagger Paths.
-func (c *Converter) convertPaths(paths v3.Paths) v2.Paths {
+func (c *Converter) convertPaths(paths openapi.Paths) swagger.Paths {
 	if paths == nil {
 		return nil
 	}
 
-	v2Paths := make(v2.Paths, len(paths))
+	v2Paths := make(swagger.Paths, len(paths))
 	for path, pathItem := range paths {
 		v2Paths[path] = c.convertPathItem(pathItem)
 	}
@@ -158,12 +158,12 @@ func (c *Converter) convertPaths(paths v3.Paths) v2.Paths {
 }
 
 // convertPathItem converts an OpenAPI PathItem to Swagger PathItem.
-func (c *Converter) convertPathItem(pathItem *v3.PathItem) *v2.PathItem {
+func (c *Converter) convertPathItem(pathItem *openapi.PathItem) *swagger.PathItem {
 	if pathItem == nil {
 		return nil
 	}
 
-	v2PathItem := &v2.PathItem{
+	v2PathItem := &swagger.PathItem{
 		Ref:        pathItem.Ref,
 		Parameters: c.convertParameters(pathItem.Parameters),
 	}
@@ -194,12 +194,12 @@ func (c *Converter) convertPathItem(pathItem *v3.PathItem) *v2.PathItem {
 }
 
 // convertOperation converts an OpenAPI Operation to Swagger Operation.
-func (c *Converter) convertOperation(op *v3.Operation) *v2.Operation {
+func (c *Converter) convertOperation(op *openapi.Operation) *swagger.Operation {
 	if op == nil {
 		return nil
 	}
 
-	v2Op := &v2.Operation{
+	v2Op := &swagger.Operation{
 		Tags:         op.Tags,
 		Summary:      op.Summary,
 		Description:  op.Description,
@@ -235,12 +235,12 @@ func (c *Converter) convertOperation(op *v3.Operation) *v2.Operation {
 }
 
 // convertParameters converts OpenAPI Parameters to Swagger Parameters.
-func (c *Converter) convertParameters(params []v3.Parameter) []*v2.Parameter {
+func (c *Converter) convertParameters(params []openapi.Parameter) []*swagger.Parameter {
 	if len(params) == 0 {
 		return nil
 	}
 
-	v2Params := make([]*v2.Parameter, 0, len(params))
+	v2Params := make([]*swagger.Parameter, 0, len(params))
 	for _, param := range params {
 		v2Param := c.convertParameter(&param)
 		if v2Param != nil {
@@ -252,12 +252,12 @@ func (c *Converter) convertParameters(params []v3.Parameter) []*v2.Parameter {
 }
 
 // convertParameter converts an OpenAPI Parameter to Swagger Parameter.
-func (c *Converter) convertParameter(param *v3.Parameter) *v2.Parameter {
+func (c *Converter) convertParameter(param *openapi.Parameter) *swagger.Parameter {
 	if param == nil {
 		return nil
 	}
 
-	v2Param := &v2.Parameter{
+	v2Param := &swagger.Parameter{
 		Name:        param.Name,
 		In:          param.In,
 		Description: param.Description,
@@ -281,7 +281,7 @@ func (c *Converter) convertParameter(param *v3.Parameter) *v2.Parameter {
 }
 
 // convertSchemaToParameter converts schema properties to parameter properties.
-func (c *Converter) convertSchemaToParameter(schema *v3.Schema, param *v2.Parameter) {
+func (c *Converter) convertSchemaToParameter(schema *openapi.Schema, param *swagger.Parameter) {
 	if schema == nil {
 		return
 	}
@@ -328,12 +328,12 @@ func (c *Converter) convertSchemaToParameter(schema *v3.Schema, param *v2.Parame
 }
 
 // convertSchemaToItems converts a Schema to Items.
-func (c *Converter) convertSchemaToItems(schema *v3.Schema) *v2.Items {
+func (c *Converter) convertSchemaToItems(schema *openapi.Schema) *swagger.Items {
 	if schema == nil {
 		return nil
 	}
 
-	items := &v2.Items{
+	items := &swagger.Items{
 		Type:    c.extractType(schema.Type),
 		Format:  schema.Format,
 		Default: schema.Default,
@@ -371,13 +371,13 @@ func (c *Converter) extractType(t interface{}) string {
 }
 
 // convertRequestBodyToParameter converts RequestBody to a body parameter.
-func (c *Converter) convertRequestBodyToParameter(rb *v3.RequestBody) *v2.Parameter {
+func (c *Converter) convertRequestBodyToParameter(rb *openapi.RequestBody) *swagger.Parameter {
 	if rb == nil || len(rb.Content) == 0 {
 		return nil
 	}
 
 	// Use first content type (preferring application/json)
-	var mediaType *v3.MediaType
+	var mediaType *openapi.MediaType
 	var contentType string
 
 	if mt, ok := rb.Content["application/json"]; ok {
@@ -396,7 +396,7 @@ func (c *Converter) convertRequestBodyToParameter(rb *v3.RequestBody) *v2.Parame
 		return nil
 	}
 
-	param := &v2.Parameter{
+	param := &swagger.Parameter{
 		Name:        "body",
 		In:          "body",
 		Description: rb.Description,
@@ -412,7 +412,7 @@ func (c *Converter) convertRequestBodyToParameter(rb *v3.RequestBody) *v2.Parame
 }
 
 // extractConsumes extracts MIME types from RequestBody.
-func (c *Converter) extractConsumes(rb *v3.RequestBody) []string {
+func (c *Converter) extractConsumes(rb *openapi.RequestBody) []string {
 	if rb == nil || len(rb.Content) == 0 {
 		return nil
 	}
@@ -426,7 +426,7 @@ func (c *Converter) extractConsumes(rb *v3.RequestBody) []string {
 }
 
 // extractProduces extracts MIME types from Responses.
-func (c *Converter) extractProduces(responses v3.Responses) []string {
+func (c *Converter) extractProduces(responses openapi.Responses) []string {
 	if len(responses) == 0 {
 		return nil
 	}
@@ -453,12 +453,12 @@ func (c *Converter) extractProduces(responses v3.Responses) []string {
 }
 
 // convertResponses converts OpenAPI Responses to Swagger Responses.
-func (c *Converter) convertResponses(responses v3.Responses) v2.Responses {
+func (c *Converter) convertResponses(responses openapi.Responses) swagger.Responses {
 	if len(responses) == 0 {
 		return nil
 	}
 
-	v2Responses := make(v2.Responses, len(responses))
+	v2Responses := make(swagger.Responses, len(responses))
 	for code, resp := range responses {
 		v2Responses[code] = c.convertResponse(resp)
 	}
@@ -467,19 +467,19 @@ func (c *Converter) convertResponses(responses v3.Responses) v2.Responses {
 }
 
 // convertResponse converts an OpenAPI Response to Swagger Response.
-func (c *Converter) convertResponse(resp *v3.Response) *v2.Response {
+func (c *Converter) convertResponse(resp *openapi.Response) *swagger.Response {
 	if resp == nil {
 		return nil
 	}
 
-	v2Resp := &v2.Response{
+	v2Resp := &swagger.Response{
 		Description: resp.Description,
 		Headers:     c.convertHeaders(resp.Headers),
 	}
 
 	// Convert content to schema (use first content type, preferring application/json)
 	if len(resp.Content) > 0 {
-		var mediaType *v3.MediaType
+		var mediaType *openapi.MediaType
 		if mt, ok := resp.Content["application/json"]; ok {
 			mediaType = mt
 		} else {
@@ -502,12 +502,12 @@ func (c *Converter) convertResponse(resp *v3.Response) *v2.Response {
 }
 
 // convertHeaders converts OpenAPI Headers to Swagger Headers.
-func (c *Converter) convertHeaders(headers map[string]*v3.Header) map[string]*v2.Header {
+func (c *Converter) convertHeaders(headers map[string]*openapi.Header) map[string]*swagger.Header {
 	if len(headers) == 0 {
 		return nil
 	}
 
-	v2Headers := make(map[string]*v2.Header, len(headers))
+	v2Headers := make(map[string]*swagger.Header, len(headers))
 	for name, header := range headers {
 		v2Headers[name] = c.convertHeader(header)
 	}
@@ -516,12 +516,12 @@ func (c *Converter) convertHeaders(headers map[string]*v3.Header) map[string]*v2
 }
 
 // convertHeader converts an OpenAPI Header to Swagger Header.
-func (c *Converter) convertHeader(header *v3.Header) *v2.Header {
+func (c *Converter) convertHeader(header *openapi.Header) *swagger.Header {
 	if header == nil {
 		return nil
 	}
 
-	v2Header := &v2.Header{
+	v2Header := &swagger.Header{
 		Description: header.Description,
 	}
 
@@ -535,7 +535,7 @@ func (c *Converter) convertHeader(header *v3.Header) *v2.Header {
 }
 
 // convertExamples converts content examples to Swagger examples.
-func (c *Converter) convertExamples(content map[string]*v3.MediaType) map[string]interface{} {
+func (c *Converter) convertExamples(content map[string]*openapi.MediaType) map[string]interface{} {
 	if len(content) == 0 {
 		return nil
 	}
@@ -563,12 +563,12 @@ func (c *Converter) convertExamples(content map[string]*v3.MediaType) map[string
 }
 
 // convertSchemas converts OpenAPI Schemas to Swagger Schemas (definitions).
-func (c *Converter) convertSchemas(schemas map[string]*v3.Schema) map[string]*v2.Schema {
+func (c *Converter) convertSchemas(schemas map[string]*openapi.Schema) map[string]*swagger.Schema {
 	if len(schemas) == 0 {
 		return nil
 	}
 
-	v2Schemas := make(map[string]*v2.Schema, len(schemas))
+	v2Schemas := make(map[string]*swagger.Schema, len(schemas))
 	for name, schema := range schemas {
 		v2Schemas[name] = c.convertSchema(schema)
 	}
@@ -577,12 +577,12 @@ func (c *Converter) convertSchemas(schemas map[string]*v3.Schema) map[string]*v2
 }
 
 // convertSchema converts an OpenAPI Schema to Swagger Schema (JSON Schema Draft 4).
-func (c *Converter) convertSchema(schema *v3.Schema) *v2.Schema {
+func (c *Converter) convertSchema(schema *openapi.Schema) *swagger.Schema {
 	if schema == nil {
 		return nil
 	}
 
-	v2Schema := &v2.Schema{
+	v2Schema := &swagger.Schema{
 		Ref:          schema.Ref,
 		Type:         c.extractType(schema.Type),
 		Format:       schema.Format,
@@ -658,7 +658,7 @@ func (c *Converter) convertSchema(schema *v3.Schema) *v2.Schema {
 		switch v := schema.AdditionalProperties.(type) {
 		case bool:
 			v2Schema.AdditionalProperties = v
-		case *v3.Schema:
+		case *openapi.Schema:
 			v2Schema.AdditionalProperties = c.convertSchema(v)
 		}
 	}
@@ -670,7 +670,7 @@ func (c *Converter) convertSchema(schema *v3.Schema) *v2.Schema {
 
 	// Convert allOf
 	if len(schema.AllOf) > 0 {
-		v2Schema.AllOf = make([]*v2.Schema, len(schema.AllOf))
+		v2Schema.AllOf = make([]*swagger.Schema, len(schema.AllOf))
 		for i, s := range schema.AllOf {
 			v2Schema.AllOf[i] = c.convertSchema(&s)
 		}
@@ -686,7 +686,7 @@ func (c *Converter) convertSchema(schema *v3.Schema) *v2.Schema {
 
 	// Handle XML
 	if schema.XML != nil {
-		v2Schema.XML = &v2.XML{
+		v2Schema.XML = &swagger.XML{
 			Name:      schema.XML.Name,
 			Namespace: schema.XML.Namespace,
 			Prefix:    schema.XML.Prefix,
@@ -726,7 +726,7 @@ func (c *Converter) isNullable(t interface{}) bool {
 }
 
 // warnUnsupportedSchemaFeatures warns about JSON Schema 2020-12 features not in Draft 4.
-func (c *Converter) warnUnsupportedSchemaFeatures(schema *v3.Schema) {
+func (c *Converter) warnUnsupportedSchemaFeatures(schema *openapi.Schema) {
 	if len(schema.OneOf) > 0 {
 		c.warnings = append(c.warnings, "oneOf is limited in Swagger 2.0 (use with discriminator only)")
 	}
@@ -745,12 +745,12 @@ func (c *Converter) warnUnsupportedSchemaFeatures(schema *v3.Schema) {
 }
 
 // convertParameterDefinitions converts component parameters.
-func (c *Converter) convertParameterDefinitions(params map[string]*v3.Parameter) map[string]*v2.Parameter {
+func (c *Converter) convertParameterDefinitions(params map[string]*openapi.Parameter) map[string]*swagger.Parameter {
 	if len(params) == 0 {
 		return nil
 	}
 
-	v2Params := make(map[string]*v2.Parameter, len(params))
+	v2Params := make(map[string]*swagger.Parameter, len(params))
 	for name, param := range params {
 		v2Params[name] = c.convertParameter(param)
 	}
@@ -759,12 +759,12 @@ func (c *Converter) convertParameterDefinitions(params map[string]*v3.Parameter)
 }
 
 // convertResponseDefinitions converts component responses.
-func (c *Converter) convertResponseDefinitions(responses map[string]*v3.Response) map[string]*v2.Response {
+func (c *Converter) convertResponseDefinitions(responses map[string]*openapi.Response) map[string]*swagger.Response {
 	if len(responses) == 0 {
 		return nil
 	}
 
-	v2Responses := make(map[string]*v2.Response, len(responses))
+	v2Responses := make(map[string]*swagger.Response, len(responses))
 	for name, resp := range responses {
 		v2Responses[name] = c.convertResponse(resp)
 	}
@@ -773,12 +773,12 @@ func (c *Converter) convertResponseDefinitions(responses map[string]*v3.Response
 }
 
 // convertSecuritySchemes converts OpenAPI SecuritySchemes to Swagger SecurityDefinitions.
-func (c *Converter) convertSecuritySchemes(schemes map[string]*v3.SecurityScheme) map[string]*v2.SecurityScheme {
+func (c *Converter) convertSecuritySchemes(schemes map[string]*openapi.SecurityScheme) map[string]*swagger.SecurityScheme {
 	if len(schemes) == 0 {
 		return nil
 	}
 
-	v2Schemes := make(map[string]*v2.SecurityScheme, len(schemes))
+	v2Schemes := make(map[string]*swagger.SecurityScheme, len(schemes))
 	for name, scheme := range schemes {
 		v2Schemes[name] = c.convertSecurityScheme(scheme)
 	}
@@ -787,12 +787,12 @@ func (c *Converter) convertSecuritySchemes(schemes map[string]*v3.SecurityScheme
 }
 
 // convertSecurityScheme converts an OpenAPI SecurityScheme to Swagger SecurityScheme.
-func (c *Converter) convertSecurityScheme(scheme *v3.SecurityScheme) *v2.SecurityScheme {
+func (c *Converter) convertSecurityScheme(scheme *openapi.SecurityScheme) *swagger.SecurityScheme {
 	if scheme == nil {
 		return nil
 	}
 
-	v2Scheme := &v2.SecurityScheme{
+	v2Scheme := &swagger.SecurityScheme{
 		Description: scheme.Description,
 	}
 
@@ -830,7 +830,7 @@ func (c *Converter) convertSecurityScheme(scheme *v3.SecurityScheme) *v2.Securit
 }
 
 // convertOAuth2Flows converts OAuth2 flows from OpenAPI 3.x to Swagger 2.0 format.
-func (c *Converter) convertOAuth2Flows(scheme *v3.SecurityScheme, v2Scheme *v2.SecurityScheme) {
+func (c *Converter) convertOAuth2Flows(scheme *openapi.SecurityScheme, v2Scheme *swagger.SecurityScheme) {
 	if scheme.Flows == nil {
 		return
 	}
@@ -876,28 +876,28 @@ func (c *Converter) convertOAuth2Flows(scheme *v3.SecurityScheme, v2Scheme *v2.S
 }
 
 // convertSecurity converts security requirements.
-func (c *Converter) convertSecurity(security []v3.SecurityRequirement) []v2.SecurityRequirement {
+func (c *Converter) convertSecurity(security []openapi.SecurityRequirement) []swagger.SecurityRequirement {
 	if len(security) == 0 {
 		return nil
 	}
 
-	v2Security := make([]v2.SecurityRequirement, len(security))
+	v2Security := make([]swagger.SecurityRequirement, len(security))
 	for i, req := range security {
-		v2Security[i] = v2.SecurityRequirement(req)
+		v2Security[i] = swagger.SecurityRequirement(req)
 	}
 
 	return v2Security
 }
 
 // convertTags converts tags.
-func (c *Converter) convertTags(tags []v3.Tag) []v2.Tag {
+func (c *Converter) convertTags(tags []openapi.Tag) []swagger.Tag {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	v2Tags := make([]v2.Tag, len(tags))
+	v2Tags := make([]swagger.Tag, len(tags))
 	for i, tag := range tags {
-		v2Tags[i] = v2.Tag{
+		v2Tags[i] = swagger.Tag{
 			Name:         tag.Name,
 			Description:  tag.Description,
 			ExternalDocs: c.convertExternalDocs(tag.ExternalDocs),
@@ -908,12 +908,12 @@ func (c *Converter) convertTags(tags []v3.Tag) []v2.Tag {
 }
 
 // convertExternalDocs converts external documentation.
-func (c *Converter) convertExternalDocs(docs *v3.ExternalDocs) *v2.ExternalDocs {
+func (c *Converter) convertExternalDocs(docs *openapi.ExternalDocs) *swagger.ExternalDocs {
 	if docs == nil {
 		return nil
 	}
 
-	return &v2.ExternalDocs{
+	return &swagger.ExternalDocs{
 		Description: docs.Description,
 		URL:         docs.URL,
 	}
@@ -924,12 +924,12 @@ func (c *Converter) convertExternalDocs(docs *v3.ExternalDocs) *v2.ExternalDocs 
 // =============================================================================
 
 // ConvertToV3 converts a Swagger 2.0 specification to OpenAPI 3.1.0.
-func (c *Converter) ConvertToV3(swagger *v2.Swagger) (*v3.OpenAPI, error) {
+func (c *Converter) ConvertToV3(swagger *swagger.Swagger) (*openapi.OpenAPI, error) {
 	if swagger == nil {
 		return nil, fmt.Errorf("input specification is nil")
 	}
 
-	spec := &v3.OpenAPI{
+	spec := &openapi.OpenAPI{
 		OpenAPI:      "3.1.0",
 		Info:         c.convertInfoToV3(swagger.Info),
 		Paths:        c.convertPathsToV3(swagger.Paths),
@@ -945,7 +945,7 @@ func (c *Converter) ConvertToV3(swagger *v2.Swagger) (*v3.OpenAPI, error) {
 
 	// Convert definitions/parameters/responses/securityDefinitions to components
 	if swagger.Definitions != nil || swagger.Parameters != nil || swagger.Responses != nil || swagger.SecurityDefinitions != nil {
-		spec.Components = &v3.Components{
+		spec.Components = &openapi.Components{
 			Schemas:         c.convertDefinitionsToSchemas(swagger.Definitions),
 			Parameters:      c.convertParameterDefinitionsToV3(swagger.Parameters),
 			Responses:       c.convertResponseDefinitionsToV3(swagger.Responses),
@@ -962,8 +962,8 @@ func (c *Converter) ConvertToV3(swagger *v2.Swagger) (*v3.OpenAPI, error) {
 }
 
 // convertInfoToV3 converts Swagger Info to OpenAPI Info.
-func (c *Converter) convertInfoToV3(info v2.Info) v3.Info {
-	v3Info := v3.Info{
+func (c *Converter) convertInfoToV3(info swagger.Info) openapi.Info {
+	v3Info := openapi.Info{
 		Title:          info.Title,
 		Description:    info.Description,
 		TermsOfService: info.TermsOfService,
@@ -971,7 +971,7 @@ func (c *Converter) convertInfoToV3(info v2.Info) v3.Info {
 	}
 
 	if info.Contact != nil {
-		v3Info.Contact = &v3.Contact{
+		v3Info.Contact = &openapi.Contact{
 			Name:  info.Contact.Name,
 			URL:   info.Contact.URL,
 			Email: info.Contact.Email,
@@ -979,7 +979,7 @@ func (c *Converter) convertInfoToV3(info v2.Info) v3.Info {
 	}
 
 	if info.License != nil {
-		v3Info.License = &v3.License{
+		v3Info.License = &openapi.License{
 			Name: info.License.Name,
 			URL:  info.License.URL,
 		}
@@ -989,12 +989,12 @@ func (c *Converter) convertInfoToV3(info v2.Info) v3.Info {
 }
 
 // buildServers constructs Server objects from host/basePath/schemes.
-func (c *Converter) buildServers(host, basePath string, schemes []string) []v3.Server {
+func (c *Converter) buildServers(host, basePath string, schemes []string) []openapi.Server {
 	if len(schemes) == 0 {
 		schemes = []string{"https"} // Default to https
 	}
 
-	servers := make([]v3.Server, 0, len(schemes))
+	servers := make([]openapi.Server, 0, len(schemes))
 	for _, scheme := range schemes {
 		serverURL := scheme + "://"
 		if host != "" {
@@ -1006,7 +1006,7 @@ func (c *Converter) buildServers(host, basePath string, schemes []string) []v3.S
 			serverURL += basePath
 		}
 
-		servers = append(servers, v3.Server{
+		servers = append(servers, openapi.Server{
 			URL: serverURL,
 		})
 	}
@@ -1015,12 +1015,12 @@ func (c *Converter) buildServers(host, basePath string, schemes []string) []v3.S
 }
 
 // convertPathsToV3 converts Swagger Paths to OpenAPI Paths.
-func (c *Converter) convertPathsToV3(paths v2.Paths) v3.Paths {
+func (c *Converter) convertPathsToV3(paths swagger.Paths) openapi.Paths {
 	if paths == nil {
 		return nil
 	}
 
-	v3Paths := make(v3.Paths, len(paths))
+	v3Paths := make(openapi.Paths, len(paths))
 	for path, pathItem := range paths {
 		v3Paths[path] = c.convertPathItemToV3(pathItem)
 	}
@@ -1029,12 +1029,12 @@ func (c *Converter) convertPathsToV3(paths v2.Paths) v3.Paths {
 }
 
 // convertPathItemToV3 converts a Swagger PathItem to OpenAPI PathItem.
-func (c *Converter) convertPathItemToV3(pathItem *v2.PathItem) *v3.PathItem {
+func (c *Converter) convertPathItemToV3(pathItem *swagger.PathItem) *openapi.PathItem {
 	if pathItem == nil {
 		return nil
 	}
 
-	v3PathItem := &v3.PathItem{
+	v3PathItem := &openapi.PathItem{
 		Ref:        pathItem.Ref,
 		Parameters: c.convertParametersToV3(pathItem.Parameters),
 	}
@@ -1065,12 +1065,12 @@ func (c *Converter) convertPathItemToV3(pathItem *v2.PathItem) *v3.PathItem {
 }
 
 // convertOperationToV3 converts a Swagger Operation to OpenAPI Operation.
-func (c *Converter) convertOperationToV3(op *v2.Operation) *v3.Operation {
+func (c *Converter) convertOperationToV3(op *swagger.Operation) *openapi.Operation {
 	if op == nil {
 		return nil
 	}
 
-	v3Op := &v3.Operation{
+	v3Op := &openapi.Operation{
 		Tags:         op.Tags,
 		Summary:      op.Summary,
 		Description:  op.Description,
@@ -1093,12 +1093,12 @@ func (c *Converter) convertOperationToV3(op *v2.Operation) *v3.Operation {
 }
 
 // separateBodyParameter separates body parameters from other parameters.
-func (c *Converter) separateBodyParameter(params []*v2.Parameter) (nonBody []*v2.Parameter, body *v2.Parameter) {
+func (c *Converter) separateBodyParameter(params []*swagger.Parameter) (nonBody []*swagger.Parameter, body *swagger.Parameter) {
 	if len(params) == 0 {
 		return nil, nil
 	}
 
-	nonBody = make([]*v2.Parameter, 0, len(params))
+	nonBody = make([]*swagger.Parameter, 0, len(params))
 	for _, param := range params {
 		if param.In == "body" {
 			if body != nil {
@@ -1114,7 +1114,7 @@ func (c *Converter) separateBodyParameter(params []*v2.Parameter) (nonBody []*v2
 }
 
 // convertBodyParameterToRequestBody converts a body parameter to RequestBody.
-func (c *Converter) convertBodyParameterToRequestBody(param *v2.Parameter, consumes []string) *v3.RequestBody {
+func (c *Converter) convertBodyParameterToRequestBody(param *swagger.Parameter, consumes []string) *openapi.RequestBody {
 	if param == nil || param.Schema == nil {
 		return nil
 	}
@@ -1123,14 +1123,14 @@ func (c *Converter) convertBodyParameterToRequestBody(param *v2.Parameter, consu
 		consumes = []string{"application/json"} // Default
 	}
 
-	content := make(map[string]*v3.MediaType, len(consumes))
+	content := make(map[string]*openapi.MediaType, len(consumes))
 	for _, mediaType := range consumes {
-		content[mediaType] = &v3.MediaType{
+		content[mediaType] = &openapi.MediaType{
 			Schema: c.convertSchemaToV3(param.Schema),
 		}
 	}
 
-	return &v3.RequestBody{
+	return &openapi.RequestBody{
 		Description: param.Description,
 		Content:     content,
 		Required:    param.Required,
@@ -1138,12 +1138,12 @@ func (c *Converter) convertBodyParameterToRequestBody(param *v2.Parameter, consu
 }
 
 // convertParametersToV3 converts Swagger Parameters to OpenAPI Parameters.
-func (c *Converter) convertParametersToV3(params []*v2.Parameter) []v3.Parameter {
+func (c *Converter) convertParametersToV3(params []*swagger.Parameter) []openapi.Parameter {
 	if len(params) == 0 {
 		return nil
 	}
 
-	v3Params := make([]v3.Parameter, 0, len(params))
+	v3Params := make([]openapi.Parameter, 0, len(params))
 	for _, param := range params {
 		if param.In == "body" {
 			continue // Body parameters are handled separately
@@ -1158,12 +1158,12 @@ func (c *Converter) convertParametersToV3(params []*v2.Parameter) []v3.Parameter
 }
 
 // convertParameterToV3 converts a Swagger Parameter to OpenAPI Parameter.
-func (c *Converter) convertParameterToV3(param *v2.Parameter) *v3.Parameter {
+func (c *Converter) convertParameterToV3(param *swagger.Parameter) *openapi.Parameter {
 	if param == nil {
 		return nil
 	}
 
-	v3Param := &v3.Parameter{
+	v3Param := &openapi.Parameter{
 		Name:            param.Name,
 		In:              param.In,
 		Description:     param.Description,
@@ -1185,12 +1185,12 @@ func (c *Converter) convertParameterToV3(param *v2.Parameter) *v3.Parameter {
 }
 
 // convertParameterPropertiesToSchema converts parameter type/format properties to a schema.
-func (c *Converter) convertParameterPropertiesToSchema(param *v2.Parameter) *v3.Schema {
+func (c *Converter) convertParameterPropertiesToSchema(param *swagger.Parameter) *openapi.Schema {
 	if param.Schema != nil {
 		return c.convertSchemaToV3(param.Schema)
 	}
 
-	schema := &v3.Schema{
+	schema := &openapi.Schema{
 		Type:    param.Type,
 		Format:  param.Format,
 		Default: param.Default,
@@ -1237,12 +1237,12 @@ func (c *Converter) convertParameterPropertiesToSchema(param *v2.Parameter) *v3.
 }
 
 // convertItemsToSchema converts Items to Schema.
-func (c *Converter) convertItemsToSchema(items *v2.Items) *v3.Schema {
+func (c *Converter) convertItemsToSchema(items *swagger.Items) *openapi.Schema {
 	if items == nil {
 		return nil
 	}
 
-	schema := &v3.Schema{
+	schema := &openapi.Schema{
 		Type:    items.Type,
 		Format:  items.Format,
 		Default: items.Default,
@@ -1265,12 +1265,12 @@ func (c *Converter) convertItemsToSchema(items *v2.Items) *v3.Schema {
 }
 
 // convertResponsesToV3 converts Swagger Responses to OpenAPI Responses.
-func (c *Converter) convertResponsesToV3(responses v2.Responses, produces []string) v3.Responses {
+func (c *Converter) convertResponsesToV3(responses swagger.Responses, produces []string) openapi.Responses {
 	if len(responses) == 0 {
 		return nil
 	}
 
-	v3Responses := make(v3.Responses, len(responses))
+	v3Responses := make(openapi.Responses, len(responses))
 	for code, resp := range responses {
 		v3Responses[code] = c.convertResponseToV3(resp, produces)
 	}
@@ -1279,12 +1279,12 @@ func (c *Converter) convertResponsesToV3(responses v2.Responses, produces []stri
 }
 
 // convertResponseToV3 converts a Swagger Response to OpenAPI Response.
-func (c *Converter) convertResponseToV3(resp *v2.Response, produces []string) *v3.Response {
+func (c *Converter) convertResponseToV3(resp *swagger.Response, produces []string) *openapi.Response {
 	if resp == nil {
 		return nil
 	}
 
-	v3Resp := &v3.Response{
+	v3Resp := &openapi.Response{
 		Description: resp.Description,
 		Headers:     c.convertHeadersToV3(resp.Headers),
 	}
@@ -1295,9 +1295,9 @@ func (c *Converter) convertResponseToV3(resp *v2.Response, produces []string) *v
 			produces = []string{"application/json"} // Default
 		}
 
-		content := make(map[string]*v3.MediaType, len(produces))
+		content := make(map[string]*openapi.MediaType, len(produces))
 		for _, mediaType := range produces {
-			mt := &v3.MediaType{
+			mt := &openapi.MediaType{
 				Schema: c.convertSchemaToV3(resp.Schema),
 			}
 
@@ -1318,12 +1318,12 @@ func (c *Converter) convertResponseToV3(resp *v2.Response, produces []string) *v
 }
 
 // convertHeadersToV3 converts Swagger Headers to OpenAPI Headers.
-func (c *Converter) convertHeadersToV3(headers map[string]*v2.Header) map[string]*v3.Header {
+func (c *Converter) convertHeadersToV3(headers map[string]*swagger.Header) map[string]*openapi.Header {
 	if len(headers) == 0 {
 		return nil
 	}
 
-	v3Headers := make(map[string]*v3.Header, len(headers))
+	v3Headers := make(map[string]*openapi.Header, len(headers))
 	for name, header := range headers {
 		v3Headers[name] = c.convertHeaderToV3(header)
 	}
@@ -1332,12 +1332,12 @@ func (c *Converter) convertHeadersToV3(headers map[string]*v2.Header) map[string
 }
 
 // convertHeaderToV3 converts a Swagger Header to OpenAPI Header.
-func (c *Converter) convertHeaderToV3(header *v2.Header) *v3.Header {
+func (c *Converter) convertHeaderToV3(header *swagger.Header) *openapi.Header {
 	if header == nil {
 		return nil
 	}
 
-	schema := &v3.Schema{
+	schema := &openapi.Schema{
 		Type:    header.Type,
 		Format:  header.Format,
 		Default: header.Default,
@@ -1351,19 +1351,19 @@ func (c *Converter) convertHeaderToV3(header *v2.Header) *v3.Header {
 		schema.Minimum = *header.Minimum
 	}
 
-	return &v3.Header{
+	return &openapi.Header{
 		Description: header.Description,
 		Schema:      schema,
 	}
 }
 
 // convertDefinitionsToSchemas converts Swagger Definitions to OpenAPI Schemas.
-func (c *Converter) convertDefinitionsToSchemas(definitions map[string]*v2.Schema) map[string]*v3.Schema {
+func (c *Converter) convertDefinitionsToSchemas(definitions map[string]*swagger.Schema) map[string]*openapi.Schema {
 	if len(definitions) == 0 {
 		return nil
 	}
 
-	v3Schemas := make(map[string]*v3.Schema, len(definitions))
+	v3Schemas := make(map[string]*openapi.Schema, len(definitions))
 	for name, schema := range definitions {
 		v3Schemas[name] = c.convertSchemaToV3(schema)
 	}
@@ -1372,12 +1372,12 @@ func (c *Converter) convertDefinitionsToSchemas(definitions map[string]*v2.Schem
 }
 
 // convertSchemaToV3 converts a Swagger Schema (JSON Schema Draft 4) to OpenAPI Schema (2020-12).
-func (c *Converter) convertSchemaToV3(schema *v2.Schema) *v3.Schema {
+func (c *Converter) convertSchemaToV3(schema *swagger.Schema) *openapi.Schema {
 	if schema == nil {
 		return nil
 	}
 
-	v3Schema := &v3.Schema{
+	v3Schema := &openapi.Schema{
 		Ref:          schema.Ref,
 		Type:         schema.Type,
 		Format:       schema.Format,
@@ -1442,7 +1442,7 @@ func (c *Converter) convertSchemaToV3(schema *v2.Schema) *v3.Schema {
 		switch v := schema.AdditionalProperties.(type) {
 		case bool:
 			v3Schema.AdditionalProperties = v
-		case *v2.Schema:
+		case *swagger.Schema:
 			v3Schema.AdditionalProperties = c.convertSchemaToV3(v)
 		}
 	}
@@ -1454,7 +1454,7 @@ func (c *Converter) convertSchemaToV3(schema *v2.Schema) *v3.Schema {
 
 	// Convert allOf
 	if len(schema.AllOf) > 0 {
-		v3Schema.AllOf = make([]v3.Schema, len(schema.AllOf))
+		v3Schema.AllOf = make([]openapi.Schema, len(schema.AllOf))
 		for i, s := range schema.AllOf {
 			converted := c.convertSchemaToV3(s)
 			if converted != nil {
@@ -1465,7 +1465,7 @@ func (c *Converter) convertSchemaToV3(schema *v2.Schema) *v3.Schema {
 
 	// Handle XML
 	if schema.XML != nil {
-		v3Schema.XML = &v3.XML{
+		v3Schema.XML = &openapi.XML{
 			Name:      schema.XML.Name,
 			Namespace: schema.XML.Namespace,
 			Prefix:    schema.XML.Prefix,
@@ -1476,7 +1476,7 @@ func (c *Converter) convertSchemaToV3(schema *v2.Schema) *v3.Schema {
 
 	// Handle discriminator (string in v2, object in v3)
 	if schema.Discriminator != "" {
-		v3Schema.Discriminator = &v3.Discriminator{
+		v3Schema.Discriminator = &openapi.Discriminator{
 			PropertyName: schema.Discriminator,
 		}
 	}
@@ -1501,12 +1501,12 @@ func (c *Converter) convertSchemaToV3(schema *v2.Schema) *v3.Schema {
 }
 
 // convertParameterDefinitionsToV3 converts component parameters.
-func (c *Converter) convertParameterDefinitionsToV3(params map[string]*v2.Parameter) map[string]*v3.Parameter {
+func (c *Converter) convertParameterDefinitionsToV3(params map[string]*swagger.Parameter) map[string]*openapi.Parameter {
 	if len(params) == 0 {
 		return nil
 	}
 
-	v3Params := make(map[string]*v3.Parameter, len(params))
+	v3Params := make(map[string]*openapi.Parameter, len(params))
 	for name, param := range params {
 		v3Params[name] = c.convertParameterToV3(param)
 	}
@@ -1515,12 +1515,12 @@ func (c *Converter) convertParameterDefinitionsToV3(params map[string]*v2.Parame
 }
 
 // convertResponseDefinitionsToV3 converts component responses.
-func (c *Converter) convertResponseDefinitionsToV3(responses map[string]*v2.Response) map[string]*v3.Response {
+func (c *Converter) convertResponseDefinitionsToV3(responses map[string]*swagger.Response) map[string]*openapi.Response {
 	if len(responses) == 0 {
 		return nil
 	}
 
-	v3Responses := make(map[string]*v3.Response, len(responses))
+	v3Responses := make(map[string]*openapi.Response, len(responses))
 	for name, resp := range responses {
 		v3Responses[name] = c.convertResponseToV3(resp, []string{"application/json"})
 	}
@@ -1529,12 +1529,12 @@ func (c *Converter) convertResponseDefinitionsToV3(responses map[string]*v2.Resp
 }
 
 // convertSecurityDefinitionsToV3 converts Swagger SecurityDefinitions to OpenAPI SecuritySchemes.
-func (c *Converter) convertSecurityDefinitionsToV3(schemes map[string]*v2.SecurityScheme) map[string]*v3.SecurityScheme {
+func (c *Converter) convertSecurityDefinitionsToV3(schemes map[string]*swagger.SecurityScheme) map[string]*openapi.SecurityScheme {
 	if len(schemes) == 0 {
 		return nil
 	}
 
-	v3Schemes := make(map[string]*v3.SecurityScheme, len(schemes))
+	v3Schemes := make(map[string]*openapi.SecurityScheme, len(schemes))
 	for name, scheme := range schemes {
 		v3Schemes[name] = c.convertSecuritySchemeToV3(scheme)
 	}
@@ -1543,12 +1543,12 @@ func (c *Converter) convertSecurityDefinitionsToV3(schemes map[string]*v2.Securi
 }
 
 // convertSecuritySchemeToV3 converts a Swagger SecurityScheme to OpenAPI SecurityScheme.
-func (c *Converter) convertSecuritySchemeToV3(scheme *v2.SecurityScheme) *v3.SecurityScheme {
+func (c *Converter) convertSecuritySchemeToV3(scheme *swagger.SecurityScheme) *openapi.SecurityScheme {
 	if scheme == nil {
 		return nil
 	}
 
-	v3Scheme := &v3.SecurityScheme{
+	v3Scheme := &openapi.SecurityScheme{
 		Description: scheme.Description,
 	}
 
@@ -1580,31 +1580,31 @@ func (c *Converter) convertSecuritySchemeToV3(scheme *v2.SecurityScheme) *v3.Sec
 }
 
 // convertOAuth2FlowsToV3 converts OAuth2 flow from Swagger 2.0 to OpenAPI 3.x format.
-func (c *Converter) convertOAuth2FlowsToV3(scheme *v2.SecurityScheme) *v3.OAuthFlows {
+func (c *Converter) convertOAuth2FlowsToV3(scheme *swagger.SecurityScheme) *openapi.OAuthFlows {
 	if scheme.Flow == "" {
 		return nil
 	}
 
-	flows := &v3.OAuthFlows{}
+	flows := &openapi.OAuthFlows{}
 
 	switch scheme.Flow {
 	case "implicit":
-		flows.Implicit = &v3.OAuthFlow{
+		flows.Implicit = &openapi.OAuthFlow{
 			AuthorizationURL: scheme.AuthorizationURL,
 			Scopes:           scheme.Scopes,
 		}
 	case "password":
-		flows.Password = &v3.OAuthFlow{
+		flows.Password = &openapi.OAuthFlow{
 			TokenURL: scheme.TokenURL,
 			Scopes:   scheme.Scopes,
 		}
 	case "application":
-		flows.ClientCredentials = &v3.OAuthFlow{
+		flows.ClientCredentials = &openapi.OAuthFlow{
 			TokenURL: scheme.TokenURL,
 			Scopes:   scheme.Scopes,
 		}
 	case "accessCode":
-		flows.AuthorizationCode = &v3.OAuthFlow{
+		flows.AuthorizationCode = &openapi.OAuthFlow{
 			AuthorizationURL: scheme.AuthorizationURL,
 			TokenURL:         scheme.TokenURL,
 			Scopes:           scheme.Scopes,
@@ -1617,28 +1617,28 @@ func (c *Converter) convertOAuth2FlowsToV3(scheme *v2.SecurityScheme) *v3.OAuthF
 }
 
 // convertSecurityToV3 converts security requirements.
-func (c *Converter) convertSecurityToV3(security []v2.SecurityRequirement) []v3.SecurityRequirement {
+func (c *Converter) convertSecurityToV3(security []swagger.SecurityRequirement) []openapi.SecurityRequirement {
 	if len(security) == 0 {
 		return nil
 	}
 
-	v3Security := make([]v3.SecurityRequirement, len(security))
+	v3Security := make([]openapi.SecurityRequirement, len(security))
 	for i, req := range security {
-		v3Security[i] = v3.SecurityRequirement(req)
+		v3Security[i] = openapi.SecurityRequirement(req)
 	}
 
 	return v3Security
 }
 
 // convertTagsToV3 converts tags.
-func (c *Converter) convertTagsToV3(tags []v2.Tag) []v3.Tag {
+func (c *Converter) convertTagsToV3(tags []swagger.Tag) []openapi.Tag {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	v3Tags := make([]v3.Tag, len(tags))
+	v3Tags := make([]openapi.Tag, len(tags))
 	for i, tag := range tags {
-		v3Tags[i] = v3.Tag{
+		v3Tags[i] = openapi.Tag{
 			Name:         tag.Name,
 			Description:  tag.Description,
 			ExternalDocs: c.convertExternalDocsToV3(tag.ExternalDocs),
@@ -1649,12 +1649,12 @@ func (c *Converter) convertTagsToV3(tags []v2.Tag) []v3.Tag {
 }
 
 // convertExternalDocsToV3 converts external documentation.
-func (c *Converter) convertExternalDocsToV3(docs *v2.ExternalDocs) *v3.ExternalDocs {
+func (c *Converter) convertExternalDocsToV3(docs *swagger.ExternalDocs) *openapi.ExternalDocs {
 	if docs == nil {
 		return nil
 	}
 
-	return &v3.ExternalDocs{
+	return &openapi.ExternalDocs{
 		Description: docs.Description,
 		URL:         docs.URL,
 	}

@@ -1,30 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 17: Template Delimiters ==="
+# Exemplo 17 - template-delims
+
+echo "=== Exemplo 17: template-delims ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Delimiters padrão
-echo "1. SEM --templateDelims (padrão: {{ }})..."
-../../nexs-swag init --dir . --output ./docs-default --quiet
-echo "   ✓ Gerado com delimiters padrão"
-
-echo ""
-
-# Delimiters customizados
-echo "2. COM --templateDelims \"[[ ]]\"..."
-../../nexs-swag init --dir . --output ./docs-custom --templateDelims "[[ ]]" --quiet
-echo "   ✓ Gerado com delimiters customizados"
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --templateDelims "[[","]]"
 
 echo ""
-echo "Quando usar:"
-echo "  - Conflito com template engines"
-echo "  - Mustache, Jinja2, etc"
-echo "  - Frontend frameworks que usam {{ }}"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --templateDelims "[[","]]"
+
 echo ""
-echo "Delimiters suportados:"
-echo "  [[ ]]   - Recomendado"
-echo "  {{{ }}} - Triple mustache"
-echo "  <% %>   - ERB style"
-echo "  {% %}   - Jinja2 style"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

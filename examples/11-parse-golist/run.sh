@@ -1,30 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 11: Parse GoList ==="
+# Exemplo 11 - parse-golist
+
+echo "=== Exemplo 11: parse-golist ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem parseGoList (parsing manual)
-echo "1. SEM --parseGoList (parsing manual)..."
-time ../../nexs-swag init --dir . --output ./docs-manual --quiet 2>&1 | tail -1
-
-echo ""
-
-# Com parseGoList (usa go list)
-echo "2. COM --parseGoList (usa 'go list')..."
-time ../../nexs-swag init --dir . --output ./docs-golist --parseGoList --quiet 2>&1 | tail -1
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --parseGoList
 
 echo ""
-echo "✓ Documentação gerada!"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --parseGoList
+
 echo ""
-echo "Benefícios do --parseGoList:"
-echo "  • Mais rápido em projetos grandes"
-echo "  • Usa informações do Go modules"
-echo "  • Detecta dependências automaticamente"
-echo "  • Respeita go.mod e replace directives"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "Quando usar:"
-echo "  • Projetos com muitos packages"
-echo "  • Go modules configurado"
-echo "  • Dependências complexas"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

@@ -1,22 +1,26 @@
 #!/bin/bash
 
-echo "=== Exemplo 13: Code Examples ==="
+echo "=== Exemplo 13: code-examples ==="
 echo ""
 
 rm -rf docs
 
-echo "Gerando documentação com code examples..."
-../../nexs-swag init --dir . --output ./docs --codeExampleFilesDir ./code_samples --quiet
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --generalInfo main.go --output ./docs/v3 --openapi-version 3.1 --codeExampleFilesDir code_samples
 
 echo ""
-echo "✓ Documentação gerada!"
-echo ""
-echo "Verificando x-codeSamples no JSON:"
-grep -A 20 "x-codeSamples" docs/openapi.json | head -25
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --generalInfo main.go --output ./docs/v2 --openapi-version 2.0 --codeExampleFilesDir code_samples
 
 echo ""
-echo "Linguagens detectadas:"
-echo "  - create_user.go  → Go"
-echo "  - create_user.js  → JavaScript"
-echo "  - create_user.py  → Python"
-echo "  - create_user.sh  → Bash"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

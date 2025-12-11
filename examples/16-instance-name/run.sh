@@ -1,31 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 16: Instance Name ==="
+# Exemplo 16 - instance-name
+
+echo "=== Exemplo 16: instance-name ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Instance padrão
-echo "1. SEM --instanceName (padrão: swagger)..."
-../../nexs-swag init --dir . --output ./docs-default --quiet
-echo "   Package:"
-head -3 docs-default/docs.go | tail -1
-
-echo ""
-
-# Instance custom
-echo "2. COM --instanceName customapi..."
-../../nexs-swag init --dir . --output ./docs-custom --instanceName customapi --quiet
-echo "   Package:"
-head -3 docs-custom/docs.go | tail -1
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --instanceName myapi
 
 echo ""
-echo "✓ Observe a diferença no package name!"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --instanceName myapi
+
 echo ""
-echo "Uso no código:"
-echo "  Default:  import _ \"./docs-default\""
-echo "  Custom:   import _ \"./docs-custom\""
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "Múltiplas instâncias:"
-echo "  ../../nexs-swag init --instanceName apiv1 --output ./docs/v1"
-echo "  ../../nexs-swag init --instanceName apiv2 --output ./docs/v2"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

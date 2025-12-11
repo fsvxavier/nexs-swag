@@ -24,7 +24,7 @@ rm -rf docs
 # Generate OpenAPI 3.1.0
 echo ""
 echo "📄 Generating OpenAPI 3.1.0..."
-$NEXS_SWAG init -g main.go -o ./docs/v3 --format json,yaml
+$NEXS_SWAG init -g main.go -o ./docs/v3 --openapi-version 3.1 --format json,yaml
 
 # Generate Swagger 2.0
 echo ""

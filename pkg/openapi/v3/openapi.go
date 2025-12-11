@@ -26,6 +26,16 @@ func (o *OpenAPI) GetVersion() string {
 	return "3.1.0"
 }
 
+// GetTitle returns the API title.
+func (o *OpenAPI) GetTitle() string {
+	return o.Info.Title
+}
+
+// GetInfo returns the Info object.
+func (o *OpenAPI) GetInfo() interface{} {
+	return o.Info
+}
+
 // Validate performs basic validation of the OpenAPI specification.
 func (o *OpenAPI) Validate() error {
 	if o.OpenAPI == "" {

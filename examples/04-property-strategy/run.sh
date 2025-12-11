@@ -1,38 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 04: Property Naming Strategy ==="
+# Exemplo 04 - property-strategy
+
+echo "=== Exemplo 04: property-strategy ==="
 echo ""
 
-# Limpar
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# 1. snake_case
-echo "1. Gerando com snake_case..."
-../../nexs-swag init --dir . --output ./docs-snake --propertyStrategy snakecase --quiet
-echo "   FirstName → $(grep -o '"first_name"' docs-snake/openapi.json || echo 'first_name')"
-echo "   LastName  → $(grep -o '"last_name"' docs-snake/openapi.json || echo 'last_name')"
-
-# 2. camelCase (default)
-echo ""
-echo "2. Gerando com camelCase (default)..."
-../../nexs-swag init --dir . --output ./docs-camel --propertyStrategy camelcase --quiet
-echo "   FirstName → $(grep -o '"firstName"' docs-camel/openapi.json || echo 'firstName')"
-echo "   LastName  → $(grep -o '"lastName"' docs-camel/openapi.json || echo 'lastName')"
-
-# 3. PascalCase
-echo ""
-echo "3. Gerando com PascalCase..."
-../../nexs-swag init --dir . --output ./docs-pascal --propertyStrategy pascalcase --quiet
-echo "   FirstName → $(grep -o '"FirstName"' docs-pascal/openapi.json || echo 'FirstName')"
-echo "   LastName  → $(grep -o '"LastName"' docs-pascal/openapi.json || echo 'LastName')"
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --propertyStrategy snakecase
 
 echo ""
-echo "✓ Documentação gerada com diferentes estratégias!"
-echo ""
-echo "Comparar:"
-echo "  - docs-snake/openapi.json   (snake_case)"
-echo "  - docs-camel/openapi.json   (camelCase)"
-echo "  - docs-pascal/openapi.json  (PascalCase)"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --propertyStrategy snakecase
 
 echo ""
-echo "Nota: user_id sempre mantém o nome da tag json explícita"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

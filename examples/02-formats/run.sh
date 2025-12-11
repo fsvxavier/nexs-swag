@@ -1,38 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 02: Múltiplos Formatos ==="
+# Exemplo 02 - formats
+
+echo "=== Exemplo 02: formats ==="
 echo ""
 
+# Limpar documentação anterior
 rm -rf docs
 
-# Gerar apenas JSON
-echo "1. Gerando apenas JSON..."
-../../nexs-swag init --dir . --output ./docs --format json
-echo "   Criado: $(ls docs/)"
-
-rm -rf docs
-
-# Gerar apenas YAML
-echo ""
-echo "2. Gerando apenas YAML..."
-../../nexs-swag init --dir . --output ./docs --format yaml
-echo "   Criado: $(ls docs/)"
-
-rm -rf docs
-
-# Gerar JSON e YAML
-echo ""
-echo "3. Gerando JSON e YAML..."
-../../nexs-swag init --dir . --output ./docs --format json,yaml
-echo "   Criado: $(ls docs/)"
-
-rm -rf docs
-
-# Gerar todos os formatos (default)
-echo ""
-echo "4. Gerando todos os formatos (json,yaml,go)..."
-../../nexs-swag init --dir . --output ./docs --format json,yaml,go
-echo "   Criado: $(ls docs/)"
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --format json,yaml,go
 
 echo ""
-echo "✓ Exemplos de múltiplos formatos gerados!"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --format json,yaml,go
+
+echo ""
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

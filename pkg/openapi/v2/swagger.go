@@ -32,6 +32,16 @@ func (s *Swagger) GetVersion() string {
 	return "2.0"
 }
 
+// GetTitle returns the API title.
+func (s *Swagger) GetTitle() string {
+	return s.Info.Title
+}
+
+// GetInfo returns the Info object.
+func (s *Swagger) GetInfo() interface{} {
+	return s.Info
+}
+
 // Validate performs basic validation of the Swagger specification.
 func (s *Swagger) Validate() error {
 	if s.Swagger != "2.0" {

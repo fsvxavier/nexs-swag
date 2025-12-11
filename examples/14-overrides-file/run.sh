@@ -1,31 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 14: Overrides File ==="
+# Exemplo 14 - overrides-file
+
+echo "=== Exemplo 14: overrides-file ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem overrides - tipos complexos
-echo "1. SEM --overridesFile..."
-../../nexs-swag init --dir . --output ./docs-no-override --quiet
-echo "   Schema de Account (ID field):"
-grep -A 5 '"ID"' docs-no-override/openapi.json | head -6
-
-echo ""
-
-# Com overrides - tipos simples
-echo "2. COM --overridesFile .swaggo..."
-../../nexs-swag init --dir . --output ./docs-with-override --overridesFile .swaggo --quiet
-echo "   Schema de Account (ID field):"
-grep -A 5 '"ID"' docs-with-override/openapi.json | head -6
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --overridesFile .swaggo
 
 echo ""
-echo "✓ Comparar os schemas!"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --overridesFile .swaggo
+
 echo ""
-echo "SEM override:"
-echo "  ID: object (sql.NullInt64 completo)"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "COM override:"
-echo "  ID: integer (tipo simples)"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
 echo ""
-echo "Ver arquivo .swaggo para configurar outros tipos"
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

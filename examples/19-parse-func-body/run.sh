@@ -1,29 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 19: Parse Func Body ==="
+# Exemplo 19 - parse-func-body
+
+echo "=== Exemplo 19: parse-func-body ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem parseFuncBody
-echo "1. SEM --parseFuncBody..."
-../../nexs-swag init --dir . --output ./docs-no-parse --quiet
-echo "   ✓ Apenas annotations são parseadas"
-
-echo ""
-
-# Com parseFuncBody
-echo "2. COM --parseFuncBody..."
-../../nexs-swag init --dir . --output ./docs-with-parse --parseFuncBody --quiet
-echo "   ✓ Corpo das funções também é analisado"
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --parseFuncBody
 
 echo ""
-echo "Benefícios:"
-echo "  • Detecta validações no código"
-echo "  • Infere responses adicionais"
-echo "  • Análise mais profunda"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --parseFuncBody
+
 echo ""
-echo "⚠️ Atenção:"
-echo "  • Mais lento"
-echo "  • Pode gerar false positives"
-echo "  • Use apenas se necessário"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

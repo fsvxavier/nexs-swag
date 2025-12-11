@@ -1,32 +1,28 @@
 #!/bin/bash
 
+# Exemplo 21 - Struct Tags
+
 echo "=== Exemplo 21: Struct Tags ==="
 echo ""
 
 rm -rf docs
 
-echo "Gerando documentação..."
-../../nexs-swag init --dir . --output ./docs --quiet
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1
 
 echo ""
-echo "✓ Documentação gerada!"
-echo ""
-echo "Tags de validação no User:"
-grep -A 20 '"User"' docs/openapi.json | grep -E '(minLength|maxLength|minimum|maximum|format|example)' | head -10
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0
 
 echo ""
-echo "Campo ignorado (Password):"
-grep -c '"password"' docs/openapi.json || echo "0 ocorrências (ignorado com sucesso!)"
-
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "Tags suportadas:"
-echo "  • example - Valor de exemplo"
-echo "  • format - Formato (email, date, etc)"
-echo "  • minLength/maxLength - Validação de string"
-echo "  • minimum/maximum - Validação numérica"
-echo "  • enums - Valores permitidos"
-echo "  • default - Valor padrão"
-echo "  • swaggertype - Override de tipo"
-echo "  • swaggerignore - Ignorar campo"
-echo "  • readonly - Campo read-only"
-echo "  • x-* - Extensões customizadas"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/
