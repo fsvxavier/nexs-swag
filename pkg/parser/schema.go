@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // JSON Schema type constants.
@@ -51,13 +51,13 @@ const (
 // SchemaProcessor processes struct type definitions to generate OpenAPI schemas.
 type SchemaProcessor struct {
 	parser    *Parser
-	openapi   *openapi.OpenAPI
+	openapi   *v3.OpenAPI
 	typeCache map[string]*TypeInfo
 	depth     int // Current parsing depth for nested structures
 }
 
 // NewSchemaProcessor creates a new schema processor.
-func NewSchemaProcessor(p *Parser, spec *openapi.OpenAPI, typeCache map[string]*TypeInfo) *SchemaProcessor {
+func NewSchemaProcessor(p *Parser, spec *v3.OpenAPI, typeCache map[string]*TypeInfo) *SchemaProcessor {
 	return &SchemaProcessor{
 		parser:    p,
 		openapi:   spec,
@@ -67,10 +67,10 @@ func NewSchemaProcessor(p *Parser, spec *openapi.OpenAPI, typeCache map[string]*
 }
 
 // ProcessStruct processes a struct type and returns an OpenAPI schema.
-func (s *SchemaProcessor) ProcessStruct(structType *ast.StructType, doc *ast.CommentGroup, typeName string) *openapi.Schema {
-	schema := &openapi.Schema{
+func (s *SchemaProcessor) ProcessStruct(structType *ast.StructType, doc *ast.CommentGroup, typeName string) *v3.Schema {
+	schema := &v3.Schema{
 		Type:       "object",
-		Properties: make(map[string]*openapi.Schema),
+		Properties: make(map[string]*v3.Schema),
 		Required:   []string{},
 	}
 
@@ -88,7 +88,7 @@ func (s *SchemaProcessor) ProcessStruct(structType *ast.StructType, doc *ast.Com
 }
 
 // parseStructDoc parses struct-level documentation comments.
-func (s *SchemaProcessor) parseStructDoc(doc *ast.CommentGroup, schema *openapi.Schema) {
+func (s *SchemaProcessor) parseStructDoc(doc *ast.CommentGroup, schema *v3.Schema) {
 	for _, comment := range doc.List {
 		text := strings.TrimSpace(strings.TrimPrefix(comment.Text, "//"))
 		text = strings.TrimSpace(strings.TrimPrefix(text, "/*"))
@@ -137,7 +137,7 @@ func (s *SchemaProcessor) parseStructDoc(doc *ast.CommentGroup, schema *openapi.
 }
 
 // processField processes a single struct field.
-func (s *SchemaProcessor) processField(field *ast.Field, schema *openapi.Schema) {
+func (s *SchemaProcessor) processField(field *ast.Field, schema *v3.Schema) {
 	if len(field.Names) == 0 {
 		// Handle embedded fields
 		s.processEmbeddedField(field, schema)
@@ -197,7 +197,7 @@ func (s *SchemaProcessor) processField(field *ast.Field, schema *openapi.Schema)
 }
 
 // processEmbeddedField processes an embedded/anonymous field.
-func (s *SchemaProcessor) processEmbeddedField(field *ast.Field, schema *openapi.Schema) {
+func (s *SchemaProcessor) processEmbeddedField(field *ast.Field, schema *v3.Schema) {
 	// Get the type name of the embedded field
 	var typeName string
 
@@ -216,7 +216,7 @@ func (s *SchemaProcessor) processEmbeddedField(field *ast.Field, schema *openapi
 
 	// Use allOf composition for embedded fields
 	if typeName != "" {
-		ref := openapi.Schema{
+		ref := v3.Schema{
 			Ref: "#/components/schemas/" + typeName,
 		}
 		schema.AllOf = append(schema.AllOf, ref)
@@ -224,7 +224,7 @@ func (s *SchemaProcessor) processEmbeddedField(field *ast.Field, schema *openapi
 }
 
 // parseFieldDoc parses field-level documentation.
-func (s *SchemaProcessor) parseFieldDoc(doc *ast.CommentGroup, schema *openapi.Schema) {
+func (s *SchemaProcessor) parseFieldDoc(doc *ast.CommentGroup, schema *v3.Schema) {
 	for _, comment := range doc.List {
 		text := strings.TrimSpace(strings.TrimPrefix(comment.Text, "//"))
 
@@ -340,7 +340,7 @@ func (s *SchemaProcessor) parseStructTags(field *ast.Field) StructTags {
 }
 
 // applyStructTagAttributes applies struct tag attributes to schema.
-func (s *SchemaProcessor) applyStructTagAttributes(tags StructTags, schema *openapi.Schema) {
+func (s *SchemaProcessor) applyStructTagAttributes(tags StructTags, schema *v3.Schema) {
 	// Apply swaggertype override first (highest priority)
 	if tags.SwaggerType != "" {
 		s.applySwaggerType(tags.SwaggerType, schema)
@@ -420,7 +420,7 @@ func (s *SchemaProcessor) applyStructTagAttributes(tags StructTags, schema *open
 
 // applyBindingValidations parses binding tag and applies validations.
 // Common binding rules: required, email, min, max, len, etc.
-func (s *SchemaProcessor) applyBindingValidations(binding string, schema *openapi.Schema) {
+func (s *SchemaProcessor) applyBindingValidations(binding string, schema *v3.Schema) {
 	rules := strings.Split(binding, ",")
 
 	for _, rule := range rules {
@@ -534,7 +534,7 @@ func (s *SchemaProcessor) applyBindingValidations(binding string, schema *openap
 
 // applyValidateRules parses validate tag and applies validations.
 // Supports go-playground/validator rules.
-func (s *SchemaProcessor) applyValidateRules(validate string, schema *openapi.Schema) {
+func (s *SchemaProcessor) applyValidateRules(validate string, schema *v3.Schema) {
 	// Similar to binding, but more comprehensive
 	// For now, reuse the binding logic as they share many rules
 	s.applyBindingValidations(validate, schema)
@@ -578,15 +578,15 @@ func (s *SchemaProcessor) applyValidateRules(validate string, schema *openapi.Sc
 }
 
 // processFieldType processes a field type and returns a schema.
-func (s *SchemaProcessor) processFieldType(expr ast.Expr) *openapi.Schema {
+func (s *SchemaProcessor) processFieldType(expr ast.Expr) *v3.Schema {
 	// Check depth limit if parseDepth is set
 	maxDepth := s.parser.GetParseDepth()
 	if maxDepth > 0 && s.depth >= maxDepth {
 		// Return empty schema when depth limit is reached
-		return &openapi.Schema{}
+		return &v3.Schema{}
 	}
 
-	schema := &openapi.Schema{}
+	schema := &v3.Schema{}
 
 	switch t := expr.(type) {
 	case *ast.Ident:
@@ -645,8 +645,8 @@ func (s *SchemaProcessor) processFieldType(expr ast.Expr) *openapi.Schema {
 }
 
 // identToSchema converts an identifier to a schema.
-func (s *SchemaProcessor) identToSchema(name string) *openapi.Schema {
-	schema := &openapi.Schema{}
+func (s *SchemaProcessor) identToSchema(name string) *v3.Schema {
+	schema := &v3.Schema{}
 
 	// Check for primitive types
 	switch name {
@@ -691,7 +691,7 @@ func (s *SchemaProcessor) identToSchema(name string) *openapi.Schema {
 // - "integer", "string", "number", "boolean", "object", "array"
 // - "primitive,integer" - convert struct to primitive type
 // - "array,number" - convert to array of numbers.
-func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.Schema) {
+func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *v3.Schema) {
 	if swaggerType == "" {
 		return
 	}
@@ -725,7 +725,7 @@ func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.S
 			schema.Ref = ""
 			switch typeStr {
 			case typeString, typeInteger, typeNumber, typeBoolean, typeObject:
-				schema.Items = &openapi.Schema{
+				schema.Items = &v3.Schema{
 					Type: typeStr,
 				}
 			}
@@ -739,7 +739,7 @@ func (s *SchemaProcessor) applySwaggerType(swaggerType string, schema *openapi.S
 // - "x-abc=def" - string value
 // - "!x-omitempty" - boolean false (negation)
 // - "x-nullable,x-abc=def,!x-omitempty" - multiple extensions.
-func (s *SchemaProcessor) applyExtensions(extensionsTag string, schema *openapi.Schema) {
+func (s *SchemaProcessor) applyExtensions(extensionsTag string, schema *v3.Schema) {
 	if extensionsTag == "" {
 		return
 	}
@@ -805,8 +805,8 @@ func extractTag(tagStr, key string) string {
 
 // parseOverrideType parses a type override string into a schema.
 // Supports: "string", "number", "integer", "boolean", "time.Time", etc.
-func (s *SchemaProcessor) parseOverrideType(override string) *openapi.Schema {
-	schema := &openapi.Schema{}
+func (s *SchemaProcessor) parseOverrideType(override string) *v3.Schema {
+	schema := &v3.Schema{}
 
 	switch override {
 	case typeString:

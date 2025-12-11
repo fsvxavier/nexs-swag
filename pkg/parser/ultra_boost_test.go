@@ -6,7 +6,7 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Ultra boost para atingir os últimos 1.4%
@@ -19,31 +19,31 @@ func TestUltraBoost1(t *testing.T) {
 	// getSchemaTypeString - testar TODOS os casos
 	for range 200 {
 		_ = proc.getSchemaTypeString(nil)
-		_ = proc.getSchemaTypeString(&openapi.Schema{})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "boolean"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "object"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "string"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "integer"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "number"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "boolean"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "object"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "array"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/Model"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/User"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date-time"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "uri"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "uuid"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "password"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int64"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "float"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "double"})
+		_ = proc.getSchemaTypeString(&v3.Schema{})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "boolean"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "object"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "string"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "integer"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "number"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "boolean"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "object"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "array"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/Model"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/User"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date-time"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "email"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "uri"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "uuid"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "password"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int32"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int64"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "float"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "double"})
 	}
 }
 
@@ -87,7 +87,7 @@ func TestUltraBoost2(t *testing.T) {
 func TestUltraBoost3(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"Model1": {Type: "object"},
 		"Model2": {Type: "object"},
 		"Model3": {Type: "object"},
@@ -137,57 +137,57 @@ func TestUltraBoost4(t *testing.T) {
 
 	// validateOperation - testar TODOS os cenários
 	for range 100 {
-		op1 := &openapi.Operation{}
+		op1 := &v3.Operation{}
 		_ = p.validateOperation(op1, "/path")
 
-		op2 := &openapi.Operation{
+		op2 := &v3.Operation{
 			Summary: "Test",
 		}
 		_ = p.validateOperation(op2, "/path")
 
-		op3 := &openapi.Operation{
+		op3 := &v3.Operation{
 			Summary:   "Test",
-			Responses: openapi.Responses{},
+			Responses: v3.Responses{},
 		}
 		_ = p.validateOperation(op3, "/path")
 
-		op4 := &openapi.Operation{
+		op4 := &v3.Operation{
 			Summary: "Test",
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op4, "/path")
 
-		op5 := &openapi.Operation{
+		op5 := &v3.Operation{
 			Summary: "Test",
-			Parameters: []openapi.Parameter{
+			Parameters: []v3.Parameter{
 				{Name: "id", In: "path"},
 			},
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op5, "/path")
 
-		op6 := &openapi.Operation{
+		op6 := &v3.Operation{
 			Summary: "Test",
-			RequestBody: &openapi.RequestBody{
+			RequestBody: &v3.RequestBody{
 				Required: true,
 			},
-			Responses: openapi.Responses{
-				"201": &openapi.Response{Description: "Created"},
+			Responses: v3.Responses{
+				"201": &v3.Response{Description: "Created"},
 			},
 		}
 		_ = p.validateOperation(op6, "/path")
 
-		op7 := &openapi.Operation{
+		op7 := &v3.Operation{
 			Summary: "Test",
-			Security: []openapi.SecurityRequirement{
+			Security: []v3.SecurityRequirement{
 				{"api_key": {}},
 			},
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op7, "/path")
@@ -203,41 +203,41 @@ func TestUltraBoost5(t *testing.T) {
 		p.openapi.Paths = nil
 		_ = p.Validate()
 
-		p.openapi.Paths = map[string]*openapi.PathItem{}
+		p.openapi.Paths = map[string]*v3.PathItem{}
 		_ = p.Validate()
 
-		p.openapi.Paths = map[string]*openapi.PathItem{
+		p.openapi.Paths = map[string]*v3.PathItem{
 			"/": {
-				Get: &openapi.Operation{
+				Get: &v3.Operation{
 					Summary: "Root",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
 			},
 		}
 		_ = p.Validate()
 
-		p.openapi.Paths = map[string]*openapi.PathItem{
+		p.openapi.Paths = map[string]*v3.PathItem{
 			"/users": {
-				Get: &openapi.Operation{
+				Get: &v3.Operation{
 					Summary: "List",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
-				Post: &openapi.Operation{
+				Post: &v3.Operation{
 					Summary: "Create",
-					Responses: openapi.Responses{
-						"201": &openapi.Response{Description: "Created"},
+					Responses: v3.Responses{
+						"201": &v3.Response{Description: "Created"},
 					},
 				},
 			},
 			"/products": {
-				Get: &openapi.Operation{
+				Get: &v3.Operation{
 					Summary: "List products",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
 			},
@@ -378,7 +378,7 @@ type Model3 struct {
 		for _, decl := range file.Decls {
 			if genDecl, ok := decl.(*ast.GenDecl); ok {
 				if genDecl.Doc != nil {
-					schema := &openapi.Schema{}
+					schema := &v3.Schema{}
 					sp.parseStructDoc(genDecl.Doc, schema)
 				}
 			}

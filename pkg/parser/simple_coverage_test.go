@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Testes simples para aumentar cobertura básica
@@ -12,7 +12,7 @@ import (
 func TestParseSchemaTypeSimple(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User": {Type: "object"},
 	}
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
@@ -33,11 +33,11 @@ func TestGetSchemaTypeStringSimple(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Chamar com vários tipos
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "boolean"})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "string"}})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/User"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "string"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "boolean"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "string"}})
+	_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/User"})
 	_ = proc.getSchemaTypeString(nil)
 }
 
@@ -54,7 +54,7 @@ func TestProcessCodeSamplesSimple(t *testing.T) {
 	codeExamplesCacheMutex.Unlock()
 
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
-	op := &openapi.Operation{}
+	op := &v3.Operation{}
 
 	// Testar vários formatos
 	proc.processCodeSamples("@x-codeSamples go:test.go", op)
@@ -66,7 +66,7 @@ func TestProcessCodeSamplesSimple(t *testing.T) {
 func TestIdentToSchemaSimple(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User":    {Type: "object"},
 		"Product": {Type: "object"},
 	}
@@ -95,16 +95,16 @@ func TestApplySwaggerTypeSimple(t *testing.T) {
 	}
 
 	// Testar vários tipos de tags
-	schema := &openapi.Schema{}
+	schema := &v3.Schema{}
 	sp.applySwaggerType("string", schema)
 
-	schema2 := &openapi.Schema{}
+	schema2 := &v3.Schema{}
 	sp.applySwaggerType("int", schema2)
 
-	schema3 := &openapi.Schema{}
+	schema3 := &v3.Schema{}
 	sp.applySwaggerType("number", schema3)
 
-	schema4 := &openapi.Schema{}
+	schema4 := &v3.Schema{}
 	sp.applySwaggerType("array,string", schema4)
 }
 
@@ -118,13 +118,13 @@ func TestApplyBindingValidationsSimple(t *testing.T) {
 	}
 
 	// Testar vários bindings
-	schema := &openapi.Schema{Type: "string"}
+	schema := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"required"`, schema)
 
-	schema2 := &openapi.Schema{Type: "integer"}
+	schema2 := &v3.Schema{Type: "integer"}
 	sp.applyBindingValidations(`binding:"min=1,max=100"`, schema2)
 
-	schema3 := &openapi.Schema{Type: "string"}
+	schema3 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"email"`, schema3)
 }
 
@@ -168,17 +168,17 @@ func TestGetSchemaTypeStringMore(t *testing.T) {
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
 	// Testar mais cenários
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "object"})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array"})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "integer"}})
-	_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "object"}})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "number"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "object"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "array"})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "integer"}})
+	_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "object"}})
 }
 
 func TestIdentToSchemaMore(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Order":    {Type: "object"},
@@ -207,29 +207,29 @@ func TestValidateOperationMore(t *testing.T) {
 	p := New()
 
 	// Testar com várias operações
-	op1 := &openapi.Operation{
+	op1 := &v3.Operation{
 		Summary: "Test operation",
-		Responses: openapi.Responses{
-			"200": &openapi.Response{Description: "OK"},
+		Responses: v3.Responses{
+			"200": &v3.Response{Description: "OK"},
 		},
 	}
 	_ = p.validateOperation(op1, "/test")
 
-	op2 := &openapi.Operation{
+	op2 := &v3.Operation{
 		Summary:     "Another operation",
 		Description: "Long description",
-		Responses: openapi.Responses{
-			"200": &openapi.Response{Description: "OK"},
-			"404": &openapi.Response{Description: "Not found"},
+		Responses: v3.Responses{
+			"200": &v3.Response{Description: "OK"},
+			"404": &v3.Response{Description: "Not found"},
 		},
 	}
 	_ = p.validateOperation(op2, "/another")
 
-	op3 := &openapi.Operation{
+	op3 := &v3.Operation{
 		Summary: "Operation with tags",
 		Tags:    []string{"users", "api"},
-		Responses: openapi.Responses{
-			"200": &openapi.Response{Description: "OK"},
+		Responses: v3.Responses{
+			"200": &v3.Response{Description: "OK"},
 		},
 	}
 	_ = p.validateOperation(op3, "/tagged")
@@ -245,25 +245,25 @@ func TestApplyBindingValidationsMore(t *testing.T) {
 	}
 
 	// Mais testes de binding
-	schema1 := &openapi.Schema{Type: "string"}
+	schema1 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"required,min=5,max=100"`, schema1)
 
-	schema2 := &openapi.Schema{Type: "integer"}
+	schema2 := &v3.Schema{Type: "integer"}
 	sp.applyBindingValidations(`binding:"gte=0,lte=100"`, schema2)
 
-	schema3 := &openapi.Schema{Type: "string"}
+	schema3 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"oneof=red green blue"`, schema3)
 
-	schema4 := &openapi.Schema{Type: "string"}
+	schema4 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"len=10"`, schema4)
 
-	schema5 := &openapi.Schema{Type: "string"}
+	schema5 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"email,required"`, schema5)
 
-	schema6 := &openapi.Schema{Type: "string"}
+	schema6 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"url"`, schema6)
 
-	schema7 := &openapi.Schema{Type: "string"}
+	schema7 := &v3.Schema{Type: "string"}
 	sp.applyBindingValidations(`binding:"uuid"`, schema7)
 }
 
@@ -283,7 +283,7 @@ func TestApplyParameterAttributesSimple(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	param := &openapi.Parameter{Name: "test"}
+	param := &v3.Parameter{Name: "test"}
 
 	// Testar vários atributos
 	attrs1 := map[string]string{
@@ -292,27 +292,27 @@ func TestApplyParameterAttributesSimple(t *testing.T) {
 	}
 	proc.applyParameterAttributes(param, attrs1)
 
-	param2 := &openapi.Parameter{Name: "test2"}
+	param2 := &v3.Parameter{Name: "test2"}
 	attrs2 := map[string]string{
 		"minlength": "5",
 		"maxlength": "50",
 	}
 	proc.applyParameterAttributes(param2, attrs2)
 
-	param3 := &openapi.Parameter{Name: "test3"}
+	param3 := &v3.Parameter{Name: "test3"}
 	attrs3 := map[string]string{
 		"pattern": "[a-z]+",
 	}
 	proc.applyParameterAttributes(param3, attrs3)
 
-	param4 := &openapi.Parameter{Name: "test4"}
+	param4 := &v3.Parameter{Name: "test4"}
 	attrs4 := map[string]string{
 		"minitems": "1",
 		"maxitems": "10",
 	}
 	proc.applyParameterAttributes(param4, attrs4)
 
-	param5 := &openapi.Parameter{Name: "test5"}
+	param5 := &v3.Parameter{Name: "test5"}
 	attrs5 := map[string]string{
 		"multipleof":       "5",
 		"exclusiveminimum": "0",
@@ -333,24 +333,24 @@ func TestCoverageBoost(t *testing.T) {
 
 	// Aumentar cobertura de getSchemaTypeString
 	for range 20 {
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int64"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "float"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "double"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "email"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int32"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int64"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "float"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "double"})
 	}
 
 	// Aumentar cobertura de validateOperation
 	for range 10 {
-		op := &openapi.Operation{
+		op := &v3.Operation{
 			Summary: "Test",
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
-				"400": &openapi.Response{Description: "Bad Request"},
-				"500": &openapi.Response{Description: "Error"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
+				"400": &v3.Response{Description: "Bad Request"},
+				"500": &v3.Response{Description: "Error"},
 			},
-			Parameters: []openapi.Parameter{
+			Parameters: []v3.Parameter{
 				{Name: "id", In: "path"},
 				{Name: "filter", In: "query"},
 			},
@@ -359,7 +359,7 @@ func TestCoverageBoost(t *testing.T) {
 	}
 
 	// Aumentar cobertura de identToSchema
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"Model1":  {Type: "object"},
 		"Model2":  {Type: "object"},
 		"Model3":  {Type: "object"},

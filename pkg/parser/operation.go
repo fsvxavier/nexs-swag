@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // OperationProcessor processes operation annotations from function comments.
 type OperationProcessor struct {
 	parser    *Parser
-	openapi   *openapi.OpenAPI
+	openapi   *v3.OpenAPI
 	typeCache map[string]*TypeInfo
 }
 
@@ -23,7 +23,7 @@ type RouteInfo struct {
 }
 
 // NewOperationProcessor creates a new operation processor.
-func NewOperationProcessor(p *Parser, spec *openapi.OpenAPI, typeCache map[string]*TypeInfo) *OperationProcessor {
+func NewOperationProcessor(p *Parser, spec *v3.OpenAPI, typeCache map[string]*TypeInfo) *OperationProcessor {
 	return &OperationProcessor{
 		parser:    p,
 		openapi:   spec,
@@ -67,9 +67,9 @@ var (
 )
 
 // Process processes function documentation and returns an Operation.
-func (o *OperationProcessor) Process(doc *ast.CommentGroup) *openapi.Operation {
-	op := &openapi.Operation{
-		Responses: make(openapi.Responses),
+func (o *OperationProcessor) Process(doc *ast.CommentGroup) *v3.Operation {
+	op := &v3.Operation{
+		Responses: make(v3.Responses),
 	}
 
 	hasAnnotations := false
@@ -153,14 +153,14 @@ func (o *OperationProcessor) GetRouteInfo(doc *ast.CommentGroup) RouteInfo {
 }
 
 // processSummary processes @Summary annotation.
-func (o *OperationProcessor) processSummary(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processSummary(text string, op *v3.Operation) {
 	matches := summaryOpRegex.FindStringSubmatch(text)
 	op.Summary = matches[1]
 }
 
 // processDescription processes @Description annotation.
 // Supports markdown file substitution: @Description file(docs/endpoint.md).
-func (o *OperationProcessor) processDescription(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processDescription(text string, op *v3.Operation) {
 	matches := descriptionOpRegex.FindStringSubmatch(text)
 	description := matches[1]
 
@@ -180,13 +180,13 @@ func (o *OperationProcessor) processDescription(text string, op *openapi.Operati
 }
 
 // processID processes @ID annotation.
-func (o *OperationProcessor) processID(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processID(text string, op *v3.Operation) {
 	matches := idRegex.FindStringSubmatch(text)
 	op.OperationID = matches[1]
 }
 
 // processTags processes @Tags annotation.
-func (o *OperationProcessor) processTags(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processTags(text string, op *v3.Operation) {
 	matches := tagsOpRegex.FindStringSubmatch(text)
 	tags := strings.Split(matches[1], ",")
 	for i, tag := range tags {
@@ -197,7 +197,7 @@ func (o *OperationProcessor) processTags(text string, op *openapi.Operation) {
 
 // processAccept processes @Accept annotation (consumes).
 // Supports multiple MIME types: @Accept json,xml,plain.
-func (o *OperationProcessor) processAccept(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processAccept(text string, op *v3.Operation) {
 	matches := acceptRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
 		return
@@ -211,16 +211,16 @@ func (o *OperationProcessor) processAccept(text string, op *openapi.Operation) {
 		// Update existing request body with multiple content types
 		if len(op.RequestBody.Content) > 0 {
 			// Get the existing schema
-			var existingSchema *openapi.Schema
+			var existingSchema *v3.Schema
 			for _, mt := range op.RequestBody.Content {
 				existingSchema = mt.Schema
 				break
 			}
 
 			// Apply to all accepted content types
-			newContent := make(map[string]*openapi.MediaType)
+			newContent := make(map[string]*v3.MediaType)
 			for _, ct := range contentTypes {
-				newContent[ct] = &openapi.MediaType{
+				newContent[ct] = &v3.MediaType{
 					Schema: existingSchema,
 				}
 			}
@@ -231,7 +231,7 @@ func (o *OperationProcessor) processAccept(text string, op *openapi.Operation) {
 
 // processProduce processes @Produce annotation (produces).
 // Supports multiple MIME types: @Produce json,xml,plain.
-func (o *OperationProcessor) processProduce(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processProduce(text string, op *v3.Operation) {
 	matches := produceRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
 		return
@@ -247,16 +247,16 @@ func (o *OperationProcessor) processProduce(text string, op *openapi.Operation) 
 		for _, response := range op.Responses {
 			if len(response.Content) > 0 {
 				// Get the existing schema
-				var existingSchema *openapi.Schema
+				var existingSchema *v3.Schema
 				for _, mt := range response.Content {
 					existingSchema = mt.Schema
 					break
 				}
 
 				// Apply to all produced content types
-				newContent := make(map[string]*openapi.MediaType)
+				newContent := make(map[string]*v3.MediaType)
 				for _, ct := range contentTypes {
-					newContent[ct] = &openapi.MediaType{
+					newContent[ct] = &v3.MediaType{
 						Schema: existingSchema,
 					}
 				}
@@ -314,7 +314,7 @@ func (o *OperationProcessor) parseMimeTypes(mimeList string) []string {
 }
 
 // processParameter processes @Param annotation.
-func (o *OperationProcessor) processParameter(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processParameter(text string, op *v3.Operation) {
 	matches := paramRegex.FindStringSubmatch(text)
 	if len(matches) < 6 {
 		return
@@ -339,7 +339,7 @@ func (o *OperationProcessor) processParameter(text string, op *openapi.Operation
 	}
 
 	// Create parameter
-	param := openapi.Parameter{
+	param := v3.Parameter{
 		Name:        name,
 		In:          in,
 		Required:    required,
@@ -360,16 +360,16 @@ func (o *OperationProcessor) processParameter(text string, op *openapi.Operation
 }
 
 // processRequestBody processes body parameter as RequestBody.
-func (o *OperationProcessor) processRequestBody(schemaType string, required bool, description string, op *openapi.Operation) {
+func (o *OperationProcessor) processRequestBody(schemaType string, required bool, description string, op *v3.Operation) {
 	if op.RequestBody == nil {
-		op.RequestBody = &openapi.RequestBody{
+		op.RequestBody = &v3.RequestBody{
 			Required:    required,
 			Description: description,
-			Content:     make(map[string]*openapi.MediaType),
+			Content:     make(map[string]*v3.MediaType),
 		}
 	}
 
-	mediaType := &openapi.MediaType{
+	mediaType := &v3.MediaType{
 		Schema: o.parseSchemaType(schemaType),
 	}
 
@@ -378,7 +378,7 @@ func (o *OperationProcessor) processRequestBody(schemaType string, required bool
 }
 
 // processResponse processes @Success, @Failure, and @Response annotations.
-func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, op *openapi.Operation) {
+func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, op *v3.Operation) {
 	matches := regex.FindStringSubmatch(text)
 	if len(matches) < 4 {
 		return
@@ -392,23 +392,23 @@ func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, 
 		description = matches[4]
 	}
 
-	response := &openapi.Response{
+	response := &v3.Response{
 		Description: description,
 	}
 
 	// Add content if schema is specified
 	if responseType == typeObject || responseType == typeArray {
-		content := make(map[string]*openapi.MediaType)
+		content := make(map[string]*v3.MediaType)
 
 		schema := o.parseSchemaType(schemaRef)
 		if responseType == typeArray {
-			schema = &openapi.Schema{
+			schema = &v3.Schema{
 				Type:  typeArray,
 				Items: schema,
 			}
 		}
 
-		content["application/json"] = &openapi.MediaType{
+		content["application/json"] = &v3.MediaType{
 			Schema: schema,
 		}
 		response.Content = content
@@ -418,7 +418,7 @@ func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, 
 }
 
 // processHeader processes @Header annotation.
-func (o *OperationProcessor) processHeader(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processHeader(text string, op *v3.Operation) {
 	matches := headerRegex.FindStringSubmatch(text)
 	if len(matches) < 5 {
 		return
@@ -431,25 +431,25 @@ func (o *OperationProcessor) processHeader(text string, op *openapi.Operation) {
 
 	response := op.Responses[statusCode]
 	if response == nil {
-		response = &openapi.Response{
+		response = &v3.Response{
 			Description: "Response " + statusCode,
-			Headers:     make(map[string]*openapi.Header),
+			Headers:     make(map[string]*v3.Header),
 		}
 		op.Responses[statusCode] = response
 	}
 
 	if response.Headers == nil {
-		response.Headers = make(map[string]*openapi.Header)
+		response.Headers = make(map[string]*v3.Header)
 	}
 
-	response.Headers[headerName] = &openapi.Header{
+	response.Headers[headerName] = &v3.Header{
 		Description: description,
 		Schema:      o.parseSchemaType(headerType),
 	}
 }
 
 // processSecurity processes @Security annotation.
-func (o *OperationProcessor) processSecurity(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processSecurity(text string, op *v3.Operation) {
 	matches := securityOpRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
 		return
@@ -465,7 +465,7 @@ func (o *OperationProcessor) processSecurity(text string, op *openapi.Operation)
 		}
 	}
 
-	security := openapi.SecurityRequirement{
+	security := v3.SecurityRequirement{
 		schemeName: scopes,
 	}
 
@@ -492,9 +492,9 @@ func (o *OperationProcessor) parseAttributes(attrStr string) map[string]string {
 }
 
 // applyParameterAttributes applies parsed attributes to a parameter.
-func (o *OperationProcessor) applyParameterAttributes(param *openapi.Parameter, attrs map[string]string) {
+func (o *OperationProcessor) applyParameterAttributes(param *v3.Parameter, attrs map[string]string) {
 	if param.Schema == nil {
-		param.Schema = &openapi.Schema{}
+		param.Schema = &v3.Schema{}
 	}
 
 	for key, value := range attrs {
@@ -597,7 +597,7 @@ func (o *OperationProcessor) applyParameterAttributes(param *openapi.Parameter, 
 
 // getSchemaTypeString extracts the type as string from a Schema.
 // Schema.Type can be string or []string in JSON Schema 2020-12.
-func (o *OperationProcessor) getSchemaTypeString(schema *openapi.Schema) string {
+func (o *OperationProcessor) getSchemaTypeString(schema *v3.Schema) string {
 	if schema == nil || schema.Type == nil {
 		return typeString
 	}
@@ -668,8 +668,8 @@ func (o *OperationProcessor) parseValue(value string, schemaType string) interfa
 }
 
 // parseSchemaType converts a type string to an OpenAPI schema.
-func (o *OperationProcessor) parseSchemaType(typeName string) *openapi.Schema {
-	schema := &openapi.Schema{}
+func (o *OperationProcessor) parseSchemaType(typeName string) *v3.Schema {
+	schema := &v3.Schema{}
 
 	// Handle array types
 	if strings.HasPrefix(typeName, "[]") {
@@ -740,7 +740,7 @@ func (o *OperationProcessor) parseSchemaType(typeName string) *openapi.Schema {
 
 // processState processes @State annotation.
 // @State adds x-state extension to operation.
-func (o *OperationProcessor) processState(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processState(text string, op *v3.Operation) {
 	matches := stateRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
 		return
@@ -756,7 +756,7 @@ func (o *OperationProcessor) processState(text string, op *openapi.Operation) {
 // processCodeSamples processes @x-codeSamples annotation.
 // Format: @x-codeSamples lang:filename
 // Example: @x-codeSamples go:examples/create_user.go.
-func (o *OperationProcessor) processCodeSamples(text string, op *openapi.Operation) {
+func (o *OperationProcessor) processCodeSamples(text string, op *v3.Operation) {
 	matches := xCodeSamplesRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
 		return

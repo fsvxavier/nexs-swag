@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Testes finais para atingir 80% de cobertura
@@ -19,48 +19,48 @@ func TestValidateOperationExtended(t *testing.T) {
 
 	tests := []struct {
 		name string
-		op   *openapi.Operation
+		op   *v3.Operation
 		path string
 	}{
 		{
 			name: "operation with request body",
-			op: &openapi.Operation{
+			op: &v3.Operation{
 				Summary: "Create user",
-				RequestBody: &openapi.RequestBody{
+				RequestBody: &v3.RequestBody{
 					Description: "User data",
 					Required:    true,
 				},
-				Responses: openapi.Responses{
-					"201": &openapi.Response{Description: "Created"},
+				Responses: v3.Responses{
+					"201": &v3.Response{Description: "Created"},
 				},
 			},
 			path: "/users",
 		},
 		{
 			name: "operation with multiple parameters",
-			op: &openapi.Operation{
+			op: &v3.Operation{
 				Summary: "List users",
-				Parameters: []openapi.Parameter{
+				Parameters: []v3.Parameter{
 					{Name: "page", In: "query", Required: false},
 					{Name: "limit", In: "query", Required: false},
 					{Name: "sort", In: "query", Required: false},
 				},
-				Responses: openapi.Responses{
-					"200": &openapi.Response{Description: "OK"},
+				Responses: v3.Responses{
+					"200": &v3.Response{Description: "OK"},
 				},
 			},
 			path: "/users",
 		},
 		{
 			name: "operation with security",
-			op: &openapi.Operation{
+			op: &v3.Operation{
 				Summary: "Protected endpoint",
-				Security: []openapi.SecurityRequirement{
+				Security: []v3.SecurityRequirement{
 					{"bearerAuth": {}},
 				},
-				Responses: openapi.Responses{
-					"200": &openapi.Response{Description: "OK"},
-					"401": &openapi.Response{Description: "Unauthorized"},
+				Responses: v3.Responses{
+					"200": &v3.Response{Description: "OK"},
+					"401": &v3.Response{Description: "Unauthorized"},
 				},
 			},
 			path: "/protected",
@@ -143,15 +143,15 @@ func TestGetSchemaTypeStringExtended(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	schemas := []*openapi.Schema{
+	schemas := []*v3.Schema{
 		{Type: "string"},
 		{Type: "integer"},
 		{Type: "number"},
 		{Type: "boolean"},
 		{Type: "object"},
-		{Type: "array", Items: &openapi.Schema{Type: "string"}},
-		{Type: "array", Items: &openapi.Schema{Type: "integer"}},
-		{Type: "array", Items: &openapi.Schema{Type: "object"}},
+		{Type: "array", Items: &v3.Schema{Type: "string"}},
+		{Type: "array", Items: &v3.Schema{Type: "integer"}},
+		{Type: "array", Items: &v3.Schema{Type: "object"}},
 		{Ref: "#/components/schemas/User"},
 		{Ref: "#/components/schemas/Product"},
 		{Type: "string", Format: "date"},
@@ -172,7 +172,7 @@ func TestGetSchemaTypeStringExtended(t *testing.T) {
 func TestParseSchemaTypeExtended(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Category": {Type: "object"},
@@ -227,7 +227,7 @@ func TestProcessDescriptionExtended(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		op := &openapi.Operation{}
+		op := &v3.Operation{}
 		proc.processDescription(tt.text, op)
 	}
 }
@@ -262,7 +262,7 @@ func TestApplyStructTagAttributesExtended(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		schema := &openapi.Schema{Type: "string"}
+		schema := &v3.Schema{Type: "string"}
 		sp.applyStructTagAttributes(tt.tags, schema)
 	}
 }
@@ -278,17 +278,17 @@ func TestApplyBindingValidationsExtended(t *testing.T) {
 
 	tests := []struct {
 		binding string
-		schema  *openapi.Schema
+		schema  *v3.Schema
 	}{
-		{`binding:"required"`, &openapi.Schema{Type: "string"}},
-		{`binding:"email"`, &openapi.Schema{Type: "string"}},
-		{`binding:"url"`, &openapi.Schema{Type: "string"}},
-		{`binding:"uuid"`, &openapi.Schema{Type: "string"}},
-		{`binding:"min=1,max=100"`, &openapi.Schema{Type: "integer"}},
-		{`binding:"gte=0,lte=10"`, &openapi.Schema{Type: "number"}},
-		{`binding:"len=10"`, &openapi.Schema{Type: "string"}},
-		{`binding:"oneof=red green blue"`, &openapi.Schema{Type: "string"}},
-		{`binding:"dive,required"`, &openapi.Schema{Type: "array"}},
+		{`binding:"required"`, &v3.Schema{Type: "string"}},
+		{`binding:"email"`, &v3.Schema{Type: "string"}},
+		{`binding:"url"`, &v3.Schema{Type: "string"}},
+		{`binding:"uuid"`, &v3.Schema{Type: "string"}},
+		{`binding:"min=1,max=100"`, &v3.Schema{Type: "integer"}},
+		{`binding:"gte=0,lte=10"`, &v3.Schema{Type: "number"}},
+		{`binding:"len=10"`, &v3.Schema{Type: "string"}},
+		{`binding:"oneof=red green blue"`, &v3.Schema{Type: "string"}},
+		{`binding:"dive,required"`, &v3.Schema{Type: "array"}},
 	}
 
 	for _, tt := range tests {
@@ -299,7 +299,7 @@ func TestApplyBindingValidationsExtended(t *testing.T) {
 func TestIdentToSchemaExtended(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Order":    {Type: "object"},
@@ -383,7 +383,7 @@ type Product struct {
 		if genDecl, ok := decl.(*ast.GenDecl); ok {
 			for _, spec := range genDecl.Specs {
 				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-					schema := &openapi.Schema{}
+					schema := &v3.Schema{}
 					if genDecl.Doc != nil {
 						sp.parseStructDoc(genDecl.Doc, schema)
 					}
@@ -474,32 +474,32 @@ func TestValidateExtended(t *testing.T) {
 	p := New()
 
 	// Add some operations and schemas
-	p.openapi.Paths = map[string]*openapi.PathItem{
+	p.openapi.Paths = map[string]*v3.PathItem{
 		"/users": {
-			Get: &openapi.Operation{
+			Get: &v3.Operation{
 				Summary: "List users",
-				Responses: openapi.Responses{
-					"200": &openapi.Response{Description: "OK"},
+				Responses: v3.Responses{
+					"200": &v3.Response{Description: "OK"},
 				},
 			},
-			Post: &openapi.Operation{
+			Post: &v3.Operation{
 				Summary: "Create user",
-				Responses: openapi.Responses{
-					"201": &openapi.Response{Description: "Created"},
+				Responses: v3.Responses{
+					"201": &v3.Response{Description: "Created"},
 				},
 			},
 		},
 		"/products": {
-			Get: &openapi.Operation{
+			Get: &v3.Operation{
 				Summary: "List products",
-				Responses: openapi.Responses{
-					"200": &openapi.Response{Description: "OK"},
+				Responses: v3.Responses{
+					"200": &v3.Response{Description: "OK"},
 				},
 			},
 		},
 	}
 
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User":    {Type: "object"},
 		"Product": {Type: "object"},
 	}

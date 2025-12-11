@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Parser parses Go source files and extracts OpenAPI documentation from comments.
 type Parser struct {
-	openapi         *openapi.OpenAPI
+	openapi         *v3.OpenAPI
 	files           map[string]*ast.File
 	fset            *token.FileSet
 	generalInfoFile string
@@ -46,35 +46,36 @@ type Parser struct {
 	collectionFormat     string
 	state                string
 	parseExtension       string
+	openapiVersion       string // Target OpenAPI version: "2.0", "3.0.0", "3.1.0"
 }
 
 // TypeInfo stores information about a parsed type.
 type TypeInfo struct {
 	Name    string
 	Package string
-	Schema  *openapi.Schema
+	Schema  *v3.Schema
 	ASTNode ast.Node
 }
 
 // New creates a new Parser instance.
 func New() *Parser {
 	return &Parser{
-		openapi: &openapi.OpenAPI{
+		openapi: &v3.OpenAPI{
 			OpenAPI:           "3.1.0",
 			JSONSchemaDialect: "https://spec.openapis.org/oas/3.1/dialect/base",
-			Info:              openapi.Info{},
-			Paths:             make(openapi.Paths),
-			Components: &openapi.Components{
-				Schemas:         make(map[string]*openapi.Schema),
-				Responses:       make(map[string]*openapi.Response),
-				Parameters:      make(map[string]*openapi.Parameter),
-				Examples:        make(map[string]*openapi.Example),
-				RequestBodies:   make(map[string]*openapi.RequestBody),
-				Headers:         make(map[string]*openapi.Header),
-				SecuritySchemes: make(map[string]*openapi.SecurityScheme),
-				Links:           make(map[string]*openapi.Link),
-				Callbacks:       make(map[string]*openapi.Callback),
-				PathItems:       make(map[string]*openapi.PathItem),
+			Info:              v3.Info{},
+			Paths:             make(v3.Paths),
+			Components: &v3.Components{
+				Schemas:         make(map[string]*v3.Schema),
+				Responses:       make(map[string]*v3.Response),
+				Parameters:      make(map[string]*v3.Parameter),
+				Examples:        make(map[string]*v3.Example),
+				RequestBodies:   make(map[string]*v3.RequestBody),
+				Headers:         make(map[string]*v3.Header),
+				SecuritySchemes: make(map[string]*v3.SecurityScheme),
+				Links:           make(map[string]*v3.Link),
+				Callbacks:       make(map[string]*v3.Callback),
+				PathItems:       make(map[string]*v3.PathItem),
 			},
 		},
 		files:                make(map[string]*ast.File),
@@ -86,7 +87,18 @@ func New() *Parser {
 		instanceName:         "swagger",
 		collectionFormat:     "csv",
 		parseDependencyLevel: 0,
+		openapiVersion:       "3.1.0", // Default to latest
 	}
+}
+
+// SetOpenAPIVersion sets the target OpenAPI version.
+func (p *Parser) SetOpenAPIVersion(version string) {
+	p.openapiVersion = version
+}
+
+// GetOpenAPIVersion returns the target OpenAPI version.
+func (p *Parser) GetOpenAPIVersion() string {
+	return p.openapiVersion
 }
 
 // ParseDir parses all Go files in the specified directory recursively.
@@ -215,7 +227,7 @@ func (p *Parser) ParseFile(path string) error {
 }
 
 // GetOpenAPI returns the parsed OpenAPI specification.
-func (p *Parser) GetOpenAPI() *openapi.OpenAPI {
+func (p *Parser) GetOpenAPI() *v3.OpenAPI {
 	// Add generated timestamp if enabled
 	if p.generatedTime && p.openapi.Info.Version != "" {
 		p.openapi.Info.Version += " (generated at " + time.Now().Format("2006-01-02 15:04:05") + ")"
@@ -302,7 +314,7 @@ func (p *Parser) parseOperations(file *ast.File) error {
 		// Add operation to path
 		pathItem := p.openapi.Paths[routeInfo.Path]
 		if pathItem == nil {
-			pathItem = &openapi.PathItem{}
+			pathItem = &v3.PathItem{}
 			p.openapi.Paths[routeInfo.Path] = pathItem
 		}
 
@@ -378,7 +390,7 @@ func (p *Parser) Validate() error {
 
 	// Validate that all schema references exist
 	for path, pathItem := range p.openapi.Paths {
-		operations := []*openapi.Operation{
+		operations := []*v3.Operation{
 			pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Delete,
 			pathItem.Patch, pathItem.Options, pathItem.Head, pathItem.Trace,
 		}
@@ -398,7 +410,7 @@ func (p *Parser) Validate() error {
 }
 
 // validateOperation validates a single operation.
-func (p *Parser) validateOperation(op *openapi.Operation, path string) error {
+func (p *Parser) validateOperation(op *v3.Operation, path string) error {
 	// Validate parameters
 	for _, param := range op.Parameters {
 		if param.Schema != nil && param.Schema.Ref != "" {
@@ -453,7 +465,7 @@ func (p *Parser) validateSchemaRef(ref string) error {
 }
 
 // hasExtension checks if operation has the required extension.
-func (p *Parser) hasExtension(op *openapi.Operation) bool {
+func (p *Parser) hasExtension(op *v3.Operation) bool {
 	if op.Extensions == nil {
 		return false
 	}

@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Testes finais para fechar os últimos 0.8%
@@ -16,20 +16,20 @@ func TestFinalPush80Percent(t *testing.T) {
 	for range 500 {
 		// Nil e nil Type
 		_ = proc.getSchemaTypeString(nil)
-		_ = proc.getSchemaTypeString(&openapi.Schema{})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: nil})
+		_ = proc.getSchemaTypeString(&v3.Schema{})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: nil})
 
 		// []interface{} cases
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{"string"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{"integer"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{123}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{true}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{"string"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{"integer"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{123}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{true}})
 
 		// []string cases
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []string{}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []string{"string"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []string{"integer", "null"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []string{}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []string{"string"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: []string{"integer", "null"}})
 
 		// parseValue com todos os casos de erro
 		_ = proc.parseValue("invalid", "integer")
@@ -61,77 +61,77 @@ func TestValidateOperation80(t *testing.T) {
 	// Super loop validateOperation
 	for range 500 {
 		// Operação vazia
-		op1 := &openapi.Operation{}
+		op1 := &v3.Operation{}
 		_ = p.validateOperation(op1, "/")
 
 		// Sem responses
-		op2 := &openapi.Operation{
+		op2 := &v3.Operation{
 			Summary: "Test",
 		}
 		_ = p.validateOperation(op2, "/test")
 
 		// Com responses
-		op3 := &openapi.Operation{
+		op3 := &v3.Operation{
 			Summary: "Test",
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op3, "/test")
 
 		// Com parâmetros
-		op4 := &openapi.Operation{
+		op4 := &v3.Operation{
 			Summary: "Test",
-			Parameters: []openapi.Parameter{
+			Parameters: []v3.Parameter{
 				{Name: "id", In: "path", Required: true},
 			},
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op4, "/test/:id")
 
 		// Com body
-		op5 := &openapi.Operation{
+		op5 := &v3.Operation{
 			Summary: "Test",
-			RequestBody: &openapi.RequestBody{
+			RequestBody: &v3.RequestBody{
 				Required: true,
 			},
-			Responses: openapi.Responses{
-				"201": &openapi.Response{Description: "Created"},
+			Responses: v3.Responses{
+				"201": &v3.Response{Description: "Created"},
 			},
 		}
 		_ = p.validateOperation(op5, "/test")
 
 		// Com security
-		op6 := &openapi.Operation{
+		op6 := &v3.Operation{
 			Summary: "Test",
-			Security: []openapi.SecurityRequirement{
+			Security: []v3.SecurityRequirement{
 				{"apiKey": {}},
 			},
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op6, "/test")
 
 		// Completo
-		op7 := &openapi.Operation{
+		op7 := &v3.Operation{
 			Summary: "Complete",
-			Parameters: []openapi.Parameter{
+			Parameters: []v3.Parameter{
 				{Name: "id", In: "path"},
 				{Name: "filter", In: "query"},
 			},
-			RequestBody: &openapi.RequestBody{
+			RequestBody: &v3.RequestBody{
 				Required: true,
 			},
-			Security: []openapi.SecurityRequirement{
+			Security: []v3.SecurityRequirement{
 				{"bearer": {"read"}},
 			},
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
-				"400": &openapi.Response{Description: "Bad Request"},
-				"401": &openapi.Response{Description: "Unauthorized"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
+				"400": &v3.Response{Description: "Bad Request"},
+				"401": &v3.Response{Description: "Unauthorized"},
 			},
 		}
 		_ = p.validateOperation(op7, "/test/:id")
@@ -170,7 +170,7 @@ func TestMiscCoverage80(t *testing.T) {
 		typeCache: p.typeCache,
 	}
 
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"Model": {Type: "object"},
 	}
 
@@ -187,12 +187,12 @@ func TestMiscCoverage80(t *testing.T) {
 	// Validate
 	for range 500 {
 		pp := New()
-		pp.openapi.Paths = map[string]*openapi.PathItem{
+		pp.openapi.Paths = map[string]*v3.PathItem{
 			"/test": {
-				Get: &openapi.Operation{
+				Get: &v3.Operation{
 					Summary: "Test",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
 			},

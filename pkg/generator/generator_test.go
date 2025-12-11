@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestNew(t *testing.T) {
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
 	}
 	outputDir := "/tmp/test"
@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 
 func TestSetInstanceName(t *testing.T) {
 	gen := &Generator{
-		spec: &openapi.OpenAPI{},
+		spec: &v3.OpenAPI{},
 	}
 
 	tests := []struct {
@@ -57,7 +57,7 @@ func TestSetInstanceName(t *testing.T) {
 
 func TestSetGeneratedTime(t *testing.T) {
 	gen := &Generator{
-		spec: &openapi.OpenAPI{},
+		spec: &v3.OpenAPI{},
 	}
 
 	gen.SetGeneratedTime(true)
@@ -73,7 +73,7 @@ func TestSetGeneratedTime(t *testing.T) {
 
 func TestSetTemplateDelims(t *testing.T) {
 	gen := &Generator{
-		spec: &openapi.OpenAPI{},
+		spec: &v3.OpenAPI{},
 	}
 
 	tests := []struct {
@@ -108,9 +108,9 @@ func TestGenerateJSON(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:   "Test API",
 			Version: "1.0.0",
 		},
@@ -123,7 +123,7 @@ func TestGenerateJSON(t *testing.T) {
 	}
 
 	// Verify file was created
-	outputFile := tmpDir + "/openapi.json"
+	outputFile := tmpDir + "/v3.json"
 	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
 		t.Errorf("Output file was not created: %s", outputFile)
 	}
@@ -133,9 +133,9 @@ func TestGenerateYAML(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:   "Test API",
 			Version: "1.0.0",
 		},
@@ -148,7 +148,7 @@ func TestGenerateYAML(t *testing.T) {
 	}
 
 	// Verify file was created
-	outputFile := tmpDir + "/openapi.yaml"
+	outputFile := tmpDir + "/v3.yaml"
 	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
 		t.Errorf("Output file was not created: %s", outputFile)
 	}
@@ -158,9 +158,9 @@ func TestGenerateGo(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:   "Test API",
 			Version: "1.0.0",
 		},
@@ -201,9 +201,9 @@ func TestGenerateGoWithTimestamp(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:   "Test API",
 			Version: "1.0.0",
 		},
@@ -232,9 +232,9 @@ func TestGenerate(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:   "Test API",
 			Version: "1.0.0",
 		},
@@ -248,17 +248,17 @@ func TestGenerate(t *testing.T) {
 		{
 			name:        "json only",
 			outputTypes: []string{"json"},
-			wantFiles:   []string{"openapi.json"},
+			wantFiles:   []string{"v3.json"},
 		},
 		{
 			name:        "yaml only",
 			outputTypes: []string{"yaml"},
-			wantFiles:   []string{"openapi.yaml"},
+			wantFiles:   []string{"v3.yaml"},
 		},
 		{
 			name:        "yml alias",
 			outputTypes: []string{"yml"},
-			wantFiles:   []string{"openapi.yaml"},
+			wantFiles:   []string{"v3.yaml"},
 		},
 		{
 			name:        "go only",
@@ -268,7 +268,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name:        "multiple formats",
 			outputTypes: []string{"json", "yaml", "go"},
-			wantFiles:   []string{"openapi.json", "openapi.yaml", "docs.go"},
+			wantFiles:   []string{"v3.json", "v3.yaml", "docs.go"},
 		},
 	}
 
@@ -296,7 +296,7 @@ func TestGenerateUnsupportedType(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
 	}
 
@@ -315,9 +315,9 @@ func TestGenerateCreatesDirIfNotExists(t *testing.T) {
 	tmpDir := t.TempDir()
 	nonExistentDir := tmpDir + "/newdir/subdir"
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:   "Test API",
 			Version: "1.0.0",
 		},
@@ -335,14 +335,14 @@ func TestGenerateCreatesDirIfNotExists(t *testing.T) {
 	}
 
 	// Verify file was created
-	if _, err := os.Stat(nonExistentDir + "/openapi.json"); os.IsNotExist(err) {
+	if _, err := os.Stat(nonExistentDir + "/v3.json"); os.IsNotExist(err) {
 		t.Error("Output file was not created")
 	}
 }
 
 func TestNewDefaults(t *testing.T) {
 	t.Parallel()
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
 	}
 
@@ -359,7 +359,7 @@ func TestNewDefaults(t *testing.T) {
 func TestSetTemplateDelimsInvalidFormat(t *testing.T) {
 	t.Parallel()
 	gen := &Generator{
-		spec: &openapi.OpenAPI{},
+		spec: &v3.OpenAPI{},
 	}
 
 	// Test with single value (invalid format)
@@ -382,25 +382,25 @@ func TestGenerateComplexSpec(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
 
-	spec := &openapi.OpenAPI{
+	spec := &v3.OpenAPI{
 		OpenAPI: "3.1.0",
-		Info: openapi.Info{
+		Info: v3.Info{
 			Title:       "Complex API",
 			Version:     "2.0.0",
 			Description: "A complex API specification",
 		},
-		Servers: []openapi.Server{
+		Servers: []v3.Server{
 			{
 				URL:         "https://api.example.com",
 				Description: "Production server",
 			},
 		},
-		Paths: openapi.Paths{
-			"/users": &openapi.PathItem{
-				Get: &openapi.Operation{
+		Paths: v3.Paths{
+			"/users": &v3.PathItem{
+				Get: &v3.Operation{
 					Summary: "List users",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{
+					Responses: v3.Responses{
+						"200": &v3.Response{
 							Description: "Success",
 						},
 					},
@@ -416,7 +416,7 @@ func TestGenerateComplexSpec(t *testing.T) {
 	}
 
 	// Verify all files created
-	expectedFiles := []string{"openapi.json", "openapi.yaml", "docs.go"}
+	expectedFiles := []string{"v3.json", "v3.yaml", "docs.go"}
 	for _, file := range expectedFiles {
 		if _, err := os.Stat(tmpDir + "/" + file); os.IsNotExist(err) {
 			t.Errorf("Expected file not created: %s", file)

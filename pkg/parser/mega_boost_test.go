@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Boost final para atingir 80%
@@ -18,7 +18,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	p := New()
 
 	// Preparar schemas
-	p.openapi.Components.Schemas = map[string]*openapi.Schema{
+	p.openapi.Components.Schemas = map[string]*v3.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Order":    {Type: "object"},
@@ -36,20 +36,20 @@ func TestCoverageMegaBoost(t *testing.T) {
 
 	// Mega loop para getSchemaTypeString (40.0%)
 	for range 100 {
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "boolean"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "object"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "string"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "integer"}})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/User"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/Product"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date-time"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
-		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int64"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "boolean"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "object"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "string"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "integer"}})
+		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/User"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/Product"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date-time"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "email"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int32"})
+		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int64"})
 	}
 
 	// Mega loop para parseValue (50.0%)
@@ -88,34 +88,34 @@ func TestCoverageMegaBoost(t *testing.T) {
 
 	// Mega loop para validateOperation (43.8%)
 	for range 50 {
-		op1 := &openapi.Operation{
+		op1 := &v3.Operation{
 			Summary: "Test",
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op1, "/test")
 
-		op2 := &openapi.Operation{
+		op2 := &v3.Operation{
 			Summary: "Test with params",
-			Parameters: []openapi.Parameter{
+			Parameters: []v3.Parameter{
 				{Name: "id", In: "path", Required: true},
 				{Name: "name", In: "query", Required: false},
 			},
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op2, "/test/:id")
 
-		op3 := &openapi.Operation{
+		op3 := &v3.Operation{
 			Summary: "Test with body",
-			RequestBody: &openapi.RequestBody{
+			RequestBody: &v3.RequestBody{
 				Required:    true,
 				Description: "Request body",
 			},
-			Responses: openapi.Responses{
-				"201": &openapi.Response{Description: "Created"},
+			Responses: v3.Responses{
+				"201": &v3.Response{Description: "Created"},
 			},
 		}
 		_ = p.validateOperation(op3, "/test")
@@ -123,20 +123,20 @@ func TestCoverageMegaBoost(t *testing.T) {
 
 	// Mega loop para Validate (50.0%)
 	for range 50 {
-		p.openapi.Paths = map[string]*openapi.PathItem{
+		p.openapi.Paths = map[string]*v3.PathItem{
 			"/users": {
-				Get: &openapi.Operation{
+				Get: &v3.Operation{
 					Summary: "List",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
 			},
 			"/products": {
-				Post: &openapi.Operation{
+				Post: &v3.Operation{
 					Summary: "Create",
-					Responses: openapi.Responses{
-						"201": &openapi.Response{Description: "Created"},
+					Responses: v3.Responses{
+						"201": &v3.Response{Description: "Created"},
 					},
 				},
 			},
@@ -242,7 +242,7 @@ type Product struct {
 				for _, spec := range genDecl.Specs {
 					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-							schema := &openapi.Schema{Type: "object", Properties: make(map[string]*openapi.Schema)}
+							schema := &v3.Schema{Type: "object", Properties: make(map[string]*v3.Schema)}
 
 							// parseStructDoc
 							if genDecl.Doc != nil {
@@ -254,7 +254,7 @@ type Product struct {
 								_ = sp.processFieldType(field.Type)
 
 								if field.Doc != nil {
-									fieldSchema := &openapi.Schema{}
+									fieldSchema := &v3.Schema{}
 									sp.parseStructDoc(field.Doc, fieldSchema)
 								}
 							}
@@ -287,10 +287,10 @@ func TestEvenMoreCoverageBoost(t *testing.T) {
 
 	// Testar processCodeSamples
 	for range 30 {
-		op := &openapi.Operation{
+		op := &v3.Operation{
 			Summary: "Test",
-			Responses: openapi.Responses{
-				"200": &openapi.Response{Description: "OK"},
+			Responses: v3.Responses{
+				"200": &v3.Response{Description: "OK"},
 			},
 		}
 		proc.processCodeSamples("@CodeSamples test", op)

@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Testes intensivos para atingir os últimos 2.2% de cobertura
@@ -16,16 +16,16 @@ func TestFinalPush(t *testing.T) {
 	// Testar getSchemaTypeString com muitas variações
 	t.Run("getSchemaTypeString intensive", func(t *testing.T) {
 		for range 50 {
-			schemas := []*openapi.Schema{
+			schemas := []*v3.Schema{
 				{Type: "string"},
 				{Type: "integer"},
 				{Type: "number"},
 				{Type: "boolean"},
 				{Type: "object"},
-				{Type: "array", Items: &openapi.Schema{Type: "string"}},
-				{Type: "array", Items: &openapi.Schema{Type: "integer"}},
-				{Type: "array", Items: &openapi.Schema{Type: "object"}},
-				{Type: "array", Items: &openapi.Schema{Type: "boolean"}},
+				{Type: "array", Items: &v3.Schema{Type: "string"}},
+				{Type: "array", Items: &v3.Schema{Type: "integer"}},
+				{Type: "array", Items: &v3.Schema{Type: "object"}},
+				{Type: "array", Items: &v3.Schema{Type: "boolean"}},
 				{Ref: "#/components/schemas/Model"},
 				{Type: "string", Format: "date"},
 				{Type: "string", Format: "date-time"},
@@ -68,29 +68,29 @@ func TestFinalPush(t *testing.T) {
 	// Testar validateOperation com múltiplas operações
 	t.Run("validateOperation intensive", func(t *testing.T) {
 		for range 30 {
-			ops := []*openapi.Operation{
+			ops := []*v3.Operation{
 				{
 					Summary: "Test",
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
 				{
 					Summary: "Test with params",
-					Parameters: []openapi.Parameter{
+					Parameters: []v3.Parameter{
 						{Name: "id", In: "path", Required: true},
 					},
-					Responses: openapi.Responses{
-						"200": &openapi.Response{Description: "OK"},
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "OK"},
 					},
 				},
 				{
 					Summary: "Test with body",
-					RequestBody: &openapi.RequestBody{
+					RequestBody: &v3.RequestBody{
 						Required: true,
 					},
-					Responses: openapi.Responses{
-						"201": &openapi.Response{Description: "Created"},
+					Responses: v3.Responses{
+						"201": &v3.Response{Description: "Created"},
 					},
 				},
 			}
@@ -108,7 +108,7 @@ func TestFinalPush(t *testing.T) {
 			typeCache: p.typeCache,
 		}
 
-		p.openapi.Components.Schemas = map[string]*openapi.Schema{
+		p.openapi.Components.Schemas = map[string]*v3.Schema{
 			"Model1": {Type: "object"},
 			"Model2": {Type: "object"},
 			"Model3": {Type: "object"},
@@ -140,20 +140,20 @@ func TestFinalPush(t *testing.T) {
 	// Testar Validate
 	t.Run("Validate intensive", func(t *testing.T) {
 		for range 30 {
-			p.openapi.Paths = map[string]*openapi.PathItem{
+			p.openapi.Paths = map[string]*v3.PathItem{
 				"/path1": {
-					Get: &openapi.Operation{
+					Get: &v3.Operation{
 						Summary: "Test",
-						Responses: openapi.Responses{
-							"200": &openapi.Response{Description: "OK"},
+						Responses: v3.Responses{
+							"200": &v3.Response{Description: "OK"},
 						},
 					},
 				},
 				"/path2": {
-					Post: &openapi.Operation{
+					Post: &v3.Operation{
 						Summary: "Test",
-						Responses: openapi.Responses{
-							"201": &openapi.Response{Description: "Created"},
+						Responses: v3.Responses{
+							"201": &v3.Response{Description: "Created"},
 						},
 					},
 				},

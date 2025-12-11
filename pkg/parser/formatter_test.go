@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestNewFormatter(t *testing.T) {
@@ -263,10 +263,10 @@ func TestValidateOperation(t *testing.T) {
 	p := New()
 
 	// Test with valid operation
-	op := &openapi.Operation{
+	op := &v3.Operation{
 		Summary: "Test",
-		Responses: openapi.Responses{
-			"200": &openapi.Response{
+		Responses: v3.Responses{
+			"200": &v3.Response{
 				Description: "Success",
 			},
 		},
@@ -277,7 +277,7 @@ func TestValidateOperation(t *testing.T) {
 	}
 
 	// Test with operation without responses - should also validate successfully
-	opNoResp := &openapi.Operation{
+	opNoResp := &v3.Operation{
 		Summary: "Test",
 	}
 	// Just verify it doesn't panic
@@ -290,19 +290,19 @@ func TestHasExtension(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		operation *openapi.Operation
+		operation *v3.Operation
 		expectExt bool
 	}{
 		{
 			name: "operation without extensions",
-			operation: &openapi.Operation{
+			operation: &v3.Operation{
 				Summary: "Test",
 			},
 			expectExt: false,
 		},
 		{
 			name: "operation with extensions",
-			operation: &openapi.Operation{
+			operation: &v3.Operation{
 				Summary: "Test",
 				Extensions: map[string]interface{}{
 					"x-custom": "value",

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestNewParser(t *testing.T) {
@@ -477,7 +477,7 @@ func TestParseDirSkipsHiddenDirs(t *testing.T) {
 func TestValidateSchemaRef(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas["User"] = &openapi.Schema{Type: "object"}
+	p.openapi.Components.Schemas["User"] = &v3.Schema{Type: "object"}
 
 	tests := []struct {
 		name    string

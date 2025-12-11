@@ -11,12 +11,13 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v2 "github.com/fsvxavier/nexs-swag/pkg/openapi/v2"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Generator generates OpenAPI specification files.
 type Generator struct {
-	spec           *openapi.OpenAPI
+	spec           *v3.OpenAPI
 	outputDir      string
 	outputType     []string
 	instanceName   string
@@ -25,7 +26,7 @@ type Generator struct {
 }
 
 // New creates a new Generator instance.
-func New(spec *openapi.OpenAPI, outputDir string, outputType []string) *Generator {
+func New(spec *v3.OpenAPI, outputDir string, outputType []string) *Generator {
 	return &Generator{
 		spec:          spec,
 		outputDir:     outputDir,
@@ -92,7 +93,7 @@ func (g *Generator) Generate() error {
 
 // generateJSON generates the OpenAPI specification in JSON format.
 func (g *Generator) generateJSON() error {
-	filePath := filepath.Join(g.outputDir, "openapi.json")
+	filePath := filepath.Join(g.outputDir, "v3.json")
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -117,7 +118,7 @@ func (g *Generator) generateJSON() error {
 
 // generateYAML generates the OpenAPI specification in YAML format.
 func (g *Generator) generateYAML() error {
-	filePath := filepath.Join(g.outputDir, "openapi.yaml")
+	filePath := filepath.Join(g.outputDir, "v3.yaml")
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -188,6 +189,158 @@ func (g *Generator) generateGo() error {
 
 	// Write ReadDoc function
 	if _, err := fmt.Fprintln(file, "// ReadDoc returns the OpenAPI specification"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintln(file, "func ReadDoc() string {"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintln(file, "\treturn SwaggerDoc"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintln(file, "}"); err != nil {
+		return err
+	}
+
+	fmt.Printf("Generated: %s\n", filePath)
+	return nil
+}
+
+// =============================================================================
+// Swagger 2.0 Generator
+// =============================================================================
+
+// GeneratorV2 generates Swagger 2.0 specification files.
+type GeneratorV2 struct {
+	spec          *v2.Swagger
+	outputDir     string
+	outputType    []string
+	instanceName  string
+	generatedTime bool
+}
+
+// NewV2 creates a new Swagger 2.0 Generator instance.
+func NewV2(spec *v2.Swagger, outputDir string, outputType []string) *GeneratorV2 {
+	return &GeneratorV2{
+		spec:          spec,
+		outputDir:     outputDir,
+		outputType:    outputType,
+		instanceName:  "docs",
+		generatedTime: false,
+	}
+}
+
+// SetInstanceName sets the package name for generated Go file.
+func (g *GeneratorV2) SetInstanceName(name string) {
+	g.instanceName = name
+}
+
+// SetGeneratedTime sets whether to include generation timestamp.
+func (g *GeneratorV2) SetGeneratedTime(enabled bool) {
+	g.generatedTime = enabled
+}
+
+// Generate generates all requested output formats.
+func (g *GeneratorV2) Generate() error {
+	// Create output directory if it doesn't exist
+	if err := os.MkdirAll(g.outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	for _, format := range g.outputType {
+		format = strings.ToLower(strings.TrimSpace(format))
+		switch format {
+		case "json":
+			if err := g.generateJSON(); err != nil {
+				return err
+			}
+		case "yaml", "yml":
+			if err := g.generateYAML(); err != nil {
+				return err
+			}
+		case "go":
+			if err := g.generateGo(); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unsupported output format: %s", format)
+		}
+	}
+
+	return nil
+}
+
+// generateJSON generates swagger.json file.
+func (g *GeneratorV2) generateJSON() error {
+	filePath := filepath.Join(g.outputDir, "swagger.json")
+	jsonData, err := json.MarshalIndent(g.spec, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	if err := os.WriteFile(filePath, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write JSON file: %w", err)
+	}
+
+	fmt.Printf("Generated: %s\n", filePath)
+	return nil
+}
+
+// generateYAML generates swagger.yaml file.
+func (g *GeneratorV2) generateYAML() error {
+	filePath := filepath.Join(g.outputDir, "swagger.yaml")
+	yamlData, err := yaml.Marshal(g.spec)
+	if err != nil {
+		return fmt.Errorf("failed to marshal YAML: %w", err)
+	}
+
+	if err := os.WriteFile(filePath, yamlData, 0644); err != nil {
+		return fmt.Errorf("failed to write YAML file: %w", err)
+	}
+
+	fmt.Printf("Generated: %s\n", filePath)
+	return nil
+}
+
+// generateGo generates docs.go file with embedded specification.
+func (g *GeneratorV2) generateGo() error {
+	filePath := filepath.Join(g.outputDir, "docs.go")
+
+	// Marshal JSON for embedding
+	jsonData, err := json.Marshal(g.spec)
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+
+	// Create file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	// Write package declaration
+	if _, err := fmt.Fprintf(file, "// Package %s Code generated by nexs-swag. DO NOT EDIT\n", g.instanceName); err != nil {
+		return err
+	}
+	if g.generatedTime {
+		if _, err := fmt.Fprintf(file, "// Generated at: %s\n", time.Now().Format("2006-01-02 15:04:05")); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintf(file, "package %s\n\n", g.instanceName); err != nil {
+		return err
+	}
+
+	// Write SwaggerDoc
+	if _, err := fmt.Fprintln(file, "// SwaggerDoc is the Swagger 2.0 specification in JSON format"); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(file, "var SwaggerDoc = `%s`\n\n", string(jsonData)); err != nil {
+		return err
+	}
+
+	// Write ReadDoc function
+	if _, err := fmt.Fprintln(file, "// ReadDoc returns the Swagger specification"); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintln(file, "func ReadDoc() string {"); err != nil {

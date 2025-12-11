@@ -6,7 +6,7 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestNewSchemaProcessor(t *testing.T) {
@@ -421,7 +421,7 @@ func TestParseFieldDoc(t *testing.T) {
 		},
 	}
 
-	schema := &openapi.Schema{}
+	schema := &v3.Schema{}
 	sp.parseFieldDoc(mockDoc, schema)
 
 	if schema.Description == "" {
@@ -458,7 +458,7 @@ func TestApplyStructTagAttributes(t *testing.T) {
 			p := New()
 			sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
-			schema := &openapi.Schema{Type: "string"}
+			schema := &v3.Schema{Type: "string"}
 			tags := StructTags{}
 
 			// Parse the tag
@@ -503,7 +503,7 @@ func TestApplyBindingValidations(t *testing.T) {
 	p := New()
 	sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
-	schema := &openapi.Schema{Type: "string"}
+	schema := &v3.Schema{Type: "string"}
 
 	// Test with required binding
 	sp.applyBindingValidations("required", schema)
@@ -539,7 +539,7 @@ func TestApplyValidateRules(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			schema := &openapi.Schema{Type: tt.sType}
+			schema := &v3.Schema{Type: tt.sType}
 			sp.applyValidateRules(tt.rule, schema)
 
 			// Verify it doesn't panic - function executed successfully
@@ -552,7 +552,7 @@ func TestApplyExtensions(t *testing.T) {
 	p := New()
 	sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
-	schema := &openapi.Schema{Type: "string"}
+	schema := &v3.Schema{Type: "string"}
 	extensions := "x-custom=value,x-order=1"
 
 	sp.applyExtensions(extensions, schema)
@@ -613,7 +613,7 @@ func TestApplySwaggerType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			schema := &openapi.Schema{}
+			schema := &v3.Schema{}
 			sp.applySwaggerType(tt.swagType, schema)
 
 			if schema.Type != tt.expectType {
