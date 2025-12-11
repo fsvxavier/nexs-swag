@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestNewParser(t *testing.T) {
@@ -478,7 +478,7 @@ func TestParseDirSkipsHiddenDirs(t *testing.T) {
 func TestValidateSchemaRef(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas["User"] = &v3.Schema{Type: "object"}
+	p.openapi.Components.Schemas["User"] = &openapi.Schema{Type: "object"}
 
 	tests := []struct {
 		name    string
@@ -618,33 +618,33 @@ func TestMassiveGetSchemaTypeString(t *testing.T) {
 	// Criar 300 iterações com todos os possíveis tipos
 	for range 300 {
 		// Tipos básicos
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "boolean"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "object"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "boolean"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "object"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array"})
 
 		// Arrays com diferentes itens
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "string"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "integer"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "number"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "boolean"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "object"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "string"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "integer"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "number"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "boolean"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "object"}})
 
 		// Referencias
-		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/User"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/Product"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/User"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/Product"})
 
 		// Formatos
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date-time"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "email"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "uri"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int32"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int64"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "float"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "double"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date-time"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "uri"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int64"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "float"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "double"})
 	}
 }
 
@@ -678,47 +678,47 @@ func TestMassiveValidateOperation(t *testing.T) {
 
 	// 150 iterações com diferentes operações
 	for range 150 {
-		op1 := &v3.Operation{
+		op1 := &openapi.Operation{
 			Summary: "Test",
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op1, "/test")
 
-		op2 := &v3.Operation{
+		op2 := &openapi.Operation{
 			Summary: "Test with params",
-			Parameters: []v3.Parameter{
+			Parameters: []openapi.Parameter{
 				{Name: "id", In: "path", Required: true},
 				{Name: "name", In: "query"},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op2, "/test/:id")
 
-		op3 := &v3.Operation{
+		op3 := &openapi.Operation{
 			Summary: "Test with body",
-			RequestBody: &v3.RequestBody{
+			RequestBody: &openapi.RequestBody{
 				Required:    true,
 				Description: "Body",
 			},
-			Responses: v3.Responses{
-				"201": &v3.Response{Description: "Created"},
-				"400": &v3.Response{Description: "Bad Request"},
+			Responses: openapi.Responses{
+				"201": &openapi.Response{Description: "Created"},
+				"400": &openapi.Response{Description: "Bad Request"},
 			},
 		}
 		_ = p.validateOperation(op3, "/test")
 
-		op4 := &v3.Operation{
+		op4 := &openapi.Operation{
 			Summary: "Test with security",
-			Security: []v3.SecurityRequirement{
+			Security: []openapi.SecurityRequirement{
 				{"bearer": {}},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
-				"401": &v3.Response{Description: "Unauthorized"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
+				"401": &openapi.Response{Description: "Unauthorized"},
 			},
 		}
 		_ = p.validateOperation(op4, "/test")
@@ -733,34 +733,34 @@ func TestMassiveValidate(t *testing.T) {
 		p.openapi.Info.Title = "Test API"
 		p.openapi.Info.Version = "1.0"
 
-		p.openapi.Paths = map[string]*v3.PathItem{
+		p.openapi.Paths = map[string]*openapi.PathItem{
 			"/users": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "List users",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
-				Post: &v3.Operation{
+				Post: &openapi.Operation{
 					Summary: "Create user",
-					Responses: v3.Responses{
-						"201": &v3.Response{Description: "Created"},
+					Responses: openapi.Responses{
+						"201": &openapi.Response{Description: "Created"},
 					},
 				},
 			},
 			"/products": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "List products",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 			},
 			"/orders": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "List orders",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 			},
@@ -802,48 +802,48 @@ func TestValidateOperationExtended(t *testing.T) {
 
 	tests := []struct {
 		name string
-		op   *v3.Operation
+		op   *openapi.Operation
 		path string
 	}{
 		{
 			name: "operation with request body",
-			op: &v3.Operation{
+			op: &openapi.Operation{
 				Summary: "Create user",
-				RequestBody: &v3.RequestBody{
+				RequestBody: &openapi.RequestBody{
 					Description: "User data",
 					Required:    true,
 				},
-				Responses: v3.Responses{
-					"201": &v3.Response{Description: "Created"},
+				Responses: openapi.Responses{
+					"201": &openapi.Response{Description: "Created"},
 				},
 			},
 			path: "/users",
 		},
 		{
 			name: "operation with multiple parameters",
-			op: &v3.Operation{
+			op: &openapi.Operation{
 				Summary: "List users",
-				Parameters: []v3.Parameter{
+				Parameters: []openapi.Parameter{
 					{Name: "page", In: "query", Required: false},
 					{Name: "limit", In: "query", Required: false},
 					{Name: "sort", In: "query", Required: false},
 				},
-				Responses: v3.Responses{
-					"200": &v3.Response{Description: "OK"},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
 				},
 			},
 			path: "/users",
 		},
 		{
 			name: "operation with security",
-			op: &v3.Operation{
+			op: &openapi.Operation{
 				Summary: "Protected endpoint",
-				Security: []v3.SecurityRequirement{
+				Security: []openapi.SecurityRequirement{
 					{"bearerAuth": {}},
 				},
-				Responses: v3.Responses{
-					"200": &v3.Response{Description: "OK"},
-					"401": &v3.Response{Description: "Unauthorized"},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
+					"401": &openapi.Response{Description: "Unauthorized"},
 				},
 			},
 			path: "/protected",
@@ -926,15 +926,15 @@ func TestGetSchemaTypeStringExtended(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	schemas := []*v3.Schema{
+	schemas := []*openapi.Schema{
 		{Type: "string"},
 		{Type: "integer"},
 		{Type: "number"},
 		{Type: "boolean"},
 		{Type: "object"},
-		{Type: "array", Items: &v3.Schema{Type: "string"}},
-		{Type: "array", Items: &v3.Schema{Type: "integer"}},
-		{Type: "array", Items: &v3.Schema{Type: "object"}},
+		{Type: "array", Items: &openapi.Schema{Type: "string"}},
+		{Type: "array", Items: &openapi.Schema{Type: "integer"}},
+		{Type: "array", Items: &openapi.Schema{Type: "object"}},
 		{Ref: "#/components/schemas/User"},
 		{Ref: "#/components/schemas/Product"},
 		{Type: "string", Format: "date"},
@@ -955,7 +955,7 @@ func TestGetSchemaTypeStringExtended(t *testing.T) {
 func TestParseSchemaTypeExtended(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Category": {Type: "object"},
@@ -1010,7 +1010,7 @@ func TestProcessDescriptionExtended(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		op := &v3.Operation{}
+		op := &openapi.Operation{}
 		proc.processDescription(tt.text, op)
 	}
 }
@@ -1045,7 +1045,7 @@ func TestApplyStructTagAttributesExtended(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		schema := &v3.Schema{Type: "string"}
+		schema := &openapi.Schema{Type: "string"}
 		sp.applyStructTagAttributes(tt.tags, schema)
 	}
 }
@@ -1061,17 +1061,17 @@ func TestApplyBindingValidationsExtended(t *testing.T) {
 
 	tests := []struct {
 		binding string
-		schema  *v3.Schema
+		schema  *openapi.Schema
 	}{
-		{`binding:"required"`, &v3.Schema{Type: "string"}},
-		{`binding:"email"`, &v3.Schema{Type: "string"}},
-		{`binding:"url"`, &v3.Schema{Type: "string"}},
-		{`binding:"uuid"`, &v3.Schema{Type: "string"}},
-		{`binding:"min=1,max=100"`, &v3.Schema{Type: "integer"}},
-		{`binding:"gte=0,lte=10"`, &v3.Schema{Type: "number"}},
-		{`binding:"len=10"`, &v3.Schema{Type: "string"}},
-		{`binding:"oneof=red green blue"`, &v3.Schema{Type: "string"}},
-		{`binding:"dive,required"`, &v3.Schema{Type: "array"}},
+		{`binding:"required"`, &openapi.Schema{Type: "string"}},
+		{`binding:"email"`, &openapi.Schema{Type: "string"}},
+		{`binding:"url"`, &openapi.Schema{Type: "string"}},
+		{`binding:"uuid"`, &openapi.Schema{Type: "string"}},
+		{`binding:"min=1,max=100"`, &openapi.Schema{Type: "integer"}},
+		{`binding:"gte=0,lte=10"`, &openapi.Schema{Type: "number"}},
+		{`binding:"len=10"`, &openapi.Schema{Type: "string"}},
+		{`binding:"oneof=red green blue"`, &openapi.Schema{Type: "string"}},
+		{`binding:"dive,required"`, &openapi.Schema{Type: "array"}},
 	}
 
 	for _, tt := range tests {
@@ -1082,7 +1082,7 @@ func TestApplyBindingValidationsExtended(t *testing.T) {
 func TestIdentToSchemaExtended(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Order":    {Type: "object"},
@@ -1166,7 +1166,7 @@ type Product struct {
 		if genDecl, ok := decl.(*ast.GenDecl); ok {
 			for _, spec := range genDecl.Specs {
 				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-					schema := &v3.Schema{}
+					schema := &openapi.Schema{}
 					if genDecl.Doc != nil {
 						sp.parseStructDoc(genDecl.Doc, schema)
 					}
@@ -1257,32 +1257,32 @@ func TestValidateExtended(t *testing.T) {
 	p := New()
 
 	// Add some operations and schemas
-	p.openapi.Paths = map[string]*v3.PathItem{
+	p.openapi.Paths = map[string]*openapi.PathItem{
 		"/users": {
-			Get: &v3.Operation{
+			Get: &openapi.Operation{
 				Summary: "List users",
-				Responses: v3.Responses{
-					"200": &v3.Response{Description: "OK"},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
 				},
 			},
-			Post: &v3.Operation{
+			Post: &openapi.Operation{
 				Summary: "Create user",
-				Responses: v3.Responses{
-					"201": &v3.Response{Description: "Created"},
+				Responses: openapi.Responses{
+					"201": &openapi.Response{Description: "Created"},
 				},
 			},
 		},
 		"/products": {
-			Get: &v3.Operation{
+			Get: &openapi.Operation{
 				Summary: "List products",
-				Responses: v3.Responses{
-					"200": &v3.Response{Description: "OK"},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
 				},
 			},
 		},
 	}
 
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"User":    {Type: "object"},
 		"Product": {Type: "object"},
 	}
@@ -1339,20 +1339,20 @@ func TestFinalPush80Percent(t *testing.T) {
 	for range 500 {
 		// Nil e nil Type
 		_ = proc.getSchemaTypeString(nil)
-		_ = proc.getSchemaTypeString(&v3.Schema{})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: nil})
+		_ = proc.getSchemaTypeString(&openapi.Schema{})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: nil})
 
 		// []interface{} cases
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{"string"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{"integer"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{123}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []interface{}{true}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{"string"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{"integer"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{123}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []interface{}{true}})
 
 		// []string cases
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []string{}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []string{"string"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: []string{"integer", "null"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []string{}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []string{"string"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: []string{"integer", "null"}})
 
 		// parseValue com todos os casos de erro
 		_ = proc.parseValue("invalid", "integer")
@@ -1384,77 +1384,77 @@ func TestValidateOperation80(t *testing.T) {
 	// Super loop validateOperation
 	for range 500 {
 		// Operação vazia
-		op1 := &v3.Operation{}
+		op1 := &openapi.Operation{}
 		_ = p.validateOperation(op1, "/")
 
 		// Sem responses
-		op2 := &v3.Operation{
+		op2 := &openapi.Operation{
 			Summary: "Test",
 		}
 		_ = p.validateOperation(op2, "/test")
 
 		// Com responses
-		op3 := &v3.Operation{
+		op3 := &openapi.Operation{
 			Summary: "Test",
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op3, "/test")
 
 		// Com parâmetros
-		op4 := &v3.Operation{
+		op4 := &openapi.Operation{
 			Summary: "Test",
-			Parameters: []v3.Parameter{
+			Parameters: []openapi.Parameter{
 				{Name: "id", In: "path", Required: true},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op4, "/test/:id")
 
 		// Com body
-		op5 := &v3.Operation{
+		op5 := &openapi.Operation{
 			Summary: "Test",
-			RequestBody: &v3.RequestBody{
+			RequestBody: &openapi.RequestBody{
 				Required: true,
 			},
-			Responses: v3.Responses{
-				"201": &v3.Response{Description: "Created"},
+			Responses: openapi.Responses{
+				"201": &openapi.Response{Description: "Created"},
 			},
 		}
 		_ = p.validateOperation(op5, "/test")
 
 		// Com security
-		op6 := &v3.Operation{
+		op6 := &openapi.Operation{
 			Summary: "Test",
-			Security: []v3.SecurityRequirement{
+			Security: []openapi.SecurityRequirement{
 				{"apiKey": {}},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op6, "/test")
 
 		// Completo
-		op7 := &v3.Operation{
+		op7 := &openapi.Operation{
 			Summary: "Complete",
-			Parameters: []v3.Parameter{
+			Parameters: []openapi.Parameter{
 				{Name: "id", In: "path"},
 				{Name: "filter", In: "query"},
 			},
-			RequestBody: &v3.RequestBody{
+			RequestBody: &openapi.RequestBody{
 				Required: true,
 			},
-			Security: []v3.SecurityRequirement{
+			Security: []openapi.SecurityRequirement{
 				{"bearer": {"read"}},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
-				"400": &v3.Response{Description: "Bad Request"},
-				"401": &v3.Response{Description: "Unauthorized"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
+				"400": &openapi.Response{Description: "Bad Request"},
+				"401": &openapi.Response{Description: "Unauthorized"},
 			},
 		}
 		_ = p.validateOperation(op7, "/test/:id")
@@ -1493,7 +1493,7 @@ func TestMiscCoverage80(t *testing.T) {
 		typeCache: p.typeCache,
 	}
 
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"Model": {Type: "object"},
 	}
 
@@ -1510,12 +1510,12 @@ func TestMiscCoverage80(t *testing.T) {
 	// Validate
 	for range 500 {
 		pp := New()
-		pp.openapi.Paths = map[string]*v3.PathItem{
+		pp.openapi.Paths = map[string]*openapi.PathItem{
 			"/test": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "Test",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 			},
@@ -1534,16 +1534,16 @@ func TestFinalPush(t *testing.T) {
 	// Testar getSchemaTypeString com muitas variações
 	t.Run("getSchemaTypeString intensive", func(t *testing.T) {
 		for range 50 {
-			schemas := []*v3.Schema{
+			schemas := []*openapi.Schema{
 				{Type: "string"},
 				{Type: "integer"},
 				{Type: "number"},
 				{Type: "boolean"},
 				{Type: "object"},
-				{Type: "array", Items: &v3.Schema{Type: "string"}},
-				{Type: "array", Items: &v3.Schema{Type: "integer"}},
-				{Type: "array", Items: &v3.Schema{Type: "object"}},
-				{Type: "array", Items: &v3.Schema{Type: "boolean"}},
+				{Type: "array", Items: &openapi.Schema{Type: "string"}},
+				{Type: "array", Items: &openapi.Schema{Type: "integer"}},
+				{Type: "array", Items: &openapi.Schema{Type: "object"}},
+				{Type: "array", Items: &openapi.Schema{Type: "boolean"}},
 				{Ref: "#/components/schemas/Model"},
 				{Type: "string", Format: "date"},
 				{Type: "string", Format: "date-time"},
@@ -1586,29 +1586,29 @@ func TestFinalPush(t *testing.T) {
 	// Testar validateOperation com múltiplas operações
 	t.Run("validateOperation intensive", func(t *testing.T) {
 		for range 30 {
-			ops := []*v3.Operation{
+			ops := []*openapi.Operation{
 				{
 					Summary: "Test",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 				{
 					Summary: "Test with params",
-					Parameters: []v3.Parameter{
+					Parameters: []openapi.Parameter{
 						{Name: "id", In: "path", Required: true},
 					},
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 				{
 					Summary: "Test with body",
-					RequestBody: &v3.RequestBody{
+					RequestBody: &openapi.RequestBody{
 						Required: true,
 					},
-					Responses: v3.Responses{
-						"201": &v3.Response{Description: "Created"},
+					Responses: openapi.Responses{
+						"201": &openapi.Response{Description: "Created"},
 					},
 				},
 			}
@@ -1626,7 +1626,7 @@ func TestFinalPush(t *testing.T) {
 			typeCache: p.typeCache,
 		}
 
-		p.openapi.Components.Schemas = map[string]*v3.Schema{
+		p.openapi.Components.Schemas = map[string]*openapi.Schema{
 			"Model1": {Type: "object"},
 			"Model2": {Type: "object"},
 			"Model3": {Type: "object"},
@@ -1658,20 +1658,20 @@ func TestFinalPush(t *testing.T) {
 	// Testar Validate
 	t.Run("Validate intensive", func(t *testing.T) {
 		for range 30 {
-			p.openapi.Paths = map[string]*v3.PathItem{
+			p.openapi.Paths = map[string]*openapi.PathItem{
 				"/path1": {
-					Get: &v3.Operation{
+					Get: &openapi.Operation{
 						Summary: "Test",
-						Responses: v3.Responses{
-							"200": &v3.Response{Description: "OK"},
+						Responses: openapi.Responses{
+							"200": &openapi.Response{Description: "OK"},
 						},
 					},
 				},
 				"/path2": {
-					Post: &v3.Operation{
+					Post: &openapi.Operation{
 						Summary: "Test",
-						Responses: v3.Responses{
-							"201": &v3.Response{Description: "Created"},
+						Responses: openapi.Responses{
+							"201": &openapi.Response{Description: "Created"},
 						},
 					},
 				},
@@ -1711,7 +1711,7 @@ func TestCoverageMegaBoost(t *testing.T) {
 	p := New()
 
 	// Preparar schemas
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"User":     {Type: "object"},
 		"Product":  {Type: "object"},
 		"Order":    {Type: "object"},
@@ -1729,20 +1729,20 @@ func TestCoverageMegaBoost(t *testing.T) {
 
 	// Mega loop para getSchemaTypeString (40.0%)
 	for range 100 {
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "boolean"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "object"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "string"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "integer"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/User"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/Product"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date-time"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "email"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int32"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int64"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "boolean"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "object"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "string"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "integer"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/User"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/Product"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date-time"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int64"})
 	}
 
 	// Mega loop para parseValue (50.0%)
@@ -1781,34 +1781,34 @@ func TestCoverageMegaBoost(t *testing.T) {
 
 	// Mega loop para validateOperation (43.8%)
 	for range 50 {
-		op1 := &v3.Operation{
+		op1 := &openapi.Operation{
 			Summary: "Test",
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op1, "/test")
 
-		op2 := &v3.Operation{
+		op2 := &openapi.Operation{
 			Summary: "Test with params",
-			Parameters: []v3.Parameter{
+			Parameters: []openapi.Parameter{
 				{Name: "id", In: "path", Required: true},
 				{Name: "name", In: "query", Required: false},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op2, "/test/:id")
 
-		op3 := &v3.Operation{
+		op3 := &openapi.Operation{
 			Summary: "Test with body",
-			RequestBody: &v3.RequestBody{
+			RequestBody: &openapi.RequestBody{
 				Required:    true,
 				Description: "Request body",
 			},
-			Responses: v3.Responses{
-				"201": &v3.Response{Description: "Created"},
+			Responses: openapi.Responses{
+				"201": &openapi.Response{Description: "Created"},
 			},
 		}
 		_ = p.validateOperation(op3, "/test")
@@ -1816,20 +1816,20 @@ func TestCoverageMegaBoost(t *testing.T) {
 
 	// Mega loop para Validate (50.0%)
 	for range 50 {
-		p.openapi.Paths = map[string]*v3.PathItem{
+		p.openapi.Paths = map[string]*openapi.PathItem{
 			"/users": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "List",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 			},
 			"/products": {
-				Post: &v3.Operation{
+				Post: &openapi.Operation{
 					Summary: "Create",
-					Responses: v3.Responses{
-						"201": &v3.Response{Description: "Created"},
+					Responses: openapi.Responses{
+						"201": &openapi.Response{Description: "Created"},
 					},
 				},
 			},
@@ -1935,7 +1935,7 @@ type Product struct {
 				for _, spec := range genDecl.Specs {
 					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-							schema := &v3.Schema{Type: "object", Properties: make(map[string]*v3.Schema)}
+							schema := &openapi.Schema{Type: "object", Properties: make(map[string]*openapi.Schema)}
 
 							// parseStructDoc
 							if genDecl.Doc != nil {
@@ -1947,7 +1947,7 @@ type Product struct {
 								_ = sp.processFieldType(field.Type)
 
 								if field.Doc != nil {
-									fieldSchema := &v3.Schema{}
+									fieldSchema := &openapi.Schema{}
 									sp.parseStructDoc(field.Doc, fieldSchema)
 								}
 							}
@@ -1980,10 +1980,10 @@ func TestEvenMoreCoverageBoost(t *testing.T) {
 
 	// Testar processCodeSamples
 	for range 30 {
-		op := &v3.Operation{
+		op := &openapi.Operation{
 			Summary: "Test",
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		proc.processCodeSamples("@CodeSamples test", op)
@@ -2001,31 +2001,31 @@ func TestUltraBoost1(t *testing.T) {
 	// getSchemaTypeString - testar TODOS os casos
 	for range 200 {
 		_ = proc.getSchemaTypeString(nil)
-		_ = proc.getSchemaTypeString(&v3.Schema{})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "boolean"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "object"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "string"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "integer"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "number"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "boolean"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "object"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "array", Items: &v3.Schema{Type: "array"}})
-		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/Model"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Ref: "#/components/schemas/User"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "date-time"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "email"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "uri"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "uuid"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "string", Format: "password"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int32"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "integer", Format: "int64"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "float"})
-		_ = proc.getSchemaTypeString(&v3.Schema{Type: "number", Format: "double"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "boolean"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "object"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "string"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "integer"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "number"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "boolean"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "object"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "array", Items: &openapi.Schema{Type: "array"}})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/Model"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Ref: "#/components/schemas/User"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "date-time"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "email"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "uri"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "uuid"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "string", Format: "password"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int32"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "integer", Format: "int64"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "float"})
+		_ = proc.getSchemaTypeString(&openapi.Schema{Type: "number", Format: "double"})
 	}
 }
 
@@ -2069,7 +2069,7 @@ func TestUltraBoost2(t *testing.T) {
 func TestUltraBoost3(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"Model1": {Type: "object"},
 		"Model2": {Type: "object"},
 		"Model3": {Type: "object"},
@@ -2119,57 +2119,57 @@ func TestUltraBoost4(t *testing.T) {
 
 	// validateOperation - testar TODOS os cenários
 	for range 100 {
-		op1 := &v3.Operation{}
+		op1 := &openapi.Operation{}
 		_ = p.validateOperation(op1, "/path")
 
-		op2 := &v3.Operation{
+		op2 := &openapi.Operation{
 			Summary: "Test",
 		}
 		_ = p.validateOperation(op2, "/path")
 
-		op3 := &v3.Operation{
+		op3 := &openapi.Operation{
 			Summary:   "Test",
-			Responses: v3.Responses{},
+			Responses: openapi.Responses{},
 		}
 		_ = p.validateOperation(op3, "/path")
 
-		op4 := &v3.Operation{
+		op4 := &openapi.Operation{
 			Summary: "Test",
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op4, "/path")
 
-		op5 := &v3.Operation{
+		op5 := &openapi.Operation{
 			Summary: "Test",
-			Parameters: []v3.Parameter{
+			Parameters: []openapi.Parameter{
 				{Name: "id", In: "path"},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op5, "/path")
 
-		op6 := &v3.Operation{
+		op6 := &openapi.Operation{
 			Summary: "Test",
-			RequestBody: &v3.RequestBody{
+			RequestBody: &openapi.RequestBody{
 				Required: true,
 			},
-			Responses: v3.Responses{
-				"201": &v3.Response{Description: "Created"},
+			Responses: openapi.Responses{
+				"201": &openapi.Response{Description: "Created"},
 			},
 		}
 		_ = p.validateOperation(op6, "/path")
 
-		op7 := &v3.Operation{
+		op7 := &openapi.Operation{
 			Summary: "Test",
-			Security: []v3.SecurityRequirement{
+			Security: []openapi.SecurityRequirement{
 				{"api_key": {}},
 			},
-			Responses: v3.Responses{
-				"200": &v3.Response{Description: "OK"},
+			Responses: openapi.Responses{
+				"200": &openapi.Response{Description: "OK"},
 			},
 		}
 		_ = p.validateOperation(op7, "/path")
@@ -2185,41 +2185,41 @@ func TestUltraBoost5(t *testing.T) {
 		p.openapi.Paths = nil
 		_ = p.Validate()
 
-		p.openapi.Paths = map[string]*v3.PathItem{}
+		p.openapi.Paths = map[string]*openapi.PathItem{}
 		_ = p.Validate()
 
-		p.openapi.Paths = map[string]*v3.PathItem{
+		p.openapi.Paths = map[string]*openapi.PathItem{
 			"/": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "Root",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 			},
 		}
 		_ = p.Validate()
 
-		p.openapi.Paths = map[string]*v3.PathItem{
+		p.openapi.Paths = map[string]*openapi.PathItem{
 			"/users": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "List",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
-				Post: &v3.Operation{
+				Post: &openapi.Operation{
 					Summary: "Create",
-					Responses: v3.Responses{
-						"201": &v3.Response{Description: "Created"},
+					Responses: openapi.Responses{
+						"201": &openapi.Response{Description: "Created"},
 					},
 				},
 			},
 			"/products": {
-				Get: &v3.Operation{
+				Get: &openapi.Operation{
 					Summary: "List products",
-					Responses: v3.Responses{
-						"200": &v3.Response{Description: "OK"},
+					Responses: openapi.Responses{
+						"200": &openapi.Response{Description: "OK"},
 					},
 				},
 			},
@@ -2240,7 +2240,7 @@ func TestUltraBoost6(t *testing.T) {
 		_ = gproc.Process("@title Extended API Title")
 		_ = gproc.Process("@version 1.0")
 		_ = gproc.Process("@version 2.0.0")
-		_ = gproc.Process("@version v3.0.0-beta")
+		_ = gproc.Process("@version openapi.0.0-beta")
 		_ = gproc.Process("@description API Description")
 		_ = gproc.Process("@description Multi word description")
 		_ = gproc.Process("@termsOfService http://example.com/terms")
@@ -2360,7 +2360,7 @@ type Model3 struct {
 		for _, decl := range file.Decls {
 			if genDecl, ok := decl.(*ast.GenDecl); ok {
 				if genDecl.Doc != nil {
-					schema := &v3.Schema{}
+					schema := &openapi.Schema{}
 					sp.parseStructDoc(genDecl.Doc, schema)
 				}
 			}

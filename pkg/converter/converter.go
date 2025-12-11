@@ -164,7 +164,7 @@ func (c *Converter) convertPathItem(pathItem *openapi.PathItem) *swagger.PathIte
 	}
 
 	v2PathItem := &swagger.PathItem{
-		Ref:        pathItem.Ref,
+		Ref:        c.convertRefToV2(pathItem.Ref),
 		Parameters: c.convertParameters(pathItem.Parameters),
 	}
 
@@ -562,6 +562,38 @@ func (c *Converter) convertExamples(content map[string]*openapi.MediaType) map[s
 	return examples
 }
 
+// convertRefToV2 converts OpenAPI 3.x $ref to Swagger 2.0 $ref format.
+// Converts #/components/schemas/Foo to #/definitions/Foo
+// Converts #/components/parameters/Foo to #/parameters/Foo
+// Converts #/components/responses/Foo to #/responses/Foo
+func (c *Converter) convertRefToV2(ref string) string {
+	if ref == "" {
+		return ""
+	}
+	ref = strings.Replace(ref, "#/components/schemas/", "#/definitions/", 1)
+	ref = strings.Replace(ref, "#/components/parameters/", "#/parameters/", 1)
+	ref = strings.Replace(ref, "#/components/responses/", "#/responses/", 1)
+	// components/securitySchemes -> securityDefinitions
+	ref = strings.Replace(ref, "#/components/securitySchemes/", "#/securityDefinitions/", 1)
+	return ref
+}
+
+// convertRefToV3 converts Swagger 2.0 $ref to OpenAPI 3.x $ref format.
+// Converts #/definitions/Foo to #/components/schemas/Foo
+// Converts #/parameters/Foo to #/components/parameters/Foo
+// Converts #/responses/Foo to #/components/responses/Foo
+func (c *Converter) convertRefToV3(ref string) string {
+	if ref == "" {
+		return ""
+	}
+	ref = strings.Replace(ref, "#/definitions/", "#/components/schemas/", 1)
+	ref = strings.Replace(ref, "#/parameters/", "#/components/parameters/", 1)
+	ref = strings.Replace(ref, "#/responses/", "#/components/responses/", 1)
+	// securityDefinitions -> components/securitySchemes
+	ref = strings.Replace(ref, "#/securityDefinitions/", "#/components/securitySchemes/", 1)
+	return ref
+}
+
 // convertSchemas converts OpenAPI Schemas to Swagger Schemas (definitions).
 func (c *Converter) convertSchemas(schemas map[string]*openapi.Schema) map[string]*swagger.Schema {
 	if len(schemas) == 0 {
@@ -583,7 +615,7 @@ func (c *Converter) convertSchema(schema *openapi.Schema) *swagger.Schema {
 	}
 
 	v2Schema := &swagger.Schema{
-		Ref:          schema.Ref,
+		Ref:          c.convertRefToV2(schema.Ref),
 		Type:         c.extractType(schema.Type),
 		Format:       schema.Format,
 		Title:        schema.Title,
@@ -1035,7 +1067,7 @@ func (c *Converter) convertPathItemToV3(pathItem *swagger.PathItem) *openapi.Pat
 	}
 
 	v3PathItem := &openapi.PathItem{
-		Ref:        pathItem.Ref,
+		Ref:        c.convertRefToV3(pathItem.Ref),
 		Parameters: c.convertParametersToV3(pathItem.Parameters),
 	}
 
@@ -1378,7 +1410,7 @@ func (c *Converter) convertSchemaToV3(schema *swagger.Schema) *openapi.Schema {
 	}
 
 	v3Schema := &openapi.Schema{
-		Ref:          schema.Ref,
+		Ref:          c.convertRefToV3(schema.Ref),
 		Type:         schema.Type,
 		Format:       schema.Format,
 		Title:        schema.Title,

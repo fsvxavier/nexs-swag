@@ -4,17 +4,17 @@ import (
 	"regexp"
 	"strings"
 
-	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // GeneralInfoProcessor processes general API information annotations.
 type GeneralInfoProcessor struct {
-	openapi *v3.OpenAPI
-	lastTag *v3.Tag
+	openapi *openapi.OpenAPI
+	lastTag *openapi.Tag
 }
 
 // NewGeneralInfoProcessor creates a new general info processor.
-func NewGeneralInfoProcessor(spec *v3.OpenAPI) *GeneralInfoProcessor {
+func NewGeneralInfoProcessor(spec *openapi.OpenAPI) *GeneralInfoProcessor {
 	return &GeneralInfoProcessor{
 		openapi: spec,
 	}
@@ -99,21 +99,21 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 	case contactNameRegex.MatchString(text):
 		matches := contactNameRegex.FindStringSubmatch(text)
 		if g.openapi.Info.Contact == nil {
-			g.openapi.Info.Contact = &v3.Contact{}
+			g.openapi.Info.Contact = &openapi.Contact{}
 		}
 		g.openapi.Info.Contact.Name = matches[1]
 
 	case contactURLRegex.MatchString(text):
 		matches := contactURLRegex.FindStringSubmatch(text)
 		if g.openapi.Info.Contact == nil {
-			g.openapi.Info.Contact = &v3.Contact{}
+			g.openapi.Info.Contact = &openapi.Contact{}
 		}
 		g.openapi.Info.Contact.URL = matches[1]
 
 	case contactEmailRegex.MatchString(text):
 		matches := contactEmailRegex.FindStringSubmatch(text)
 		if g.openapi.Info.Contact == nil {
-			g.openapi.Info.Contact = &v3.Contact{}
+			g.openapi.Info.Contact = &openapi.Contact{}
 		}
 		g.openapi.Info.Contact.Email = matches[1]
 
@@ -121,21 +121,21 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 	case licenseNameRegex.MatchString(text):
 		matches := licenseNameRegex.FindStringSubmatch(text)
 		if g.openapi.Info.License == nil {
-			g.openapi.Info.License = &v3.License{}
+			g.openapi.Info.License = &openapi.License{}
 		}
 		g.openapi.Info.License.Name = matches[1]
 
 	case licenseURLRegex.MatchString(text):
 		matches := licenseURLRegex.FindStringSubmatch(text)
 		if g.openapi.Info.License == nil {
-			g.openapi.Info.License = &v3.License{}
+			g.openapi.Info.License = &openapi.License{}
 		}
 		g.openapi.Info.License.URL = matches[1]
 
 	case licenseIDRegex.MatchString(text):
 		matches := licenseIDRegex.FindStringSubmatch(text)
 		if g.openapi.Info.License == nil {
-			g.openapi.Info.License = &v3.License{}
+			g.openapi.Info.License = &openapi.License{}
 		}
 		g.openapi.Info.License.Identifier = matches[1]
 
@@ -145,7 +145,7 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 		// @host defines the base server URL
 		// If no servers exist yet, create one with the host
 		if len(g.openapi.Servers) == 0 {
-			g.openapi.Servers = append(g.openapi.Servers, v3.Server{
+			g.openapi.Servers = append(g.openapi.Servers, openapi.Server{
 				URL: "https://" + matches[1],
 			})
 		} else {
@@ -177,7 +177,7 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 
 	case serverRegex.MatchString(text):
 		matches := serverRegex.FindStringSubmatch(text)
-		server := v3.Server{
+		server := openapi.Server{
 			URL:         matches[1],
 			Description: strings.TrimSpace(matches[2]),
 		}
@@ -186,7 +186,7 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 	// Tag object
 	case tagNameRegex.MatchString(text):
 		matches := tagNameRegex.FindStringSubmatch(text)
-		tag := v3.Tag{
+		tag := openapi.Tag{
 			Name: matches[1],
 		}
 		g.openapi.Tags = append(g.openapi.Tags, tag)
@@ -202,7 +202,7 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 		matches := tagDocsURLRegex.FindStringSubmatch(text)
 		if g.lastTag != nil {
 			if g.lastTag.ExternalDocs == nil {
-				g.lastTag.ExternalDocs = &v3.ExternalDocs{}
+				g.lastTag.ExternalDocs = &openapi.ExternalDocs{}
 			}
 			g.lastTag.ExternalDocs.URL = matches[1]
 		}
@@ -211,7 +211,7 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 		matches := tagDocsDescRegex.FindStringSubmatch(text)
 		if g.lastTag != nil {
 			if g.lastTag.ExternalDocs == nil {
-				g.lastTag.ExternalDocs = &v3.ExternalDocs{}
+				g.lastTag.ExternalDocs = &openapi.ExternalDocs{}
 			}
 			g.lastTag.ExternalDocs.Description = matches[1]
 		}
@@ -220,21 +220,21 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 	case externalDocsURLRegex.MatchString(text):
 		matches := externalDocsURLRegex.FindStringSubmatch(text)
 		if g.openapi.ExternalDocs == nil {
-			g.openapi.ExternalDocs = &v3.ExternalDocs{}
+			g.openapi.ExternalDocs = &openapi.ExternalDocs{}
 		}
 		g.openapi.ExternalDocs.URL = matches[1]
 
 	case externalDocsDescRegex.MatchString(text):
 		matches := externalDocsDescRegex.FindStringSubmatch(text)
 		if g.openapi.ExternalDocs == nil {
-			g.openapi.ExternalDocs = &v3.ExternalDocs{}
+			g.openapi.ExternalDocs = &openapi.ExternalDocs{}
 		}
 		g.openapi.ExternalDocs.Description = matches[1]
 
 	// Security definitions
 	case securityBasicRegex.MatchString(text):
 		matches := securityBasicRegex.FindStringSubmatch(text)
-		g.openapi.Components.SecuritySchemes[matches[1]] = &v3.SecurityScheme{
+		g.openapi.Components.SecuritySchemes[matches[1]] = &openapi.SecurityScheme{
 			Type:        "http",
 			Scheme:      "basic",
 			Description: strings.TrimSpace(matches[2]),
@@ -242,7 +242,7 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 
 	case securityAPIKeyRegex.MatchString(text):
 		matches := securityAPIKeyRegex.FindStringSubmatch(text)
-		g.openapi.Components.SecuritySchemes[matches[1]] = &v3.SecurityScheme{
+		g.openapi.Components.SecuritySchemes[matches[1]] = &openapi.SecurityScheme{
 			Type:        "apiKey",
 			Name:        matches[2],
 			In:          matches[3],

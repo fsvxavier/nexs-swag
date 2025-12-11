@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	v3 "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestTransToValidCollectionFormat(t *testing.T) {
@@ -94,7 +94,7 @@ func TestProcessDescription(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := &v3.Operation{}
+			op := &openapi.Operation{}
 			proc.processDescription(tt.text, op)
 			if op.Description != tt.expected {
 				t.Errorf("Expected description '%s', got '%s'", tt.expected, op.Description)
@@ -108,7 +108,7 @@ func TestProcessID(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	op := &v3.Operation{}
+	op := &openapi.Operation{}
 	proc.processID("@ID getUserByID", op)
 
 	if op.OperationID != "getUserByID" {
@@ -145,7 +145,7 @@ func TestProcessTags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := &v3.Operation{}
+			op := &openapi.Operation{}
 			proc.processTags(tt.text, op)
 
 			if len(op.Tags) != len(tt.expectedTags) {
@@ -166,11 +166,11 @@ func TestProcessAccept(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	op := &v3.Operation{
-		RequestBody: &v3.RequestBody{
-			Content: map[string]*v3.MediaType{
+	op := &openapi.Operation{
+		RequestBody: &openapi.RequestBody{
+			Content: map[string]*openapi.MediaType{
 				"application/json": {
-					Schema: &v3.Schema{Type: "object"},
+					Schema: &openapi.Schema{Type: "object"},
 				},
 			},
 		},
@@ -189,13 +189,13 @@ func TestProcessProduce(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	op := &v3.Operation{
-		Responses: v3.Responses{
-			"200": &v3.Response{
+	op := &openapi.Operation{
+		Responses: openapi.Responses{
+			"200": &openapi.Response{
 				Description: "Success",
-				Content: map[string]*v3.MediaType{
+				Content: map[string]*openapi.MediaType{
 					"application/json": {
-						Schema: &v3.Schema{Type: "object"},
+						Schema: &openapi.Schema{Type: "object"},
 					},
 				},
 			},
@@ -294,7 +294,7 @@ func TestProcessParameter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := &v3.Operation{}
+			op := &openapi.Operation{}
 			proc.processParameter(tt.text, op)
 
 			if len(op.Parameters) != 1 {
@@ -318,12 +318,12 @@ func TestProcessParameter(t *testing.T) {
 func TestProcessRequestBody(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"User": {Type: "object"},
 	}
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	op := &v3.Operation{}
+	op := &openapi.Operation{}
 	proc.processRequestBody("User", true, "User object", op)
 
 	if op.RequestBody == nil {
@@ -340,7 +340,7 @@ func TestProcessRequestBody(t *testing.T) {
 func TestProcessResponse(t *testing.T) {
 	t.Parallel()
 	p := New()
-	p.openapi.Components.Schemas = map[string]*v3.Schema{
+	p.openapi.Components.Schemas = map[string]*openapi.Schema{
 		"User": {Type: "object"},
 	}
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
@@ -367,8 +367,8 @@ func TestProcessResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := &v3.Operation{
-				Responses: make(v3.Responses),
+			op := &openapi.Operation{
+				Responses: make(openapi.Responses),
 			}
 			// Use correct regex format matching operation.go
 			var regex *regexp.Regexp
@@ -391,9 +391,9 @@ func TestProcessHeader(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	op := &v3.Operation{
-		Responses: v3.Responses{
-			"200": &v3.Response{
+	op := &openapi.Operation{
+		Responses: openapi.Responses{
+			"200": &openapi.Response{
 				Description: "Success",
 			},
 		},
@@ -440,7 +440,7 @@ func TestProcessSecurity(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			op := &v3.Operation{}
+			op := &openapi.Operation{}
 			proc.processSecurity(tt.text, op)
 
 			if len(op.Security) == 0 {
@@ -551,7 +551,7 @@ func TestGetSchemaTypeString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create schema based on input type
-			schema := &v3.Schema{Type: tt.expected}
+			schema := &openapi.Schema{Type: tt.expected}
 			result := proc.getSchemaTypeString(schema)
 			if result != tt.expected {
 				t.Errorf("Expected type '%s', got '%s'", tt.expected, result)
@@ -672,7 +672,7 @@ func TestProcessCodeSamples(t *testing.T) {
 	p := New()
 	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
 
-	op := &v3.Operation{}
+	op := &openapi.Operation{}
 	proc.processCodeSamples("@CodeSample file:example.go", op)
 
 	// Just verify it doesn't panic
