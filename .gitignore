@@ -35,6 +35,3 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
-# Generated docs
-docs/
-examples/*/docs/
