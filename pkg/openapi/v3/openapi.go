@@ -1,8 +1,9 @@
-// Package openapi implements OpenAPI 3.1.x specification structures.
-package openapi
+// Package v3 implements OpenAPI 3.1.x specification structures.
+package v3
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // OpenAPI represents the root document object of the OpenAPI 3.1.x document.
@@ -18,6 +19,41 @@ type OpenAPI struct {
 	Security          []SecurityRequirement `json:"security,omitempty"          yaml:"security,omitempty"`          // Security requirements
 	Tags              []Tag                 `json:"tags,omitempty"              yaml:"tags,omitempty"`              // List of tags
 	ExternalDocs      *ExternalDocs         `json:"externalDocs,omitempty"      yaml:"externalDocs,omitempty"`      // Additional external documentation
+}
+
+// GetVersion returns the OpenAPI specification version.
+func (o *OpenAPI) GetVersion() string {
+	return "3.1.0"
+}
+
+// GetTitle returns the API title.
+func (o *OpenAPI) GetTitle() string {
+	return o.Info.Title
+}
+
+// GetInfo returns the Info object.
+func (o *OpenAPI) GetInfo() interface{} {
+	return o.Info
+}
+
+// Validate performs basic validation of the OpenAPI specification.
+func (o *OpenAPI) Validate() error {
+	if o.OpenAPI == "" {
+		return fmt.Errorf("openapi version is required")
+	}
+	if o.Info.Title == "" {
+		return fmt.Errorf("info.title is required")
+	}
+	if o.Info.Version == "" {
+		return fmt.Errorf("info.version is required")
+	}
+	return nil
+}
+
+// MarshalJSON implements custom JSON marshaling.
+func (o *OpenAPI) MarshalJSON() ([]byte, error) {
+	type Alias OpenAPI
+	return json.Marshal((*Alias)(o))
 }
 
 // Info provides metadata about the API.

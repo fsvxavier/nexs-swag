@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // GeneralInfoProcessor processes general API information annotations.

@@ -1,6 +1,8 @@
-# Exemplo 09 - Parse Dependency
+# Example 09 - Parse Dependency
 
-Demonstra o uso de `--parseDependency` para incluir types de packages importados.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `--parseDependency` to include types from imported packages.
 
 ## Flag
 
@@ -9,9 +11,9 @@ Demonstra o uso de `--parseDependency` para incluir types de packages importados
 --pd
 ```
 
-## Conceito
+## Concept
 
-Este exemplo demonstra como o nexs-swag pode parsear dependências quando você tem types definidos em packages separados. Neste exemplo simplificado, mostramos o conceito com um único arquivo, mas em projetos reais você teria:
+This example demonstrates how nexs-swag can parse dependencies when you have types defined in separate packages. In this simplified example, we show the concept with a single file, but in real projects you would have:
 
 ```
 myapp/
@@ -20,21 +22,21 @@ myapp/
     └── product.go       # Define Product
 ```
 
-## Uso
+## Usage
 
 ```bash
 nexs-swag init --parseDependency
 ```
 
-## Como Funciona
+## How It Works
 
-### SEM --parseDependency
-Apenas types do package atual são incluídos na documentação.
+### WITHOUT --parseDependency
+Only types from the current package are included in the documentation.
 
-### COM --parseDependency
-Types de packages importados também são parseados e incluídos.
+### WITH --parseDependency
+Types from imported packages are also parsed and included.
 
-## Estrutura em Projetos Reais
+## Structure in Real Projects
 
 ```go
 // main.go
@@ -55,49 +57,49 @@ type Product struct {
 }
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Quando Usar
+## When to Use
 
-**Use --parseDependency quando:**
-- Models em packages separados
-- Estrutura modular
-- Types importados
-- Libraries compartilhadas
+**Use --parseDependency when:**
+- Models in separate packages
+- Modular structure
+- Imported types
+- Shared libraries
 
-**NÃO precisa quando:**
-- Todos os types no mesmo package
-- API simples
-- Sem imports de models
+**NOT needed when:**
+- All types in the same package
+- Simple API
+- No model imports
 
-## Níveis de Parsing
+## Parsing Levels
 
-Combine com `--parseDependencyLevel` para controlar profundidade:
+Combine with `--parseDependencyLevel` to control depth:
 
 ```bash
-# Nível 0: Apenas diretório principal
+# Level 0: Only main directory
 nexs-swag init --parseDependency --parseDependencyLevel 0
 
-# Nível 1: + 1 nível de dependências
+# Level 1: + 1 dependency level
 nexs-swag init --parseDependency --parseDependencyLevel 1
 
-# Nível 2: + 2 níveis (default)
+# Level 2: + 2 levels (default)
 nexs-swag init --parseDependency --parseDependencyLevel 2
 ```
 
 ## Performance
 
-⚠️ **Atenção:** Parsear muitas dependências pode ser lento.
+⚠️ **Warning:** Parsing many dependencies can be slow.
 
-Otimizações:
+Optimizations:
 ```bash
-# Apenas o necessário
+# Only what's necessary
 nexs-swag init --parseDependency --parseDependencyLevel 1
 
-# Limitar com --exclude
+# Limit with --exclude
 nexs-swag init --parseDependency --exclude "vendor,node_modules"
 ```

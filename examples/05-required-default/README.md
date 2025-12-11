@@ -1,6 +1,8 @@
-# Exemplo 05 - Required By Default
+# Example 05 - Required By Default
 
-Demonstra o comportamento da flag `--requiredByDefault` que torna todos os campos required por padrão.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the behavior of the `--requiredByDefault` flag that makes all fields required by default.
 
 ## Flag
 
@@ -8,40 +10,40 @@ Demonstra o comportamento da flag `--requiredByDefault` que torna todos os campo
 --requiredByDefault
 ```
 
-## Comportamento
+## Behavior
 
-### SEM a flag (default)
+### WITHOUT the flag (default)
 ```bash
 nexs-swag init
 ```
-- **Todos os campos são OPTIONAL** por padrão
-- Apenas campos com `binding:"required"` ou `validate:"required"` são required
+- **All fields are OPTIONAL** by default
+- Only fields with `binding:"required"` or `validate:"required"` are required
 
-### COM a flag
+### WITH the flag
 ```bash
 nexs-swag init --requiredByDefault
 ```
-- **Todos os campos são REQUIRED** por padrão
-- Exceções:
-  - Campos com `json:",omitempty"`
-  - Campos com `binding:"omitempty"`  
-  - Campos que são ponteiros (`*Type`)
+- **All fields are REQUIRED** by default
+- Exceptions:
+  - Fields with `json:",omitempty"`
+  - Fields with `binding:"omitempty"`  
+  - Fields that are pointers (`*Type`)
 
-## Exemplo
+## Example
 
 ```go
 type Product struct {
-    ID          int      // ✅ Required (com flag)
-    Name        string   // ✅ Required (com flag)
+    ID          int      // ✅ Required (with flag)
+    Name        string   // ✅ Required (with flag)
     Description string   `json:"description,omitempty"` // ❌ Optional (omitempty)
     Discount    *float64 // ❌ Optional (pointer)
     Category    string   `json:"category" binding:"omitempty"` // ❌ Optional (binding)
 }
 ```
 
-## Schema Gerado
+## Generated Schema
 
-### Sem --requiredByDefault
+### Without --requiredByDefault
 ```json
 {
   "Product": {
@@ -57,7 +59,7 @@ type Product struct {
 }
 ```
 
-### Com --requiredByDefault
+### With --requiredByDefault
 ```json
 {
   "Product": {
@@ -74,21 +76,21 @@ type Product struct {
 }
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 chmod +x run.sh
 ./run.sh
 ```
 
-## Casos de Uso
+## Use Cases
 
-**Use `--requiredByDefault` quando:**
-- API exige validação rigorosa
-- Maioria dos campos são obrigatórios
-- Prefere opt-out (marcar opcionais) ao invés de opt-in
+**Use `--requiredByDefault` when:**
+- API requires strict validation
+- Most fields are mandatory
+- Prefer opt-out (mark optionals) instead of opt-in
 
-**NÃO use quando:**
-- API tem muitos campos opcionais
-- Prefere opt-in explícito com `binding:"required"`
-- Compatibilidade com clientes existentes
+**DON'T use when:**
+- API has many optional fields
+- Prefer explicit opt-in with `binding:"required"`
+- Compatibility with existing clients

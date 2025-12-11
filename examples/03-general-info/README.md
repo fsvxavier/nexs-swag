@@ -1,58 +1,60 @@
-# Exemplo 03 - General Info File
+# Example 03 - General Info File
 
-Demonstra o uso de `--generalInfo` para especificar qual arquivo contém as annotations gerais da API.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
 
-## Problema
+Demonstrates using `--generalInfo` to specify which file contains the API's general annotations.
 
-Quando você tem múltiplos arquivos Go, o parser pode encontrar annotations de info geral (@title, @version) em vários lugares, causando conflitos.
+## Problem
 
-## Solução
+When you have multiple Go files, the parser may find general info annotations (@title, @version) in several places, causing conflicts.
 
-Use `--generalInfo` para especificar exatamente qual arquivo contém a info geral:
+## Solution
+
+Use `--generalInfo` to specify exactly which file contains the general info:
 
 ```bash
 nexs-swag init --generalInfo main.go
 ```
 
-## Estrutura
+## Structure
 
 ```
 03-general-info/
-├── main.go       # ✅ TEM @title, @version, @host, etc
-├── products.go   # ❌ Apenas endpoints de produtos
-├── orders.go     # ❌ Apenas endpoints de orders
+├── main.go       # ✅ HAS @title, @version, @host, etc
+├── products.go   # ❌ Only product endpoints
+├── orders.go     # ❌ Only order endpoints
 └── run.sh
 ```
 
-## Regra
+## Rule
 
-- **Arquivo de Info Geral:** Deve ter @title, @version, @host, @BasePath
-- **Outros Arquivos:** Devem ter APENAS endpoints (@Router, @Summary, etc)
+- **General Info File:** Must have @title, @version, @host, @BasePath
+- **Other Files:** Should have ONLY endpoints (@Router, @Summary, etc)
 
-## Como Executar
+## How to Run
 
 ```bash
 chmod +x run.sh
 ./run.sh
 ```
 
-## Comparação
+## Comparison
 
-### Sem --generalInfo
+### Without --generalInfo
 ```bash
 nexs-swag init --dir .
-# Pode gerar erro se encontrar @title em múltiplos arquivos
+# May generate error if @title found in multiple files
 ```
 
-### Com --generalInfo
+### With --generalInfo
 ```bash
 nexs-swag init --dir . --generalInfo main.go
-# ✅ Correto: apenas main.go é parseado para info geral
-# ✅ products.go e orders.go fornecem apenas endpoints
+# ✅ Correct: only main.go is parsed for general info
+# ✅ products.go and orders.go provide only endpoints
 ```
 
-## Benefícios
+## Benefits
 
-1. **Evita conflitos:** Um único local para info da API
-2. **Mais rápido:** Parser não precisa verificar todos os arquivos para info geral
-3. **Organização:** Separa concerns (info geral vs endpoints)
+1. **Avoids conflicts:** Single location for API info
+2. **Faster:** Parser doesn't need to check all files for general info
+3. **Organization:** Separates concerns (general info vs endpoints)

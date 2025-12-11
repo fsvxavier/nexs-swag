@@ -1,6 +1,8 @@
-# Exemplo 11 - Parse GoList
+# Example 11 - Parse GoList
 
-Demonstra o uso de `--parseGoList` para parsing mais rápido e preciso.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `--parseGoList` for faster and more accurate parsing.
 
 ## Flag
 
@@ -8,43 +10,43 @@ Demonstra o uso de `--parseGoList` para parsing mais rápido e preciso.
 --parseGoList
 ```
 
-## Diferença
+## Difference
 
-### SEM --parseGoList (Manual)
-- Percorre diretórios manualmente
-- Parseia todos os arquivos .go
-- Mais lento em projetos grandes
-- Pode perder dependências
+### WITHOUT --parseGoList (Manual)
+- Traverses directories manually
+- Parses all .go files
+- Slower in large projects
+- May miss dependencies
 
-### COM --parseGoList (Go Tooling)
-- Usa `go list -json`
-- Informações do Go modules
-- Mais rápido e preciso
-- Respeita go.mod
+### WITH --parseGoList (Go Tooling)
+- Uses `go list -json`
+- Go modules information
+- Faster and more accurate
+- Respects go.mod
 
-## Uso
+## Usage
 
 ```bash
 nexs-swag init --parseGoList
 ```
 
-## Como Funciona
+## How It Works
 
 ### Manual Parsing
 ```bash
-# nexs-swag faz:
-1. Walk em todos os diretórios
-2. Encontra arquivos .go
-3. Parseia cada arquivo
-4. Resolve imports manualmente
+# nexs-swag does:
+1. Walk all directories
+2. Find .go files
+3. Parse each file
+4. Resolve imports manually
 ```
 
 ### Go List Parsing
 ```bash
-# nexs-swag executa:
+# nexs-swag executes:
 go list -json ./...
 
-# Retorna:
+# Returns:
 {
   "ImportPath": "myapp",
   "Dir": "/path/to/myapp",
@@ -56,43 +58,43 @@ go list -json ./...
 
 ## Performance
 
-### Projeto Pequeno (< 50 arquivos)
+### Small Project (< 50 files)
 ```
 Manual:  ~500ms
 GoList:  ~400ms
-Ganho:   20%
+Gain:    20%
 ```
 
-### Projeto Médio (100-500 arquivos)
+### Medium Project (100-500 files)
 ```
 Manual:  ~5s
 GoList:  ~2s
-Ganho:   60%
+Gain:    60%
 ```
 
-### Projeto Grande (> 1000 arquivos)
+### Large Project (> 1000 files)
 ```
 Manual:  ~30s
 GoList:  ~8s
-Ganho:   73%
+Gain:    73%
 ```
 
-## Vantagens
+## Advantages
 
-### 1. Velocidade
+### 1. Speed
 ```bash
-# 3x mais rápido em projetos grandes
+# 3x faster in large projects
 time nexs-swag init --parseGoList
-# real: 2s vs 6s sem flag
+# real: 2s vs 6s without flag
 ```
 
-### 2. Precisão
+### 2. Accuracy
 ```bash
-# Respeita go.mod replace
+# Respects go.mod replace
 # go.mod:
 replace github.com/old/pkg => ../local/pkg
 
-# nexs-swag usa o path correto
+# nexs-swag uses correct path
 ```
 
 ### 3. Build Tags
@@ -101,49 +103,49 @@ replace github.com/old/pkg => ../local/pkg
 
 package linux
 
-// Só parseado se build tag corresponder
+// Only parsed if build tag matches
 ```
 
 ### 4. Vendor Detection
 ```bash
-# Detecta vendor/ automaticamente
+# Detects vendor/ automatically
 go mod vendor
 nexs-swag init --parseGoList
-# Ignora vendor/ se modules estiverem habilitados
+# Ignores vendor/ if modules are enabled
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Quando Usar
+## When to Use
 
-**Use --parseGoList quando:**
-- Projeto com Go modules
-- Muitos packages
-- Dependências complexas
-- Quer velocidade
+**Use --parseGoList when:**
+- Project with Go modules
+- Many packages
+- Complex dependencies
+- Want speed
 
-**NÃO use quando:**
-- Projeto sem go.mod
+**DON'T use when:**
+- Project without go.mod
 - GOPATH-based project
-- Precisa parsear arquivos específicos ignorados pelo go list
+- Need to parse specific files ignored by go list
 
-## Requisitos
+## Requirements
 
 ```bash
 # Go 1.11+ (modules)
 go mod init myapp
 
-# ou GOPATH configurado
+# or configured GOPATH
 export GOPATH=/path/to/gopath
 ```
 
-## Combinar com Outras Flags
+## Combine with Other Flags
 
-### Com parseDependency
+### With parseDependency
 ```bash
 nexs-swag init \
   --parseGoList \
@@ -151,56 +153,32 @@ nexs-swag init \
   --parseDependencyLevel 2
 ```
 
-### Com exclude
+### With exclude
 ```bash
-# --exclude ainda funciona
 nexs-swag init \
   --parseGoList \
   --exclude "testdata,mocks"
 ```
 
-### Com parseInternal
+## Troubleshooting
+
+### Error: "go list: command not found"
 ```bash
-nexs-swag init \
-  --parseGoList \
-  --parseInternal
+# Install Go
+# https://golang.org/doc/install
+
+# Verify
+go version
 ```
 
-## Debug
-
-### Ver o que go list retorna
+### Error: "not a Go module"
 ```bash
-go list -json ./...
+# Initialize module
+go mod init myapp
 ```
 
-### Verificar packages detectados
+### Parsing old GOPATH project
 ```bash
-nexs-swag init --parseGoList 2>&1 | grep "Parsing"
+# Use without --parseGoList
+nexs-swag init --dir . --output ./docs
 ```
-
-## Limitações
-
-### Build Tags
-```go
-// +build windows
-
-// Só parseado no Windows
-// Para forçar parsing:
-GOOS=windows nexs-swag init --parseGoList
-```
-
-### Generate Directives
-```go
-//go:generate ...
-
-// go list não executa go generate
-// Execute manualmente se necessário:
-go generate ./...
-nexs-swag init --parseGoList
-```
-
-## Recomendação
-
-✅ **Use --parseGoList por padrão** se seu projeto usa Go modules.
-
-A flag será o padrão em versões futuras do nexs-swag.

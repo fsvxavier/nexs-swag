@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestTransToValidCollectionFormat(t *testing.T) {

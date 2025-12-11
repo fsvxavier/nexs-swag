@@ -1,47 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 07: Tag Filtering ==="
+# Exemplo 07 - tags-filter
+
+echo "=== Exemplo 07: tags-filter ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem filtro - todos os endpoints
-echo "1. SEM filtro (todos os endpoints)..."
-../../nexs-swag init --dir . --output ./docs-all --quiet
-echo "   Endpoints:"
-grep '"tags"' docs-all/openapi.json | head -4
-
-echo ""
-
-# Apenas users
-echo "2. Apenas tag 'users'..."
-../../nexs-swag init --dir . --output ./docs-users --tags users --quiet
-echo "   Endpoints com tag users:"
-grep -o '"\/[^"]*"' docs-users/openapi.json
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --tags api
 
 echo ""
 
-# Apenas admin
-echo "3. Apenas tag 'admin'..."
-../../nexs-swag init --dir . --output ./docs-admin --tags admin --quiet
-echo "   Endpoints com tag admin:"
-grep -o '"\/[^"]*"' docs-admin/openapi.json
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --tags api
 
 echo ""
-
-# Excluir internal
-echo "4. Excluir tag 'internal'..."
-../../nexs-swag init --dir . --output ./docs-no-internal --tags '!internal' --quiet
-echo "   Endpoints (sem internal):"
-grep -o '"\/[^"]*"' docs-no-internal/openapi.json
-
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-
-# Múltiplas tags
-echo "5. Tags 'users' e 'admin'..."
-../../nexs-swag init --dir . --output ./docs-multi --tags users,admin --quiet
-echo "   Endpoints:"
-grep -o '"\/[^"]*"' docs-multi/openapi.json
-
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
 echo ""
-echo "✓ Documentação gerada com diferentes filtros!"
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

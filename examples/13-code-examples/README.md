@@ -1,6 +1,8 @@
-# Exemplo 13 - Code Examples
+# Example 13 - Code Examples
 
-Demonstra como adicionar exemplos de código em múltiplas linguagens.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates how to add code examples in multiple languages.
 
 ## Flag
 
@@ -9,45 +11,45 @@ Demonstra como adicionar exemplos de código em múltiplas linguagens.
 --cef <directory>
 ```
 
-## Uso
+## Usage
 
 ```bash
 nexs-swag init --codeExampleFilesDir ./code_samples
 ```
 
-## Estrutura
+## Structure
 
 ```
 13-code-examples/
 ├── main.go
 └── code_samples/
-    ├── create_user.go    # Exemplo em Go
-    ├── create_user.js    # Exemplo em JavaScript
-    ├── create_user.py    # Exemplo em Python
-    └── create_user.sh    # Exemplo em Bash
+    ├── create_user.go    # Example in Go
+    ├── create_user.js    # Example in JavaScript
+    ├── create_user.py    # Example in Python
+    └── create_user.sh    # Example in Bash
 ```
 
-## Como Funciona
+## How It Works
 
-### 1. No código, use a annotation:
+### 1. In code, use the annotation:
 ```go
 // @x-codeSamples file(create_user)
 // @Router /users [post]
 func CreateUser() {}
 ```
 
-### 2. Crie arquivos com o prefixo:
+### 2. Create files with the prefix:
 - `create_user.go`
 - `create_user.js`
 - `create_user.py`
 - etc.
 
-### 3. O nexs-swag detecta automaticamente a linguagem pela extensão
+### 3. nexs-swag automatically detects language by extension
 
-## Linguagens Suportadas
+## Supported Languages
 
-| Extensão | Linguagem |
-|----------|-----------|
+| Extension | Language |
+|-----------|----------|
 | .go | Go |
 | .js | JavaScript |
 | .ts | TypeScript |
@@ -64,9 +66,9 @@ func CreateUser() {}
 | .kt | Kotlin |
 | .dart | Dart |
 | .scala | Scala |
-| ...e mais |
+| ...and more |
 
-## OpenAPI Gerado
+## Generated OpenAPI
 
 ```json
 {
@@ -76,19 +78,19 @@ func CreateUser() {}
         "x-codeSamples": [
           {
             "lang": "Go",
-            "source": "// código do create_user.go..."
+            "source": "// code from create_user.go..."
           },
           {
             "lang": "JavaScript",
-            "source": "// código do create_user.js..."
+            "source": "// code from create_user.js..."
           },
           {
             "lang": "Python",
-            "source": "# código do create_user.py..."
+            "source": "# code from create_user.py..."
           },
           {
             "lang": "Bash",
-            "source": "#!/bin/bash\n# código do create_user.sh..."
+            "source": "#!/bin/bash\n# code from create_user.sh..."
           }
         ]
       }
@@ -97,22 +99,22 @@ func CreateUser() {}
 }
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Benefícios
+## Benefits
 
-1. **Múltiplas Linguagens:** Exemplos para diferentes clientes
-2. **Detecção Automática:** Extensão → linguagem
-3. **Reutilização:** Mesmo arquivo para múltiplos endpoints
-4. **Testáveis:** Code samples são código real que pode ser executado
+1. **Multiple Languages:** Examples for different clients
+2. **Auto-Detection:** Extension → language
+3. **Reusability:** Same file for multiple endpoints
+4. **Testable:** Code samples are real code that can be executed
 
-## Casos de Uso
+## Use Cases
 
-- **SDKs:** Exemplos para cada linguagem suportada
-- **Documentação Rica:** Facilita integração
-- **Onboarding:** Desenvolvedores copiam e colam
-- **Testing:** Exemplos validados e funcionais
+- **SDKs:** Examples for each supported language
+- **Rich Documentation:** Facilitates integration
+- **Onboarding:** Developers copy and paste
+- **Testing:** Validated and functional examples

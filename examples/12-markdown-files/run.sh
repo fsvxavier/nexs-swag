@@ -1,32 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 12: Markdown Files ==="
+# Exemplo 12 - markdown-files
+
+echo "=== Exemplo 12: markdown-files ==="
 echo ""
 
-rm -rf openapi-docs
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem markdown - description curta
-echo "1. SEM --markdownFiles..."
-../../nexs-swag init --dir . --output ./openapi-docs --quiet
-echo "   Description de POST /users:"
-grep -A 5 '"post"' openapi-docs/openapi.json | grep '"description"' | head -1
-
-rm -rf openapi-docs
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --markdownFiles docs
 
 echo ""
 
-# Com markdown - description completa
-echo "2. COM --markdownFiles..."
-../../nexs-swag init --dir . --output ./openapi-docs --markdownFiles ./docs --quiet
-echo "   Description de POST /users (primeiras 200 chars):"
-grep -A 5 '"post"' openapi-docs/openapi.json | grep '"description"' | head -1 | cut -c1-200
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --markdownFiles docs
 
 echo ""
-echo "✓ Documentação gerada!"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "Compare:"
-echo "  - Sem flag: usa 'file(create-user.md)' literal"
-echo "  - Com flag: substitui pelo conteúdo do arquivo markdown"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
 echo ""
-echo "Ver conteúdo completo:"
-echo "  cat openapi-docs/openapi.json | jq '.paths.\"/users\".post.description'"
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

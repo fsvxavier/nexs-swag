@@ -1,90 +1,85 @@
-# Exemplo 16 - Instance Name
+# Example 16 - Instance Name
 
-Demonstra o uso de `--instanceName` para customizar o nome da instância do Swagger.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `--instanceName` to customize the generated docs variable name.
 
 ## Flag
 
 ```bash
 --instanceName <name>
---in <name>
 ```
 
 Default: `swagger`
 
-## Uso
+## Usage
 
 ```bash
-nexs-swag init --instanceName customapi
+nexs-swag init --instanceName myapi
 ```
 
-## Comportamento
+## Generated Code
 
-### Package Name
-
-**Default:**
+### Default (swagger)
 ```go
-package swagger
-```
+package docs
 
-**Custom:**
-```go
-package customapi
-```
+import "github.com/swaggo/swag"
 
-### Registração
+const docTemplate = `...`
 
-**Default:**
-```go
+var SwaggerInfo = &swag.Spec{...}
+
 func init() {
-    swagger.SwaggerInfo.Title = "My API"
+    swag.Register(swag.Name, SwaggerInfo)
 }
 ```
 
-**Custom:**
+### Custom (myapi)
 ```go
+package docs
+
+import "github.com/swaggo/swag"
+
+const docTemplate = `...`
+
+var MyapiInfo = &swag.Spec{...}
+
 func init() {
-    customapi.SwaggerInfo.Title = "My API"
+    swag.Register("myapi", MyapiInfo)
 }
 ```
 
-## Múltiplas Instâncias
+## Use Cases
 
-Gerar documentação para múltiplas APIs no mesmo projeto:
-
+### Multiple APIs in One Project
 ```bash
 # API v1
-nexs-swag init \
-  --dir ./api/v1 \
-  --output ./docs/v1 \
-  --instanceName apiv1
+nexs-swag init --dir ./apiv1 --output ./docs/v1 --instanceName apiv1
 
 # API v2
-nexs-swag init \
-  --dir ./api/v2 \
-  --output ./docs/v2 \
-  --instanceName apiv2
+nexs-swag init --dir ./apiv2 --output ./docs/v2 --instanceName apiv2
 ```
 
-### Código
-
+### Integration
 ```go
 package main
 
 import (
-    _ "myapp/docs/v1"  // Registra apiv1
-    _ "myapp/docs/v2"  // Registra apiv2
+    _ "myapp/docs/v1" // apiv1
+    _ "myapp/docs/v2" // apiv2
     
-    "github.com/swaggo/http-swagger/v2"
+    httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func main() {
-    // API v1
-    http.HandleFunc("/v1/swagger/", httpSwagger.Handler(
+    // Serve v1
+    http.HandleFunc("/swagger/v1/", httpSwagger.Handler(
         httpSwagger.InstanceName("apiv1"),
     ))
     
-    // API v2
-    http.HandleFunc("/v2/swagger/", httpSwagger.Handler(
+    // Serve v2
+    http.HandleFunc("/swagger/v2/", httpSwagger.Handler(
         httpSwagger.InstanceName("apiv2"),
     ))
     
@@ -92,70 +87,30 @@ func main() {
 }
 ```
 
-## Estrutura
+## Benefits
 
-```
-myproject/
-├── api/
-│   ├── v1/
-│   │   └── main.go      # @title API v1
-│   └── v2/
-│       └── main.go      # @title API v2
-└── docs/
-    ├── v1/
-    │   └── docs.go      # package apiv1
-    └── v2/
-        └── docs.go      # package apiv2
-```
+- **Multiple APIs:** Different specifications in same project
+- **Versioning:** API v1, v2, v3 simultaneously
+- **Isolation:** No conflicts between specifications
+- **Organization:** Clear naming for each API
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Casos de Uso
+## Common Names
 
-### 1. Versionamento de API
-```bash
---instanceName apiv1  # Versão 1
---instanceName apiv2  # Versão 2
-```
+- `api` - Main API
+- `apiv1`, `apiv2` - Versioned APIs
+- `admin` - Admin API
+- `public` - Public API
+- `internal` - Internal API
 
-### 2. Múltiplos Serviços
-```bash
---instanceName users      # Serviço de usuários
---instanceName products   # Serviço de produtos
-```
+## Important
 
-### 3. Ambientes
-```bash
---instanceName prod   # Produção
---instanceName dev    # Desenvolvimento
-```
-
-### 4. Modularização
-```bash
---instanceName public   # API pública
---instanceName admin    # API administrativa
-```
-
-## Acesso no Browser
-
-```bash
-# Default instance
-http://localhost:8080/swagger/
-
-# Custom instance v1
-http://localhost:8080/v1/swagger/
-
-# Custom instance v2
-http://localhost:8080/v2/swagger/
-```
-
-## Benefícios
-
-- **Isolamento:** Cada API com sua documentação
-- **Versionamento:** Múltiplas versões simultâneas
-- **Organização:** Código e docs organizados
-- **Flexibilidade:** Várias APIs no mesmo processo
+Instance name must:
+- Start with letter
+- Contain only letters and numbers
+- Be unique in your project

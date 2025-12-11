@@ -1,27 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 09: Parse Dependency ==="
+# Exemplo 09 - parse-dependency
+
+echo "=== Exemplo 09: parse-dependency ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem parseDependency
-echo "1. SEM --parseDependency..."
-../../nexs-swag init --dir . --output ./docs-no-parse --quiet 2>&1 | grep -E "error|warning" || echo "   ⚠️ models.Product não encontrado"
-
-echo ""
-
-# Com parseDependency
-echo "2. COM --parseDependency..."
-../../nexs-swag init --dir . --output ./docs-with-parse --parseDependency --quiet
-echo "   ✓ models.Product incluído"
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --parseDependency
 
 echo ""
-echo "Verificar definição no JSON:"
-grep -A 5 '"Product"' docs-with-parse/openapi.json | head -8
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --parseDependency
 
 echo ""
-echo "Benefícios:"
-echo "  - Parseia packages importados"
-echo "  - Inclui models externos"
-echo "  - Resolve todas as dependências"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

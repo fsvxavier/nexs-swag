@@ -1,6 +1,8 @@
-# Exemplo 07 - Tag Filtering
+# Example 07 - Tag Filtering
 
-Demonstra como filtrar endpoints por tags.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates how to filter endpoints by tags.
 
 ## Flag
 
@@ -9,59 +11,59 @@ Demonstra como filtrar endpoints por tags.
 -t tag1,tag2
 ```
 
-## Sintaxe
+## Syntax
 
-### Incluir Tags
+### Include Tags
 ```bash
-# Apenas endpoints com tag "users"
+# Only endpoints with "users" tag
 nexs-swag init --tags users
 
-# Endpoints com "users" OU "admin"
+# Endpoints with "users" OR "admin"
 nexs-swag init --tags users,admin
 ```
 
-### Excluir Tags
+### Exclude Tags
 ```bash
-# Todos EXCETO "internal"
+# All EXCEPT "internal"
 nexs-swag init --tags '!internal'
 
-# Todos EXCETO "internal" e "deprecated"
+# All EXCEPT "internal" and "deprecated"
 nexs-swag init --tags '!internal,!deprecated'
 ```
 
-### Combinar
+### Combine
 ```bash
-# Apenas "admin" mas NÃO "internal"
+# Only "admin" but NOT "internal"
 nexs-swag init --tags admin,!internal
 ```
 
-## Endpoints do Exemplo
+## Example Endpoints
 
-| Endpoint | Tags | Incluído em |
+| Endpoint | Tags | Included in |
 |----------|------|-------------|
 | `GET /users` | users | --tags users |
-| `POST /users` | users,admin | --tags users OU --tags admin |
+| `POST /users` | users,admin | --tags users OR --tags admin |
 | `DELETE /users/{id}` | admin | --tags admin |
 | `GET /internal/config` | internal | --tags internal |
 
-## Exemplos de Filtros
+## Filter Examples
 
-### 1. Documentação Pública (sem internals)
+### 1. Public Documentation (without internals)
 ```bash
 nexs-swag init --tags '!internal'
 ```
 
-### 2. Documentação Admin
+### 2. Admin Documentation
 ```bash
 nexs-swag init --tags admin
 ```
 
-### 3. Documentação Completa (exceto deprecated)
+### 3. Complete Documentation (except deprecated)
 ```bash
 nexs-swag init --tags '!deprecated'
 ```
 
-### 4. Múltiplas Versões
+### 4. Multiple Versions
 ```bash
 # API v1
 nexs-swag init --tags v1 --output docs/v1
@@ -70,15 +72,15 @@ nexs-swag init --tags v1 --output docs/v1
 nexs-swag init --tags v2 --output docs/v2
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Casos de Uso
+## Use Cases
 
-- **Documentação pública vs interna:** Excluir endpoints internos
-- **Múltiplas versões:** Gerar docs separadas para v1, v2
-- **Por permissão:** user, admin, superadmin
-- **Por status:** stable, beta, deprecated
+- **Public vs internal documentation:** Exclude internal endpoints
+- **Multiple versions:** Generate separate docs for v1, v2
+- **By permission:** user, admin, superadmin
+- **By status:** stable, beta, deprecated

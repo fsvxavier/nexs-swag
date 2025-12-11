@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // JSON Schema type constants.

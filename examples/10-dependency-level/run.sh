@@ -1,34 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 10: Dependency Level ==="
+# Exemplo 10 - dependency-level
+
+echo "=== Exemplo 10: dependency-level ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Level 0
-echo "1. Level 0 (apenas types referenciados diretamente)..."
-../../nexs-swag init --dir . --output ./docs-level0 --parseDependency --parseDependencyLevel 0 --quiet
-echo "   Definitions encontradas:"
-grep -o '"[^"]*\(Order\|Item\|Meta\)"' docs-level0/openapi.json 2>/dev/null | sort -u || echo "   Nenhum"
-
-echo ""
-
-# Level 1
-echo "2. Level 1 (+ 1 nível de referências)..."
-../../nexs-swag init --dir . --output ./docs-level1 --parseDependency --parseDependencyLevel 1 --quiet
-echo "   Definitions encontradas:"
-grep -o '"[^"]*\(Order\|Item\|Meta\)"' docs-level1/openapi.json 2>/dev/null | sort -u
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --parseDependencyLevel 2
 
 echo ""
 
-# Level 2
-echo "3. Level 2 (+ 2 níveis de referências)..."
-../../nexs-swag init --dir . --output ./docs-level2 --parseDependency --parseDependencyLevel 2 --quiet
-echo "   Definitions encontradas:"
-grep -o '"[^"]*\(Order\|Item\|Meta\)"' docs-level2/openapi.json 2>/dev/null | sort -u
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --parseDependencyLevel 2
 
 echo ""
-echo "Estrutura de dependências:"
-echo "  Order → Item → Meta"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "Cada nível adiciona mais types referenciados na cadeia de dependências."
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

@@ -1,6 +1,8 @@
-# Exemplo 08 - Parse Internal Packages
+# Example 08 - Parse Internal Packages
 
-Demonstra o uso de `--parseInternal` para incluir pacotes `internal/`.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `--parseInternal` to include `internal/` packages.
 
 ## Flag
 

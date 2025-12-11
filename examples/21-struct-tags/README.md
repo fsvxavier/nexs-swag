@@ -1,6 +1,8 @@
-# Exemplo 21 - Struct Tags
+# Example 21 - Struct Tags
 
-Demonstra o uso de struct tags para enriquecer documentação Swagger.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of struct tags to enrich Swagger documentation.
 
 ## Tags Suportadas
 

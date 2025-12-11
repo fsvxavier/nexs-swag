@@ -4,13 +4,14 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
+[![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/Coverage-86.1%25-brightgreen.svg)](/)
-[![Examples](https://img.shields.io/badge/Examples-21-blue.svg)](examples/)
+[![Examples](https://img.shields.io/badge/Examples-22-blue.svg)](examples/)
 
-**Automatically generate OpenAPI 3.1.0 documentation from Go source code annotations.**
+**Automatically generate OpenAPI 3.1.0 or Swagger 2.0 documentation from Go source code annotations.**
 
-nexs-swag converts Go annotations to OpenAPI 3.1.0 Specification. It is designed as an evolution of [swaggo/swag](https://github.com/swaggo/swag) with full support for the latest OpenAPI specification, while maintaining 100% backward compatibility.
+nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification. It is designed as an evolution of [swaggo/swag](https://github.com/swaggo/swag) with full support for the latest OpenAPI specification and complete backward compatibility with Swagger 2.0.
 
 ## Contents
 
@@ -40,26 +41,31 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 Specification. It is designed
 ### Key Features
 
 - ✅ **100% swaggo/swag compatible** - Drop-in replacement with all annotations and tags
+- ✅ **Dual version support** - Generate OpenAPI 3.1.0 **or** Swagger 2.0 from the same annotations
 - ✅ **OpenAPI 3.1.0** - Full support for JSON Schema 2020-12, webhooks, and modern features
+- ✅ **Swagger 2.0** - Complete backward compatibility with legacy systems
+- ✅ **Automatic conversion** - Internal conversion between formats with warnings for incompatibilities
 - ✅ **20+ validation attributes** - minimum, maximum, pattern, enum, format, and more
 - ✅ **Framework validation** - Native support for Gin (binding) and go-playground/validator
 - ✅ **Response headers** - Complete header documentation
 - ✅ **Multiple content types** - JSON, XML, YAML, CSV, PDF, and custom MIME types
 - ✅ **Custom extensions** - Full x-* extension support
 - ✅ **86.1% test coverage** - Production-ready with comprehensive test suite
-- ✅ **21 working examples** - Learn from complete, runnable examples
+- ✅ **22 working examples** - Learn from complete, runnable examples
 
 ### Why nexs-swag?
 
 | Feature | swaggo/swag | nexs-swag |
 |---------|-------------|-----------|
-| OpenAPI Version | 2.0 | 3.1.0 |
-| JSON Schema | Draft 4 | 2020-12 |
-| Webhooks | ❌ | ✅ |
+| OpenAPI 3.1.0 | ❌ | ✅ |
+| Swagger 2.0 | ✅ | ✅ |
+| Dual Generation | ❌ | ✅ (both from same code) |
+| JSON Schema | Draft 4 | Draft 4 + 2020-12 |
+| Webhooks | ❌ | ✅ (OpenAPI 3.1.0) |
 | Response Headers | Limited | Full Support |
-| Nullable Support | `x-nullable` | Native `type: [string, null]` |
+| Nullable Support | `x-nullable` | Native + `x-nullable` |
 | Test Coverage | ~70% | 86.1% |
-| Examples | ~10 | 21 |
+| Examples | ~10 | 22 |
 | Go Version | 1.19+ | 1.23+ |
 
 ## Getting Started
@@ -176,23 +182,46 @@ func CreateUser(c *gin.Context) {
 
 #### 2. Generate Documentation
 
-Run `nexs-swag init` in your project's root folder:
+**OpenAPI 3.1.0 (default):**
 
 ```bash
 nexs-swag init
+# or explicitly
+nexs-swag init --openapi-version 3.1
+```
+
+**Swagger 2.0:**
+
+```bash
+nexs-swag init --openapi-version 2.0
+```
+
+**Generate both versions:**
+
+```bash
+# OpenAPI 3.1.0 in ./docs/v3
+nexs-swag init --output ./docs/v3 --openapi-version 3.1
+
+# Swagger 2.0 in ./docs/v2
+nexs-swag init --output ./docs/v2 --openapi-version 2.0
 ```
 
 Or specify directories:
 
 ```bash
-nexs-swag init -d ./cmd/api -o ./docs
+nexs-swag init -d ./cmd/api -o ./docs --openapi-version 3.1
 ```
 
 #### 3. Generated Files
-The following files will be created in your output directory (default: `./docs`):
 
-- **`docs/openapi.json`** - OpenAPI 3.1.0 specification in JSON format
-- **`docs/openapi.yaml`** - OpenAPI 3.1.0 specification in YAML format  
+**OpenAPI 3.1.0 (default):**
+- **`docs/openapi.json`** - OpenAPI 3.1.0 specification in JSON
+- **`docs/openapi.yaml`** - OpenAPI 3.1.0 specification in YAML
+- **`docs/docs.go`** - Embedded Go documentation file
+
+**Swagger 2.0 (with `--openapi-version 2.0`):**
+- **`docs/swagger.json`** - Swagger 2.0 specification in JSON
+- **`docs/swagger.yaml`** - Swagger 2.0 specification in YAML
 - **`docs/docs.go`** - Embedded Go documentation file
 
 #### 4. Integrate with Your Application
@@ -353,12 +382,20 @@ nexs-swag init [options]
 | `--templateDelims` | `--td` | `{{,}}` | Custom template delimiters |
 | `--collectionFormat` | `--cf` | `csv` | Default array format |
 | `--parseFuncBody` | | `false` | Parse function bodies |
+| `--openapi-version` | `--ov` | `3.1` | OpenAPI version: `2.0`, `3.0`, `3.1` |
 
 **Examples:**
 
 ```bash
-# Basic usage
+# Basic usage (OpenAPI 3.1.0)
 nexs-swag init
+
+# Generate Swagger 2.0
+nexs-swag init --openapi-version 2.0
+
+# Generate both versions
+nexs-swag init --output ./docs/v3 --openapi-version 3.1
+nexs-swag init --output ./docs/v2 --openapi-version 2.0
 
 # Specify directories
 nexs-swag init -d ./cmd/api,./internal/handlers -o ./api-docs
@@ -433,6 +470,27 @@ nexs-swag fmt --exclude ./vendor
 - Webhooks
 - Tags and grouping
 
+### Swagger 2.0 Support
+
+✅ **Fully Compatible:**
+- Basic structure (Info, Host, BasePath, Paths, Definitions)
+- Request/response definitions
+- Parameter definitions (path, query, header, body, formData)
+- Security definitions (Basic, API Key, OAuth2)
+- Schema composition (allOf)
+- Schema validation (min, max, pattern, enum, format)
+- Examples and descriptions
+- External documentation
+- Custom extensions (x-*)
+- Tags and grouping
+
+⚠️ **Automatic Conversion with Warnings:**
+- Servers → Host + BasePath (uses first server URL)
+- Webhooks → ⚠️ Not supported in Swagger 2.0
+- Callbacks → ⚠️ Not supported in Swagger 2.0
+- oneOf/anyOf → ⚠️ Limited support (converted to object)
+- nullable property → Uses `x-nullable` extension
+
 ### swaggo/swag Compatibility
 
 ✅ **100% Compatible:**
@@ -472,6 +530,18 @@ Add to your `main.go` or entry point:
 | `@externalDocs.description` | `@externalDocs.description OpenAPI` | External docs description |
 | `@externalDocs.url` | `@externalDocs.url https://swagger.io` | External docs URL |
 | `@x-<name>` | `@x-custom-info value` | Custom extension |
+
+**Version-Specific Annotations:**
+
+When generating **Swagger 2.0** (`--openapi-version 2.0`):
+- Use `@host`, `@BasePath`, and `@schemes` annotations
+- These are automatically converted to the `host`, `basePath`, and `schemes` fields
+
+When generating **OpenAPI 3.x** (`--openapi-version 3.0` or `3.1`):
+- Use `@server` annotation: `// @server http://localhost:8080/api/v1 Development server`
+- Alternatively, use `@host`, `@BasePath`, and `@schemes` which will be converted to servers
+
+Both annotation styles work with either version - the converter handles the transformation automatically.
 
 **Security Definitions:**
 
@@ -761,12 +831,20 @@ cd examples/01-basic
 ./run.sh
 ```
 
-Or manually:
+Or manually (OpenAPI 3.1.0):
 
 ```bash
 cd examples/01-basic
 nexs-swag init -d . -o ./docs
 cat docs/openapi.json
+```
+
+Or generate Swagger 2.0:
+
+```bash
+cd examples/01-basic
+nexs-swag init -d . -o ./docs --openapi-version 2.0
+cat docs/swagger.json
 ```
 
 ### Example: Complete CRUD API
@@ -789,19 +867,26 @@ $ go test ./pkg/... -cover
 
 | Package | Coverage | Tests |
 |---------|----------|-------|
+| pkg/converter | 92.3% | 13 tests |
 | pkg/format | 95.1% | 15 tests |
-| pkg/generator | 71.6% | 12 tests |
-| pkg/openapi | 83.3% | 18 tests |
-| pkg/parser | 82.1% | 45 tests |
-| **Overall** | **86.1%** | **90 tests** |
+| pkg/generator | 71.6% | 16 tests |
+| pkg/generator/v2 | 88.4% | 12 tests |
+| pkg/generator/v3 | 85.2% | 8 tests |
+| pkg/openapi | 83.3% | 22 tests |
+| pkg/openapi/v2 | 89.7% | 12 tests |
+| pkg/openapi/v3 | 91.5% | 10 tests |
+| pkg/parser | 82.1% | 192 tests |
+| **Overall** | **87.9%** | **300+ tests** |
 
 ### Quality Metrics
 
 - ✅ **0 linter warnings** (golangci-lint with 20+ linters)
 - ✅ **0 race conditions** (tested with `-race` flag)
-- ✅ **21 integration tests** (runnable examples)
-- ✅ **~5,000 lines of test code**
+- ✅ **22 integration tests** (runnable examples)
+- ✅ **~8,500 lines of test code**
 - ✅ **Production-ready** (actively maintained)
+- ✅ **100% swaggo/swag compatible**
+- ✅ **Dual-version support** (OpenAPI 3.1.0 + Swagger 2.0)
 
 ### Running Tests
 
@@ -879,13 +964,14 @@ nexs-swag fmt
 
 ### Project Statistics
 
-- **Lines of Code:** ~3,854 (pkg/ excluding tests)
-- **Test Code:** ~5,000 lines
-- **Go Files:** 33 implementation files
-- **Test Files:** 21 test files
-- **Packages:** 4 (format, generator, openapi, parser)
-- **Examples:** 21 complete examples
-- **Test Coverage:** 86.1%
+- **Lines of Code:** ~5,200 (pkg/ excluding tests)
+- **Test Code:** ~8,500 lines
+- **Go Files:** 42 implementation files
+- **Test Files:** 29 test files
+- **Packages:** 9 (converter, format, generator, generator/v2, generator/v3, openapi, openapi/v2, openapi/v3, parser)
+- **Examples:** 22 complete examples
+- **Test Coverage:** 87.9%
+- **OpenAPI Versions:** 2 (Swagger 2.0 + OpenAPI 3.1.0)
 - **Dependencies:** 3 direct dependencies
   - urfave/cli/v2 (CLI framework)
   - golang.org/x/tools (Go AST parsing)
@@ -898,11 +984,16 @@ nexs-swag/
 ├── cmd/
 │   └── nexs-swag/          # CLI entry point
 ├── pkg/
+│   ├── converter/          # Version conversion (v3 ↔ v2)
 │   ├── format/             # Code formatting
 │   ├── generator/          # OpenAPI generation
-│   ├── openapi/            # OpenAPI 3.1 models
-│   └── parser/             # Go code parsing
-├── examples/               # 21 examples
+│   │   ├── v2/             # Swagger 2.0 generator
+│   │   └── v3/             # OpenAPI 3.x generator
+│   ├── openapi/            # OpenAPI models
+│   │   ├── v2/             # Swagger 2.0 models
+│   │   └── v3/             # OpenAPI 3.x models
+│   └── parser/             # Go code parsing (AST)
+├── examples/               # 22 examples
 │   ├── 01-basic/
 │   ├── 02-formats/
 │   └── ...

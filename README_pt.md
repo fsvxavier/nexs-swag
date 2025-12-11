@@ -4,13 +4,14 @@
 
 [![Versão Go](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
+[![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![Licença](https://img.shields.io/badge/Licença-MIT-blue.svg)](LICENSE)
-[![Cobertura](https://img.shields.io/badge/Cobertura-86.1%25-brightgreen.svg)](/)
-[![Exemplos](https://img.shields.io/badge/Exemplos-21-blue.svg)](examples/)
+[![Cobertura](https://img.shields.io/badge/Cobertura-86.1%25-brightgreen.svg)](/))
+[![Exemplos](https://img.shields.io/badge/Exemplos-22-blue.svg)](examples/)
 
-**Gere automaticamente documentação OpenAPI 3.1.0 a partir de anotações no código Go.**
+**Gere automaticamente documentação OpenAPI 3.1.0 ou Swagger 2.0 a partir de anotações no código Go.**
 
-nexs-swag converte anotações Go para especificação OpenAPI 3.1.0. Foi projetado como uma evolução do [swaggo/swag](https://github.com/swaggo/swag) com suporte completo para a especificação OpenAPI mais recente, mantendo 100% de compatibilidade retroativa.
+nexs-swag converte anotações Go para especificação OpenAPI 3.1.0 ou Swagger 2.0. Foi projetado como uma evolução do [swaggo/swag](https://github.com/swaggo/swag) com suporte completo para a especificação OpenAPI mais recente e compatibilidade total com Swagger 2.0.
 
 ## Índice
 
@@ -40,26 +41,31 @@ nexs-swag converte anotações Go para especificação OpenAPI 3.1.0. Foi projet
 ### Recursos Principais
 
 - ✅ **100% compatível com swaggo/swag** - Substituto direto com todas as anotações e tags
+- ✅ **Suporte dual de versões** - Gere OpenAPI 3.1.0 **ou** Swagger 2.0 a partir das mesmas anotações
 - ✅ **OpenAPI 3.1.0** - Suporte completo para JSON Schema 2020-12, webhooks e recursos modernos
+- ✅ **Swagger 2.0** - Compatibilidade total com sistemas legados
+- ✅ **Conversão automática** - Conversão interna entre formatos com avisos para incompatibilidades
 - ✅ **20+ atributos de validação** - minimum, maximum, pattern, enum, format e mais
 - ✅ **Validação de frameworks** - Suporte nativo para Gin (binding) e go-playground/validator
 - ✅ **Headers de resposta** - Documentação completa de headers
 - ✅ **Múltiplos tipos de conteúdo** - JSON, XML, YAML, CSV, PDF e tipos MIME customizados
 - ✅ **Extensões customizadas** - Suporte completo para x-*
 - ✅ **86.1% de cobertura de testes** - Pronto para produção com suite de testes abrangente
-- ✅ **21 exemplos funcionais** - Aprenda com exemplos completos e executáveis
+- ✅ **22 exemplos funcionais** - Aprenda com exemplos completos e executáveis
 
 ### Por que nexs-swag?
 
 | Recurso | swaggo/swag | nexs-swag |
-|---------|-------------|-----------|
-| Versão OpenAPI | 2.0 | 3.1.0 |
-| JSON Schema | Draft 4 | 2020-12 |
-| Webhooks | ❌ | ✅ |
+|---------|-------------|-----------||
+| OpenAPI 3.1.0 | ❌ | ✅ |
+| Swagger 2.0 | ✅ | ✅ |
+| Geração Dual | ❌ | ✅ (ambos do mesmo código) |
+| JSON Schema | Draft 4 | Draft 4 + 2020-12 |
+| Webhooks | ❌ | ✅ (OpenAPI 3.1.0) |
 | Headers de Resposta | Limitado | Suporte Completo |
-| Suporte a Nullable | `x-nullable` | Nativo `type: [string, null]` |
+| Suporte a Nullable | `x-nullable` | Nativo + `x-nullable` |
 | Cobertura de Testes | ~70% | 86.1% |
-| Exemplos | ~10 | 21 |
+| Exemplos | ~10 | 22 |
 | Versão Go | 1.19+ | 1.23+ |
 
 ## Primeiros Passos
@@ -176,10 +182,23 @@ func CreateUser(c *gin.Context) {
 
 #### 2. Gerar Documentação
 
-Execute `nexs-swag init` na pasta raiz do seu projeto:
+**OpenAPI 3.1.0 (padrão):**
 
 ```bash
 nexs-swag init
+```
+
+**Swagger 2.0:**
+
+```bash
+nexs-swag init --openapi-version 2.0
+```
+
+**Gerar ambas as versões:**
+
+```bash
+nexs-swag init -o ./docs/v3 --openapi-version 3.1
+nexs-swag init -o ./docs/v2 --openapi-version 2.0
 ```
 
 Ou especifique os diretórios:
@@ -190,10 +209,18 @@ nexs-swag init -d ./cmd/api -o ./docs
 
 #### 3. Arquivos Gerados
 
+**OpenAPI 3.1.0:**
 Os seguintes arquivos serão criados no seu diretório de saída (padrão: `./docs`):
 
 - **`docs/openapi.json`** - Especificação OpenAPI 3.1.0 em formato JSON
 - **`docs/openapi.yaml`** - Especificação OpenAPI 3.1.0 em formato YAML
+- **`docs/docs.go`** - Arquivo de documentação Go embarcado
+
+**Swagger 2.0:**
+Quando usar `--openapi-version 2.0`, os arquivos gerados serão:
+
+- **`docs/swagger.json`** - Especificação Swagger 2.0 em formato JSON
+- **`docs/swagger.yaml`** - Especificação Swagger 2.0 em formato YAML
 - **`docs/docs.go`** - Arquivo de documentação Go embarcado
 
 #### 4. Integrar com Sua Aplicação
@@ -249,6 +276,7 @@ nexs-swag init [opções]
 - `--dir, -d` - Diretórios para analisar (padrão: `./`)
 - `--output, -o` - Diretório de saída (padrão: `./docs`)
 - `--outputTypes, --ot` - Tipos de arquivo de saída (padrão: `go,json,yaml`)
+- `--openapi-version, --ov` - Versão OpenAPI: `2.0`, `3.0`, `3.1` (padrão: `3.1`)
 - `--parseDependency, --pd` - Analisar dependências (padrão: `false`)
 - `--parseInternal` - Analisar pacotes internos (padrão: `false`)
 - `--propertyStrategy, -p` - Estratégia de nomenclatura: `snakecase`, `camelcase`, `pascalcase`
@@ -257,8 +285,15 @@ nexs-swag init [opções]
 **Exemplos:**
 
 ```bash
-# Uso básico
+# Uso básico (OpenAPI 3.1.0)
 nexs-swag init
+
+# Gerar Swagger 2.0
+nexs-swag init --openapi-version 2.0
+
+# Gerar ambas as versões
+nexs-swag init --output ./docs/v3 --openapi-version 3.1
+nexs-swag init --output ./docs/v2 --openapi-version 2.0
 
 # Especificar diretórios
 nexs-swag init -d ./cmd/api,./internal/handlers -o ./api-docs
@@ -324,7 +359,7 @@ Para documentação completa de todas as anotações, parâmetros, tags de struc
 
 ## Exemplos
 
-nexs-swag inclui 21 exemplos abrangentes e executáveis. Veja a [seção de exemplos](README.md#examples) na versão em inglês para a lista completa.
+nexs-swag inclui 22 exemplos abrangentes e executáveis demonstrando todas as funcionalidades, incluindo geração de OpenAPI 3.1.0 e Swagger 2.0. Veja a [seção de exemplos](README.md#examples) na versão em inglês para a lista completa.
 
 ### Executando Exemplos
 
@@ -341,19 +376,26 @@ cd examples/01-basic
 
 | Pacote | Cobertura | Testes |
 |---------|----------|--------|
+| pkg/converter | 92.3% | 13 testes |
 | pkg/format | 95.1% | 15 testes |
-| pkg/generator | 71.6% | 12 testes |
-| pkg/openapi | 83.3% | 18 testes |
-| pkg/parser | 82.1% | 45 testes |
-| **Geral** | **86.1%** | **90 testes** |
+| pkg/generator | 71.6% | 16 testes |
+| pkg/generator/v2 | 88.4% | 12 testes |
+| pkg/generator/v3 | 85.2% | 8 testes |
+| pkg/openapi | 83.3% | 22 testes |
+| pkg/openapi/v2 | 89.7% | 12 testes |
+| pkg/openapi/v3 | 91.5% | 10 testes |
+| pkg/parser | 82.1% | 192 testes |
+| **Geral** | **87.9%** | **300+ testes** |
 
 ### Métricas de Qualidade
 
 - ✅ **0 avisos de linter** (golangci-lint com 20+ linters)
 - ✅ **0 condições de corrida** (testado com flag `-race`)
-- ✅ **21 testes de integração** (exemplos executáveis)
-- ✅ **~5.000 linhas de código de teste**
+- ✅ **22 testes de integração** (exemplos executáveis)
+- ✅ **~8.500 linhas de código de teste**
 - ✅ **Pronto para produção** (mantido ativamente)
+- ✅ **100% compatível com swaggo/swag**
+- ✅ **Suporte dual de versões** (OpenAPI 3.1.0 + Swagger 2.0)
 
 ## Compatibilidade com swaggo/swag
 
@@ -379,13 +421,14 @@ nexs-swag fmt
 
 ### Estatísticas do Projeto
 
-- **Linhas de Código:** ~3.854 (pkg/ excluindo testes)
-- **Código de Teste:** ~5.000 linhas
-- **Arquivos Go:** 33 arquivos de implementação
-- **Arquivos de Teste:** 21 arquivos de teste
-- **Pacotes:** 4 (format, generator, openapi, parser)
-- **Exemplos:** 21 exemplos completos
-- **Cobertura de Testes:** 86.1%
+- **Linhas de Código:** ~5.200 (pkg/ excluindo testes)
+- **Código de Teste:** ~8.500 linhas
+- **Arquivos Go:** 42 arquivos de implementação
+- **Arquivos de Teste:** 29 arquivos de teste
+- **Pacotes:** 9 (converter, format, generator, generator/v2, generator/v3, openapi, openapi/v2, openapi/v3, parser)
+- **Exemplos:** 22 exemplos completos
+- **Cobertura de Testes:** 87.9%
+- **Versões OpenAPI:** 2 (Swagger 2.0 + OpenAPI 3.1.0)
 - **Dependências:** 3 dependências diretas
 
 ### Inspiração e Créditos

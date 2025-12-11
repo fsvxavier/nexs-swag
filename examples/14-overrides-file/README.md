@@ -1,6 +1,8 @@
-# Exemplo 14 - Overrides File
+# Example 14 - Overrides File
 
-Demonstra o uso de arquivo `.swaggo` para overrides globais de tipos.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `.swaggo` file for global type overrides.
 
 ## Flag
 
@@ -10,13 +12,13 @@ Demonstra o uso de arquivo `.swaggo` para overrides globais de tipos.
 
 Default: `.swaggo`
 
-## Uso
+## Usage
 
 ```bash
 nexs-swag init --overridesFile .swaggo
 ```
 
-## Arquivo .swaggo
+## .swaggo File
 
 ```json
 {
@@ -31,11 +33,11 @@ nexs-swag init --overridesFile .swaggo
 }
 ```
 
-## Problema
+## Problem
 
-Tipos customizados do Go geram schemas complexos:
+Custom Go types generate complex schemas:
 
-### SEM Overrides
+### WITHOUT Overrides
 ```json
 {
   "Account": {
@@ -52,7 +54,7 @@ Tipos customizados do Go geram schemas complexos:
 }
 ```
 
-### COM Overrides
+### WITH Overrides
 ```json
 {
   "Account": {
@@ -65,7 +67,7 @@ Tipos customizados do Go geram schemas complexos:
 }
 ```
 
-## Tipos Comuns
+## Common Types
 
 ### SQL Nullable Types
 ```json
@@ -102,27 +104,27 @@ Tipos customizados do Go geram schemas complexos:
 }
 ```
 
-## Alternativa: swaggertype Tag
+## Alternative: swaggertype Tag
 
-Sem arquivo global:
+Without global file:
 ```go
 type Account struct {
     ID sql.NullInt64 `json:"id" swaggertype:"integer"`
 }
 ```
 
-Com arquivo global:
+With global file:
 ```go
 type Account struct {
-    ID sql.NullInt64 `json:"id"` // Automaticamente integer
+    ID sql.NullInt64 `json:"id"` // Automatically integer
 }
 ```
 
-## Prioridade
+## Priority
 
-1. **swaggertype tag** (maior prioridade)
+1. **swaggertype tag** (highest priority)
 2. **Overrides file**
-3. **Auto-detection** (menor prioridade)
+3. **Auto-detection** (lowest priority)
 
 ```go
 type User struct {
@@ -132,22 +134,22 @@ type User struct {
 }
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Benefícios
+## Benefits
 
-- **Global:** Um lugar para todos os overrides
-- **Reutilizável:** Compartilhar entre projetos
-- **Limpo:** Código sem tags repetitivas
-- **Versionável:** Commitar junto com código
+- **Global:** One place for all overrides
+- **Reusable:** Share across projects
+- **Clean:** Code without repetitive tags
+- **Versionable:** Commit with code
 
-## Casos de Uso
+## Use Cases
 
-- Projetos com database/sql
-- Bibliotecas de terceiros
-- Tipos customizados da empresa
-- Padronização de tipos
+- Projects with database/sql
+- Third-party libraries
+- Company custom types
+- Type standardization

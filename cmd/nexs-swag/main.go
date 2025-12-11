@@ -9,8 +9,10 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/fsvxavier/nexs-swag/pkg/converter"
 	pkgformat "github.com/fsvxavier/nexs-swag/pkg/format"
-	"github.com/fsvxavier/nexs-swag/pkg/generator"
+	generatorv2 "github.com/fsvxavier/nexs-swag/pkg/generator/v2"
+	generatorv3 "github.com/fsvxavier/nexs-swag/pkg/generator/v3"
 	"github.com/fsvxavier/nexs-swag/pkg/parser"
 )
 
@@ -182,6 +184,12 @@ func main() {
 						Name:  "state",
 						Value: "",
 						Usage: "State file for @HostState annotation",
+					},
+					&cli.StringFlag{
+						Name:    "openapi-version",
+						Aliases: []string{"ov"},
+						Value:   "3.1.0",
+						Usage:   "OpenAPI version to generate: 2.0, 3.0, 3.1 (default: 3.1)",
 					},
 				},
 				Action: initAction,
@@ -398,6 +406,19 @@ func initAction(c *cli.Context) error {
 	collectionFormat := c.String("collectionFormat")
 	parseExtension := c.String("parseExtension")
 	state := c.String("state")
+	openapiVersion := c.String("openapi-version")
+
+	// Validate and normalize openapi-version
+	switch openapiVersion {
+	case "2.0", "2", "2.0.0":
+		openapiVersion = "2.0"
+	case "3.0", "3", "3.0.0":
+		openapiVersion = "3.0"
+	case "3.1", "3.1.0":
+		openapiVersion = "3.1"
+	default:
+		return fmt.Errorf("invalid openapi-version: %s (must be 2.0, 3.0, or 3.1)", openapiVersion)
+	}
 
 	// Use outputTypes if format is not explicitly set
 	if outputTypes != "" && formatStr == "json,yaml,go" {
@@ -472,6 +493,7 @@ func initAction(c *cli.Context) error {
 	p.SetCollectionFormat(collectionFormat)
 	p.SetParseExtension(parseExtension)
 	p.SetState(state)
+	p.SetOpenAPIVersion(openapiVersion)
 
 	// Parse directory
 	if err := p.ParseDir(searchDir); err != nil {
@@ -494,16 +516,45 @@ func initAction(c *cli.Context) error {
 	// Get OpenAPI specification
 	spec := p.GetOpenAPI()
 
-	// Generate output files
-	if !quiet {
-		fmt.Printf("Generating documentation in: %s\n", outputDir)
-	}
-	gen := generator.New(spec, outputDir, formats)
-	gen.SetInstanceName(instanceName)
-	gen.SetGeneratedTime(generatedTime)
-	gen.SetTemplateDelims(templateDelims)
-	if err := gen.Generate(); err != nil {
-		return fmt.Errorf("failed to generate documentation: %w", err)
+	// Convert to target version if needed
+	if openapiVersion == "2.0" {
+		if !quiet {
+			fmt.Printf("Converting OpenAPI 3.1.0 to Swagger 2.0...\n")
+		}
+		conv := converter.New()
+		swagger2, err := conv.ConvertToV2(spec)
+		if err != nil {
+			return fmt.Errorf("failed to convert to Swagger 2.0: %w", err)
+		}
+		if len(conv.GetWarnings()) > 0 && !quiet {
+			fmt.Println("Conversion warnings:")
+			for _, warning := range conv.GetWarnings() {
+				fmt.Printf("  - %s\n", warning)
+			}
+		}
+
+		// Generate Swagger 2.0 output
+		if !quiet {
+			fmt.Printf("Generating Swagger %s documentation in: %s\n", openapiVersion, outputDir)
+		}
+		gen := generatorv2.New(swagger2, outputDir, formats)
+		gen.SetInstanceName(instanceName)
+		gen.SetGeneratedTime(generatedTime)
+		if err := gen.Generate(); err != nil {
+			return fmt.Errorf("failed to generate documentation: %w", err)
+		}
+	} else {
+		// Generate OpenAPI 3.x output
+		if !quiet {
+			fmt.Printf("Generating OpenAPI %s documentation in: %s\n", openapiVersion, outputDir)
+		}
+		gen := generatorv3.New(spec, outputDir, formats)
+		gen.SetInstanceName(instanceName)
+		gen.SetGeneratedTime(generatedTime)
+		gen.SetTemplateDelims(templateDelims)
+		if err := gen.Generate(); err != nil {
+			return fmt.Errorf("failed to generate documentation: %w", err)
+		}
 	}
 
 	if !quiet {

@@ -1,6 +1,8 @@
-# Exemplo 12 - Markdown Files
+# Example 12 - Markdown Files
 
-Demonstra como usar arquivos markdown para descriptions detalhadas.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates how to use markdown files for detailed descriptions.
 
 ## Flag
 
@@ -9,15 +11,15 @@ Demonstra como usar arquivos markdown para descriptions detalhadas.
 --md <directory>
 ```
 
-## Uso
+## Usage
 
 ```bash
 nexs-swag init --markdownFiles ./docs
 ```
 
-## Sintaxe
+## Syntax
 
-No código Go, use `file(nome.md)` na description:
+In Go code, use `file(name.md)` in the description:
 
 ```go
 // @Description file(create-user.md)
@@ -25,24 +27,24 @@ No código Go, use `file(nome.md)` na description:
 func CreateUser() {}
 ```
 
-O nexs-swag vai:
-1. Ler `docs/create-user.md`
-2. Substituir `file(create-user.md)` pelo conteúdo do arquivo
-3. Adicionar o conteúdo na description do OpenAPI
+nexs-swag will:
+1. Read `docs/create-user.md`
+2. Replace `file(create-user.md)` with file content
+3. Add content to OpenAPI description
 
-## Estrutura
+## Structure
 
 ```
 12-markdown-files/
-├── main.go                   # API com file() references
+├── main.go                   # API with file() references
 └── docs/
-    ├── create-user.md        # Description detalhada
-    └── get-user.md           # Outra description
+    ├── create-user.md        # Detailed description
+    └── get-user.md           # Another description
 ```
 
-## Benefícios
+## Benefits
 
-### 1. Descriptions Detalhadas
+### 1. Detailed Descriptions
 ```markdown
 # Create User
 
@@ -56,14 +58,14 @@ Creates a new user with validation.
 ...
 ```
 
-### 2. Separação de Concerns
-- Código Go: lógica da aplicação
-- Markdown: documentação detalhada
-- Mais fácil de manter
+### 2. Separation of Concerns
+- Go code: application logic
+- Markdown: detailed documentation
+- Easier to maintain
 
-### 3. Reutilização
+### 3. Reusability
 ```go
-// Múltiplos endpoints podem usar o mesmo markdown
+// Multiple endpoints can use same markdown
 // @Description file(auth-required.md)
 func Endpoint1() {}
 
@@ -71,14 +73,14 @@ func Endpoint1() {}
 func Endpoint2() {}
 ```
 
-### 4. Formatação Rica
+### 4. Rich Formatting
 - Headers
-- Listas
+- Lists
 - Code blocks
-- Tabelas
+- Tables
 - Links
 
-## Exemplo Real
+## Real Example
 
 ```go
 // @Description file(user-endpoints.md)
@@ -104,31 +106,31 @@ All user endpoints require Bearer token.
 | 429  | Rate limit exceeded |
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 ./run.sh
 ```
 
-## Comparação
+## Comparison
 
-### Sem Markdown
+### Without Markdown
 ```json
 {
   "description": "file(create-user.md)"
 }
 ```
 
-### Com Markdown
+### With Markdown
 ```json
 {
   "description": "# Create User Endpoint\n\nCreates a new user in the system...\n\n## Request Body\n..."
 }
 ```
 
-## Casos de Uso
+## Use Cases
 
-- APIs complexas com muita documentação
-- Documentação colaborativa (tech writers)
-- Versionamento de docs separado do código
-- Geração de documentação a partir de Wiki
+- Complex APIs with lots of documentation
+- Collaborative documentation (tech writers)
+- Documentation versioning separate from code
+- Documentation generation from Wiki

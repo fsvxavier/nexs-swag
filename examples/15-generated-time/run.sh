@@ -1,28 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 15: Generated Time ==="
+# Exemplo 15 - generated-time
+
+echo "=== Exemplo 15: generated-time ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem timestamp
-echo "1. SEM --generatedTime..."
-../../nexs-swag init --dir . --output ./docs-no-time --quiet
-echo "   Header do docs.go:"
-head -3 docs-no-time/docs.go
-
-echo ""
-
-# Com timestamp
-echo "2. COM --generatedTime..."
-../../nexs-swag init --dir . --output ./docs-with-time --generatedTime --quiet
-echo "   Header do docs.go:"
-head -3 docs-with-time/docs.go
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --generatedTime
 
 echo ""
-echo "✓ Compare os headers!"
+
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --generatedTime
+
 echo ""
-echo "Benefícios do timestamp:"
-echo "  - Rastreamento de quando foi gerado"
-echo "  - Útil para debug e versionamento"
-echo "  - Pode ser usado em CI/CD"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
+echo ""
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

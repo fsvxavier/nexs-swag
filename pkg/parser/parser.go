@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 // Parser parses Go source files and extracts OpenAPI documentation from comments.
@@ -46,6 +46,7 @@ type Parser struct {
 	collectionFormat     string
 	state                string
 	parseExtension       string
+	openapiVersion       string // Target OpenAPI version: "2.0", "3.0.0", "3.1.0"
 }
 
 // TypeInfo stores information about a parsed type.
@@ -86,7 +87,18 @@ func New() *Parser {
 		instanceName:         "swagger",
 		collectionFormat:     "csv",
 		parseDependencyLevel: 0,
+		openapiVersion:       "3.1.0", // Default to latest
 	}
+}
+
+// SetOpenAPIVersion sets the target OpenAPI version.
+func (p *Parser) SetOpenAPIVersion(version string) {
+	p.openapiVersion = version
+}
+
+// GetOpenAPIVersion returns the target OpenAPI version.
+func (p *Parser) GetOpenAPIVersion() string {
+	return p.openapiVersion
 }
 
 // ParseDir parses all Go files in the specified directory recursively.

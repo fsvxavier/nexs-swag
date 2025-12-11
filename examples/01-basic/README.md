@@ -1,6 +1,8 @@
-# Exemplo 01 - Básico
+# Example 01 - Basic
 
-Demonstra o uso básico do nexs-swag com as flags essenciais.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates basic usage of nexs-swag with essential flags.
 
 ## Flags Utilizadas
 

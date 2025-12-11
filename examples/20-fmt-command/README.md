@@ -1,6 +1,8 @@
-# Exemplo 20 - Fmt Command
+# Example 20 - Fmt Command
 
-Demonstra o comando `fmt` para formatar annotations Swagger.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the `fmt` command to format Swagger annotations.
 
 ## Comando
 

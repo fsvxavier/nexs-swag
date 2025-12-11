@@ -1,84 +1,87 @@
 # Examples - nexs-swag
 
-Este diretório contém exemplos de uso para cada flag e funcionalidade do nexs-swag.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
 
-## Pré-requisitos
+This directory contains usage examples for each flag and functionality of nexs-swag.
 
-Instale o nexs-swag antes de executar os exemplos:
+## Prerequisites
+
+Install nexs-swag before running the examples:
 
 ```bash
-# Do diretório raiz do projeto
+# From the project root directory
 cd ..
 go install ./cmd/nexs-swag
 
-# Ou use o script de instalação
+# Or use the installation script
 ./install.sh
 
-# Verificar instalação
+# Verify installation
 nexs-swag --version
 ```
 
-## Estrutura
+## Structure
 
-Cada subdiretório contém um exemplo específico com:
-- `main.go` - Código Go com annotations Swagger
-- `README.md` - Instruções detalhadas de uso
-- `run.sh` - Script para executar o exemplo
+Each subdirectory contains a specific example with:
+- `main.go` - Go code with Swagger annotations
+- `README.md` - Detailed usage instructions (🌍 Available in 3 languages)
+- `run.sh` - Script to run the example
 
-## Lista de Exemplos
+## Examples List
 
-### Básicos (01-08)
-- [01-basic](./01-basic) - Uso básico com `--dir` e `--output`
-- [02-formats](./02-formats) - Múltiplos formatos com `--format`
-- [03-general-info](./03-general-info) - Arquivo específico com `--generalInfo`
+### Basic (01-08)
+- [01-basic](./01-basic) - Basic usage with `--dir` and `--output`
+- [02-formats](./02-formats) - Multiple formats with `--format`
+- [03-general-info](./03-general-info) - Specific file with `--generalInfo`
 - [04-property-strategy](./04-property-strategy) - `--propertyStrategy` (snake_case, camelCase, PascalCase)
 - [05-required-default](./05-required-default) - `--requiredByDefault`
-- [06-exclude](./06-exclude) - `--exclude` para excluir diretórios
-- [07-tags-filter](./07-tags-filter) - `--tags` para filtrar por tags
+- [06-exclude](./06-exclude) - `--exclude` to exclude directories
+- [07-tags-filter](./07-tags-filter) - `--tags` to filter by tags
 - [08-parse-internal](./08-parse-internal) - `--parseInternal`
 
-### Dependências (09-11)
+### Dependencies (09-11)
 - [09-parse-dependency](./09-parse-dependency) - `--parseDependency`
 - [10-dependency-level](./10-dependency-level) - `--parseDependencyLevel` (0-3)
 - [11-parse-golist](./11-parse-golist) - `--parseGoList`
 
-### Conteúdo Externo (12-14)
+### External Content (12-14)
 - [12-markdown-files](./12-markdown-files) - `--markdownFiles`
 - [13-code-examples](./13-code-examples) - `--codeExampleFilesDir`
 - [14-overrides-file](./14-overrides-file) - `--overridesFile`
 
-### Configurações (15-18)
+### Configuration (15-18)
 - [15-generated-time](./15-generated-time) - `--generatedTime`
 - [16-instance-name](./16-instance-name) - `--instanceName`
 - [17-template-delims](./17-template-delims) - `--templateDelims`
 - [18-collection-format](./18-collection-format) - `--collectionFormat`
 
-### Avançados (19-21)
+### Advanced (19-22)
 - [19-parse-func-body](./19-parse-func-body) - `--parseFuncBody`
-- [20-fmt-command](./20-fmt-command) - Comando `fmt`
+- [20-fmt-command](./20-fmt-command) - `fmt` command
 - [21-struct-tags](./21-struct-tags) - swaggertype, swaggerignore, extensions
+- [22-openapi-v2](./22-openapi-v2) - `--openapi-version` (Swagger 2.0 / OpenAPI 3.1.0)
 
-## Como Usar
+## How to Use
 
-### Executar um exemplo específico
+### Run a specific example
 
 ```bash
 cd 01-basic
 ./run.sh
 ```
 
-### Executar manualmente
+### Run manually
 
 ```bash
 cd 01-basic
 nexs-swag init --dir . --output ./docs
 ```
 
-### Executar todos os exemplos
+### Run all examples
 
 ```bash
 for dir in */; do
-    echo "=== Executando $dir ==="
+    echo "=== Running $dir ==="
     cd "$dir"
     ./run.sh
     cd ..
@@ -86,43 +89,45 @@ for dir in */; do
 done
 ```
 
-## Estrutura de Cada Exemplo
+## Example Structure
 
 ```
-XX-nome-exemplo/
-├── main.go          # Servidor HTTP com annotations
-├── run.sh           # Script de demonstração
-└── README.md        # Documentação completa
+XX-example-name/
+├── main.go          # HTTP server with annotations
+├── run.sh           # Demo script
+└── README.md        # Complete documentation (🌍 3 languages)
 ```
 
-## Dicas
+## Tips
 
-### Visualizar documentação gerada
+### View generated documentation
 
 ```bash
-# JSON
+# OpenAPI 3.1.0 (default)
 cat docs/openapi.json | jq
-
-# YAML
 cat docs/openapi.yaml
 
-# Docs Go
+# Swagger 2.0 (if generated with --openapi-version 2.0)
+cat docs/swagger.json | jq
+cat docs/swagger.yaml
+
+# Go docs
 cat docs/docs.go
 ```
 
-### Servir com Swagger UI
+### Serve with Swagger UI
 
 ```bash
-# Instalar swagger ui
+# Install swagger ui
 docker run -p 8080:8080 \
   -e SWAGGER_JSON=/docs/openapi.json \
   -v $(pwd)/docs:/docs \
   swaggerapi/swagger-ui
 
-# Acessar: http://localhost:8080
+# Access: http://localhost:8080
 ```
 
-### Integrar em projetos
+### Integrate in projects
 
 ```go
 package main
@@ -130,7 +135,7 @@ package main
 import (
     "net/http"
     
-    _ "myapp/docs"  // Importar docs gerados
+    _ "myapp/docs"  // Import generated docs
     
     httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -143,41 +148,41 @@ func main() {
 
 ## Troubleshooting
 
-### Erro "nexs-swag: command not found"
+### Error "nexs-swag: command not found"
 
 ```bash
-# Verificar instalação
+# Check installation
 which nexs-swag
 
-# Se não estiver instalado
+# If not installed
 cd ..
 go install ./cmd/nexs-swag
 
-# Verificar se $GOPATH/bin está no PATH
+# Check if $GOPATH/bin is in PATH
 echo $PATH | grep $(go env GOPATH)/bin
 
-# Adicionar ao PATH se necessário
+# Add to PATH if necessary
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-### Erro ao gerar documentação
+### Error generating documentation
 
 ```bash
-# Verificar se o código compila
+# Check if code compiles
 go build .
 
-# Executar com mais detalhes
+# Run with more details
 nexs-swag init --dir . --output ./docs --debug
 ```
 
-### Limpar documentação anterior
+### Clean previous documentation
 
 ```bash
 rm -rf docs docs-*
 ```
 
-## Recursos
+## Resources
 
-- [Documentação Completa](../INSTALL.md)
-- [swaggo/swag - Documentação Original](https://github.com/swaggo/swag)
+- [Complete Documentation](../INSTALL.md)
+- [swaggo/swag - Original Documentation](https://github.com/swaggo/swag)
 - [OpenAPI Specification](https://swagger.io/specification/)

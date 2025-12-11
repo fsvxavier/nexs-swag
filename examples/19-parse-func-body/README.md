@@ -1,6 +1,8 @@
-# Exemplo 19 - Parse Func Body
+# Example 19 - Parse Func Body
 
-Demonstra o uso de `--parseFuncBody` para análise do corpo das funções.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the use of `--parseFuncBody` for function body analysis.
 
 ## Flag
 

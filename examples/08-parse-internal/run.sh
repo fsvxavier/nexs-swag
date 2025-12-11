@@ -1,30 +1,29 @@
 #!/bin/bash
 
-echo "=== Exemplo 08: Parse Internal Packages ==="
+# Exemplo 08 - parse-internal
+
+echo "=== Exemplo 08: parse-internal ==="
 echo ""
 
-rm -rf docs-*
+# Limpar documentação anterior
+rm -rf docs
 
-# Sem parseInternal - ignora internal/
-echo "1. SEM --parseInternal (ignora internal/)..."
-../../nexs-swag init --dir . --output ./docs-no-internal --quiet
-echo "   Schemas encontrados:"
-grep -o '"[A-Z][a-zA-Z]*"' docs-no-internal/openapi.json | sort -u
-echo "   Endpoints:"
-grep -o '"\/[^"]*"' docs-no-internal/openapi.json
+# Gerar OpenAPI 3.1
+echo "Gerando OpenAPI 3.1..."
+../../nexs-swag init --dir . --output ./docs/v3 --openapi-version 3.1 --parseInternal
 
 echo ""
 
-# Com parseInternal - inclui internal/
-echo "2. COM --parseInternal (inclui internal/)..."
-../../nexs-swag init --dir . --output ./docs-with-internal --parseInternal --quiet
-echo "   Schemas encontrados:"
-grep -o '"[A-Z][a-zA-Z]*"' docs-with-internal/openapi.json | sort -u
-echo "   Endpoints:"
-grep -o '"\/[^"]*"' docs-with-internal/openapi.json
+# Gerar Swagger 2.0
+echo "Gerando Swagger 2.0..."
+../../nexs-swag init --dir . --output ./docs/v2 --openapi-version 2.0 --parseInternal
 
 echo ""
-echo "✓ Compare os resultados!"
+echo "✓ OpenAPI 3.1 gerada em ./docs/v3"
+echo "✓ Swagger 2.0 gerada em ./docs/v2"
 echo ""
-echo "SEM flag: apenas /users"
-echo "COM flag: /users + /internal/config"
+echo "Arquivos OpenAPI 3.1:"
+ls -lh docs/v3/
+echo ""
+echo "Arquivos Swagger 2.0:"
+ls -lh docs/v2/

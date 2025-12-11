@@ -1,6 +1,8 @@
-# Exemplo 04 - Property Naming Strategy
+# Example 04 - Property Naming Strategy
 
-Demonstra as diferentes estratégias de naming para campos de struct.
+🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
+
+Demonstrates the different naming strategies for struct fields.
 
 ## Flag
 
@@ -9,7 +11,7 @@ Demonstra as diferentes estratégias de naming para campos de struct.
 -p <strategy>
 ```
 
-## Estratégias Disponíveis
+## Available Strategies
 
 ### 1. snake_case
 ```bash
@@ -35,29 +37,29 @@ nexs-swag init --propertyStrategy pascalcase
 - `LastName` → `LastName`
 - `IsActive` → `IsActive`
 
-## Regras Importantes
+## Important Rules
 
-### ✅ Aplicado quando:
-- Campo **NÃO** tem tag `json`
-- Campo **NÃO** tem `json:"-"`
+### ✅ Applied when:
+- Field does **NOT** have `json` tag
+- Field does **NOT** have `json:"-"`
 
-### ❌ NÃO aplicado quando:
-- Campo tem tag `json:"explicit_name"` → usa "explicit_name"
-- Campo tem `json:"-"` → ignorado
-- Campo tem `json:",omitempty"` → aplica strategy + omitempty
+### ❌ NOT applied when:
+- Field has tag `json:"explicit_name"` → uses "explicit_name"
+- Field has `json:"-"` → ignored
+- Field has `json:",omitempty"` → applies strategy + omitempty
 
-## Exemplo
+## Example
 
 ```go
 type User struct {
-    UserID    int    `json:"user_id"`      // ✅ SEMPRE "user_id"
-    FirstName string                       // ⚠️ Depende da strategy
+    UserID    int    `json:"user_id"`      // ✅ ALWAYS "user_id"
+    FirstName string                       // ⚠️ Depends on strategy
     LastName  string `json:",omitempty"`   // ⚠️ Strategy + omitempty
-    Password  string `json:"-"`            // ❌ Ignorado
+    Password  string `json:"-"`            // ❌ Ignored
 }
 ```
 
-Com `--propertyStrategy snakecase`:
+With `--propertyStrategy snakecase`:
 ```json
 {
     "user_id": 123,
@@ -66,7 +68,7 @@ Com `--propertyStrategy snakecase`:
 }
 ```
 
-Com `--propertyStrategy camelcase`:
+With `--propertyStrategy camelcase`:
 ```json
 {
     "user_id": 123,
@@ -75,15 +77,15 @@ Com `--propertyStrategy camelcase`:
 }
 ```
 
-## Como Executar
+## How to Run
 
 ```bash
 chmod +x run.sh
 ./run.sh
 ```
 
-## Casos de Uso
+## Use Cases
 
-- **snake_case:** APIs Python, Ruby, bancos de dados
-- **camelCase:** APIs JavaScript, JSON padrão
-- **PascalCase:** APIs C#, .NET
+- **snake_case:** Python, Ruby APIs, databases
+- **camelCase:** JavaScript APIs, standard JSON
+- **PascalCase:** C#, .NET APIs

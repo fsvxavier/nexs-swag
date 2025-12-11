@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fsvxavier/nexs-swag/pkg/openapi"
+	openapi "github.com/fsvxavier/nexs-swag/pkg/openapi/v3"
 )
 
 func TestNewFormatter(t *testing.T) {
