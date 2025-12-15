@@ -262,9 +262,7 @@ func (p *Parser) SetParseExtension(ext string) {
 func (p *Parser) parseDependencies() error {
 	if !p.parseDependency {
 		return nil
-	}
-
-	// Read go.mod file
+	} // Read go.mod file
 	modData, err := os.ReadFile("go.mod")
 	if err != nil {
 		// go.mod not found, skip silently

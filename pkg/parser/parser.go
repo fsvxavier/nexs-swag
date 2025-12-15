@@ -106,9 +106,7 @@ func (p *Parser) ParseDir(dir string) error {
 	// Parse dependencies from go.mod if enabled
 	if err := p.parseDependencies(); err != nil {
 		return fmt.Errorf("failed to parse dependencies: %w", err)
-	}
-
-	// Use go list if enabled
+	} // Use go list if enabled
 	if p.parseGoList {
 		if err := p.parseWithGoList(dir); err != nil {
 			return fmt.Errorf("failed to parse with go list: %w", err)
@@ -154,26 +152,46 @@ func (p *Parser) ParseDir(dir string) error {
 
 		return p.ParseFile(path)
 	})
-}
-
-// shouldExclude checks if a path matches any exclude pattern.
+} // shouldExclude checks if a path matches any exclude pattern.
 func (p *Parser) shouldExclude(path string, info os.FileInfo) bool {
 	if len(p.excludePatterns) == 0 {
 		return false
 	}
 
 	name := info.Name()
+
+	// Clean path for comparison (remove leading ./)
+	cleanPath := strings.TrimPrefix(path, "./")
+
 	for _, pattern := range p.excludePatterns {
 		// Simple pattern matching
 		pattern = strings.TrimSpace(pattern)
 
+		// Remove leading ./ from pattern
+		pattern = strings.TrimPrefix(pattern, "./")
+
 		// Check if it's a wildcard pattern
 		if strings.Contains(pattern, "*") {
+			// Match against both name and full path
 			if matched, err := filepath.Match(pattern, name); err == nil && matched {
 				return true
 			}
-		} else if strings.Contains(path, pattern) || name == pattern {
-			return true
+			if matched, err := filepath.Match(pattern, cleanPath); err == nil && matched {
+				return true
+			}
+		} else {
+			// Exact match on directory/file name
+			if name == pattern {
+				return true
+			}
+			// Match if pattern is found in path
+			if strings.Contains(cleanPath, pattern) {
+				return true
+			}
+			// Match if path starts with pattern (for directory exclusion)
+			if strings.HasPrefix(cleanPath, pattern+"/") || cleanPath == pattern {
+				return true
+			}
 		}
 	}
 
