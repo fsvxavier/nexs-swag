@@ -317,7 +317,7 @@ func (p *Parser) parseDependencies() error {
 
 // parseDependencyPackage parses a single dependency package based on the level.
 func (p *Parser) parseDependencyPackage(modulePath string) error {
-	// Find dependency in vendor or GOPATH/GOMODCACHE
+	// Find dependency in vendor or GOMODCACHE
 	var depDir string
 
 	// Check vendor first
@@ -326,12 +326,29 @@ func (p *Parser) parseDependencyPackage(modulePath string) error {
 		depDir = vendorDir
 	} else {
 		// Try GOMODCACHE
-		_ = os.Getenv("GOMODCACHE")
-		// Note: Module cache lookup would be implemented here in a full solution
+		goModCache := os.Getenv("GOMODCACHE")
+		if goModCache == "" {
+			// Try default GOMODCACHE location
+			goPath := os.Getenv("GOPATH")
+			if goPath == "" {
+				// Default GOPATH location
+				homeDir, err := os.UserHomeDir()
+				if err != nil {
+					return nil
+				}
+				goPath = filepath.Join(homeDir, "go")
+			}
+			goModCache = filepath.Join(goPath, "pkg", "mod")
+		}
 
-		// Find the module in cache (this is simplified - real impl would need version matching)
-		// For now, skip if not in vendor
-		return nil
+		// Find the module in cache
+		// Module paths in cache are lowercased and versioned
+		// Example: github.com/user/repo@v1.2.3
+		depDir = p.findModuleInCache(goModCache, modulePath)
+		if depDir == "" {
+			// Module not found in cache, skip silently
+			return nil
+		}
 	}
 
 	// Parse based on level
@@ -341,13 +358,79 @@ func (p *Parser) parseDependencyPackage(modulePath string) error {
 	case 2: // Operations only
 		return p.parseDependencyOperations(depDir)
 	case 3: // All
+		// Check if this module has already been parsed to avoid infinite recursion
+		if p.parsedModules[depDir] {
+			return nil
+		}
+		// Mark module as parsed before recursing
+		p.parsedModules[depDir] = true
 		return p.ParseDir(depDir)
 	}
 
 	return nil
 }
 
-// parseDependencyModels parses only model definitions from a dependency.
+// findModuleInCache searches for a module in the GOMODCACHE.
+// Returns the path to the highest version found, or empty string if not found.
+func (p *Parser) findModuleInCache(cacheDir, modulePath string) string {
+	// Build cache path with proper escaping for uppercase letters
+	// Go module cache uses !lowercase for uppercase letters
+	var cachePath strings.Builder
+	for _, c := range modulePath {
+		if c >= 'A' && c <= 'Z' {
+			cachePath.WriteByte('!')
+			cachePath.WriteRune(c + 32) // convert to lowercase
+		} else {
+			cachePath.WriteRune(c)
+		}
+	}
+
+	escapedModulePath := cachePath.String()
+
+	// Try both original and escaped paths
+	pathsToTry := []string{
+		filepath.Join(cacheDir, modulePath),
+		filepath.Join(cacheDir, escapedModulePath),
+	}
+
+	for _, basePath := range pathsToTry {
+		// Check if path exists
+		if _, err := os.Stat(basePath); err != nil {
+			continue
+		}
+
+		// List versions
+		entries, err := os.ReadDir(basePath)
+		if err != nil {
+			continue
+		}
+
+		// Find the latest version (simple heuristic: last alphabetically)
+		var latestVersion string
+		for _, entry := range entries {
+			if entry.IsDir() && (strings.HasPrefix(entry.Name(), "v") || strings.HasPrefix(entry.Name(), "@")) {
+				if latestVersion == "" || entry.Name() > latestVersion {
+					latestVersion = entry.Name()
+				}
+			}
+		}
+
+		if latestVersion != "" {
+			fullPath := filepath.Join(basePath, latestVersion)
+			// Verify it's a valid module directory
+			if _, err := os.Stat(filepath.Join(fullPath, "go.mod")); err == nil {
+				return fullPath
+			}
+		}
+
+		// If no versioned subdirectories, check if the base path itself is valid
+		if _, err := os.Stat(filepath.Join(basePath, "go.mod")); err == nil {
+			return basePath
+		}
+	}
+
+	return ""
+} // parseDependencyModels parses only model definitions from a dependency.
 func (p *Parser) parseDependencyModels(dir string) error {
 	// Parse Go files and extract only type definitions
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

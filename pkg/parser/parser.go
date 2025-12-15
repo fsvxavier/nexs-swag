@@ -22,6 +22,7 @@ type Parser struct {
 	fset            *token.FileSet
 	generalInfoFile string
 	typeCache       map[string]*TypeInfo
+	parsedModules   map[string]bool // Track parsed modules to avoid infinite recursion
 
 	// Configuration options
 	excludePatterns      []string
@@ -81,6 +82,7 @@ func New() *Parser {
 		files:                make(map[string]*ast.File),
 		fset:                 token.NewFileSet(),
 		typeCache:            make(map[string]*TypeInfo),
+		parsedModules:        make(map[string]bool),
 		propertyStrategy:     "camelcase",
 		parseDepth:           100,
 		typeOverrides:        make(map[string]string),
@@ -379,12 +381,31 @@ func (p *Parser) parseSchemas(file *ast.File) error {
 
 		schema := processor.ProcessStruct(structType, typeSpec.Doc, typeSpec.Name.Name)
 		if schema != nil {
-			p.openapi.Components.Schemas[typeSpec.Name.Name] = schema
+			// Use simple name for types in current package
+			schemaName := typeSpec.Name.Name
 
-			// Cache the type info
-			p.typeCache[typeSpec.Name.Name] = &TypeInfo{
-				Name:    typeSpec.Name.Name,
-				Package: file.Name.Name,
+			// For external packages, use qualified name (package.Type)
+			packageName := file.Name.Name
+			if packageName != "main" && packageName != "" {
+				// Check if this is from an external dependency
+				// by verifying if it's not in the main module
+				qualifiedName := packageName + "." + typeSpec.Name.Name
+
+				// Register both names to support both reference styles
+				p.openapi.Components.Schemas[qualifiedName] = schema
+				p.typeCache[qualifiedName] = &TypeInfo{
+					Name:    qualifiedName,
+					Package: packageName,
+					Schema:  schema,
+					ASTNode: typeSpec,
+				}
+			}
+
+			// Always register with simple name too
+			p.openapi.Components.Schemas[schemaName] = schema
+			p.typeCache[schemaName] = &TypeInfo{
+				Name:    schemaName,
+				Package: packageName,
 				Schema:  schema,
 				ASTNode: typeSpec,
 			}
