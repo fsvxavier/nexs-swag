@@ -10,6 +10,13 @@ Demonstrates the use of `--parseFuncBody` for function body analysis.
 --parseFuncBody
 ```
 
+Or with explicit value:
+```bash
+--parseFuncBody=true
+```
+
+> **Note:** Both syntaxes are valid. Use `--parseFuncBody` (without value) or `--parseFuncBody=true` (explicit). Do NOT use `--parseFuncBody true` (space-separated).
+
 ## Comportamento
 
 ### SEM --parseFuncBody (Default)

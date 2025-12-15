@@ -9,7 +9,12 @@ Demuestra el uso de `--parseDependency` para incluir tipos de paquetes importado
 ```bash
 --parseDependency
 --pd
+# O explícitamente:
+--parseDependency=true
+--pd=true
 ```
+
+> **Nota:** Ambas sintaxis son válidas. Use `--parseDependency` o `--pd` (sin valor), o `--parseDependency=true` (explícito).
 
 ## Concepto
 

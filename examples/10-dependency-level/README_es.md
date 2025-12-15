@@ -13,7 +13,7 @@ Demuestra el uso de `--parseDependencyLevel` para controlar la profundidad del p
 
 Default: `0`
 
-Requiere: `--parseDependency`
+Requiere: `--parseDependency` (o `--parseDependency=true`)
 
 ## Concepto
 

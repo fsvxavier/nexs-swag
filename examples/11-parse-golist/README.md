@@ -10,6 +10,13 @@ Demonstrates the use of `--parseGoList` for faster and more accurate parsing.
 --parseGoList
 ```
 
+Or with explicit value:
+```bash
+--parseGoList=true
+```
+
+> **Note:** Both syntaxes are valid. Use `--parseGoList` (without value) or `--parseGoList=true` (explicit). Do NOT use `--parseGoList true` (space-separated).
+
 ## Difference
 
 ### WITHOUT --parseGoList (Manual)

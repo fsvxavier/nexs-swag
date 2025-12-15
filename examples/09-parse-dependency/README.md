@@ -9,7 +9,12 @@ Demonstrates the use of `--parseDependency` to include types from imported packa
 ```bash
 --parseDependency
 --pd
+# Or explicitly:
+--parseDependency=true
+--pd=true
 ```
+
+> **Note:** Both syntaxes are valid. Use `--parseDependency` or `--pd` (without value), or `--parseDependency=true` (explicit).
 
 ## Concept
 
@@ -26,6 +31,10 @@ myapp/
 
 ```bash
 nexs-swag init --parseDependency
+# Or:
+nexs-swag init --pd
+# Or explicitly:
+nexs-swag init --parseDependency=true
 ```
 
 ## How It Works

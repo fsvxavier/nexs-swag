@@ -384,6 +384,15 @@ nexs-swag init [options]
 | `--parseFuncBody` | | `false` | Parse function bodies |
 | `--openapi-version` | `--ov` | `3.1` | OpenAPI version: `2.0`, `3.0`, `3.1` |
 
+> **⚠️ Important: Boolean Flag Syntax**
+>
+> Boolean flags accept two valid syntaxes:
+> - ✅ **Without value** (presence = true): `--parseInternal`, `--pd`
+> - ✅ **With equals sign**: `--parseInternal=true`, `--pd=false`
+> - ❌ **Wrong** (space-separated): `--parseInternal true`, `--pd true`
+>
+> The space-separated syntax doesn't work because the CLI parser treats the word after the flag as a separate positional argument, not as the flag's value.
+
 **Examples:**
 
 ```bash
@@ -402,9 +411,13 @@ nexs-swag init -d ./cmd/api,./internal/handlers -o ./api-docs
 
 # Parse dependencies (level 1 - models only)
 nexs-swag init --parseDependency --parseDependencyLevel 1
+# Or with explicit syntax:
+nexs-swag init --parseDependency=true --parseDependencyLevel 1
 
 # Parse internal packages
 nexs-swag init --parseInternal
+# Or explicitly:
+nexs-swag init --parseInternal=true
 
 # JSON output only
 nexs-swag init --outputTypes json

@@ -13,7 +13,9 @@ Demonstrates the use of `--parseDependencyLevel` to control parsing depth.
 
 Default: `0`
 
-Requires: `--parseDependency`
+Requires: `--parseDependency` (or `--pd`)
+
+> **Note:** Use `--parseDependency` or `--parseDependency=true` to enable dependency parsing. Then set the level with `--parseDependencyLevel 2` or `--pdl=2`.
 
 ## Concept
 
@@ -47,6 +49,10 @@ Main + 1 dependency level
 
 ```bash
 nexs-swag init --parseDependency --parseDependencyLevel 1
+# Or with shortcuts:
+nexs-swag init --pd --pdl 1
+# Or explicitly:
+nexs-swag init --pd=true --pdl=1
 ```
 
 ### Level 2

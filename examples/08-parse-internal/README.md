@@ -8,7 +8,11 @@ Demonstrates the use of `--parseInternal` to include `internal/` packages.
 
 ```bash
 --parseInternal
+# Or explicitly:
+--parseInternal=true
 ```
+
+> **Note:** Both syntaxes are valid. Use `--parseInternal` (without value) or `--parseInternal=true` (explicit). Do NOT use `--parseInternal true` (space-separated).
 
 ## Comportamento
 
@@ -22,6 +26,8 @@ nexs-swag init
 ### COM flag
 ```bash
 nexs-swag init --parseInternal
+# Or:
+nexs-swag init --parseInternal=true
 ```
 - **Inclui** diretórios `internal/`
 - APIs internas também são documentadas

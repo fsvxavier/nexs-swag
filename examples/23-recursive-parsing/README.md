@@ -151,8 +151,11 @@ nexs-swag init --exclude ./config               ❌
 ### ✅ CORRECT Syntax
 
 ```bash
-# Boolean flags without values
+# Boolean flags without values (recommended)
 nexs-swag init --parseInternal --pd             ✅
+
+# Boolean flags with equals sign (explicit)
+nexs-swag init --parseInternal=true --pd=true   ✅
 
 # Exclude can use ./ but it's optional
 nexs-swag init --exclude config                 ✅
@@ -195,7 +198,7 @@ chmod +x run.sh
 **Solution:** Use `--exclude config` or `--exclude ./config`
 
 ### Issue: "External package types not resolved"
-**Solution:** Add `--pd true --pdl 1` (or higher)
+**Solution:** Add `--pd --pdl 1` (or higher)
 
 ## Best Practices
 

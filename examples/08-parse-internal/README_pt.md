@@ -10,7 +10,11 @@ Demonstrates the use of `--parseInternal` to include `internal/` packages.
 
 ```bash
 --parseInternal
+# Ou explicitamente:
+--parseInternal=true
 ```
+
+> **Nota:** Ambas as sintaxes são válidas. Use `--parseInternal` (sem valor) ou `--parseInternal=true` (explícito). NÃO use `--parseInternal true` (separado por espaço).
 
 ## Comportamento
 

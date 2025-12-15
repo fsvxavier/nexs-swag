@@ -13,7 +13,7 @@ Demonstra o uso de `--parseDependencyLevel` para controlar profundidade de parsi
 
 Default: `0`
 
-Requer: `--parseDependency`
+Requer: `--parseDependency` (ou `--parseDependency=true`)
 
 ## Conceito
 

@@ -282,6 +282,15 @@ nexs-swag init [opções]
 - `--propertyStrategy, -p` - Estratégia de nomenclatura: `snakecase`, `camelcase`, `pascalcase`
 - `--validate` - Validar especificação gerada (padrão: `true`)
 
+> **⚠️ Importante: Sintaxe de Flags Booleanas**
+>
+> Flags booleanas aceitam duas sintaxes válidas:
+> - ✅ **Sem valor** (presença = true): `--parseInternal`, `--pd`
+> - ✅ **Com sinal de igual**: `--parseInternal=true`, `--pd=false`
+> - ❌ **Errado** (separado por espaço): `--parseInternal true`, `--pd true`
+>
+> A sintaxe separada por espaço não funciona porque o parser CLI trata a palavra após a flag como um argumento posicional separado, não como o valor da flag.
+
 **Exemplos:**
 
 ```bash
@@ -300,6 +309,13 @@ nexs-swag init -d ./cmd/api,./internal/handlers -o ./api-docs
 
 # Analisar dependências (nível 1 - apenas modelos)
 nexs-swag init --parseDependency --parseDependencyLevel 1
+# Ou com sintaxe explícita:
+nexs-swag init --parseDependency=true --parseDependencyLevel 1
+
+# Analisar pacotes internos
+nexs-swag init --parseInternal
+# Ou explicitamente:
+nexs-swag init --parseInternal=true
 
 # Apenas saída JSON
 nexs-swag init --outputTypes json

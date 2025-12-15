@@ -11,6 +11,14 @@ Demuestra el uso de `--parseFuncBody` para extraer tipos del body de funciones.
 --pfb
 ```
 
+O con valor explícito:
+```bash
+--parseFuncBody=true
+--pfb=true
+```
+
+> **Nota:** Ambas sintaxis son válidas. Use `--parseFuncBody` o `--pfb` (sin valor), o `--parseFuncBody=true` (explícito). NO use `--parseFuncBody true` (separado por espacio).
+
 Default: `false`
 
 ## Concepto

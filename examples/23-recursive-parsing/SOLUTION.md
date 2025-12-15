@@ -4,13 +4,10 @@
 
 Ao executar o comando:
 ```bash
-nexs-swag init --output ./docs --ov 3.1 --pd true --pdl 3 --parseInternal true --validate --exclude ./config
+nexs-swag init --output ./docs --ov 3.1 --pd --pdl 3 --parseInternal --validate --exclude config
 ```
 
-**Sintomas:**
-- `--exclude ./config` não funcionava (endpoints de config eram incluídos)
-- `--parseInternal true` não funcionava (endpoints internos não eram incluídos)
-- Aparente "conflito" entre `--parseDependency` e `--exclude`
+**Nota:** O problema original foi causado por sintaxe incorreta de flags booleanas (`--pd true` em vez de `--pd`). Este documento explica a sintaxe correta.
 
 ## ✅ Causa Raiz
 
@@ -35,15 +32,15 @@ Em bibliotecas CLI como `urfave/cli`, flags booleanas funcionam assim:
 --parseInternal true   // "true" é interpretado como PRÓXIMO ARGUMENTO, não como valor!
 ```
 
-### O que acontecia
+### O que acontecia com a sintaxe incorreta
 
-Quando você executava:
+Quando você executava (sintaxe INCORRETA):
 ```bash
 --parseInternal true --pd true --pdl 3
 ```
 
 O parser CLI interpretava como:
-1. `parseInternal` → recebe o padrão `false` (flag ignorada)
+1. `parseInternal` → recebe o padrão `false` (flag ignorada porque "true" é visto como próximo argumento)
 2. `"true"` → interpretado como argumento posicional (arquivo inexistente)
 3. `pd` → recebe o padrão `false` (flag ignorada)
 4. `"true"` → interpretado como argumento posicional (arquivo inexistente)
@@ -68,14 +65,14 @@ nexs-swag init \
 
 ### Tabela de Referência
 
-| Flag | Tipo | ❌ Errado | ✅ Correto |
-|------|------|-----------|-----------|
-| `--parseInternal` | bool | `--parseInternal true` | `--parseInternal` |
-| `--pd` (parseDependency) | bool | `--pd true` | `--pd` |
-| `--parseVendor` | bool | `--parseVendor true` | `--parseVendor` |
-| `--validate` | bool | `--validate false` | *(omitir a flag)* |
-| `--pdl` (parseDependencyLevel) | int | `--pdl` | `--pdl 3` |
-| `--exclude` | string | — | `--exclude config` |
+| Flag | Tipo | ❌ Errado | ✅ Correto (sem valor) | ✅ Correto (com =) |
+|------|------|-----------|-------------------|-------------------|
+| `--parseInternal` | bool | `--parseInternal true` | `--parseInternal` | `--parseInternal=true` |
+| `--pd` (parseDependency) | bool | `--pd true` | `--pd` | `--pd=true` |
+| `--parseVendor` | bool | `--parseVendor true` | `--parseVendor` | `--parseVendor=true` |
+| `--validate` | bool | `--validate false` | *(omitir a flag)* | `--validate=false` |
+| `--pdl` (parseDependencyLevel) | int | `--pdl` (sem valor) | `--pdl 3` | `--pdl=3` |
+| `--exclude` | string | — | `--exclude config` | `--exclude=config` |
 
 ## 🔍 Diagnóstico do Problema
 

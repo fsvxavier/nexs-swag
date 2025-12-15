@@ -8,7 +8,11 @@ Demuestra el uso de `--parseInternal` para incluir paquetes `internal/`.
 
 ```bash
 --parseInternal
+# O explícitamente:
+--parseInternal=true
 ```
+
+> **Nota:** Ambas sintaxis son válidas. Use `--parseInternal` (sin valor) o `--parseInternal=true` (explícito). NO use `--parseInternal true` (separado por espacio).
 
 ## Comportamiento
 
