@@ -23,6 +23,7 @@ type Parser struct {
 	generalInfoFile string
 	typeCache       map[string]*TypeInfo
 	parsedModules   map[string]bool // Track parsed modules to avoid infinite recursion
+	referencedTypes map[string]bool // Track types referenced in operations (selective parsing)
 
 	// Configuration options
 	excludePatterns      []string
@@ -35,6 +36,7 @@ type Parser struct {
 	overridesFile        string
 	includeTags          []string
 	excludeTags          []string
+	includeTypes         []string // Filter by Go type categories: struct, interface, func, const, type, all
 	parseFuncBody        bool
 	parseVendor          bool
 	typeOverrides        map[string]string
@@ -83,6 +85,8 @@ func New() *Parser {
 		fset:                 token.NewFileSet(),
 		typeCache:            make(map[string]*TypeInfo),
 		parsedModules:        make(map[string]bool),
+		referencedTypes:      make(map[string]bool),
+		includeTypes:         []string{"all"}, // Default: include all referenced types
 		propertyStrategy:     "camelcase",
 		parseDepth:           100,
 		typeOverrides:        make(map[string]string),
@@ -116,7 +120,7 @@ func (p *Parser) ParseDir(dir string) error {
 		return nil
 	}
 
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -154,6 +158,22 @@ func (p *Parser) ParseDir(dir string) error {
 
 		return p.ParseFile(path)
 	})
+
+	if err != nil {
+		return err
+	}
+
+	// After parsing all files and operations, resolve type dependencies
+	p.ResolveTypeDependencies()
+
+	// Now parse schemas for only the referenced types
+	for _, file := range p.files {
+		if err := p.parseSchemas(file); err != nil {
+			return fmt.Errorf("failed to parse schemas: %w", err)
+		}
+	}
+
+	return nil
 } // shouldExclude checks if a path matches any exclude pattern.
 func (p *Parser) shouldExclude(path string, info os.FileInfo) bool {
 	if len(p.excludePatterns) == 0 {
@@ -233,15 +253,13 @@ func (p *Parser) ParseFile(path string) error {
 		}
 	}
 
-	// Parse operations from function comments
+	// Parse operations from function comments (this populates referencedTypes)
 	if err := p.parseOperations(file); err != nil {
 		return fmt.Errorf("failed to parse operations from %s: %w", path, err)
 	}
 
-	// Parse schemas from type definitions
-	if err := p.parseSchemas(file); err != nil {
-		return fmt.Errorf("failed to parse schemas from %s: %w", path, err)
-	}
+	// Note: parseSchemas will be called after all files are parsed
+	// to ensure we have all referenced types from all operations
 
 	return nil
 }
@@ -290,6 +308,7 @@ func (p *Parser) parseGeneralInfo(file *ast.File) error {
 }
 
 // parseOperations extracts operation information from function comments.
+// Respects includeTypes filter for func category.
 func (p *Parser) parseOperations(file *ast.File) error {
 	ast.Inspect(file, func(n ast.Node) bool {
 		funcDecl, ok := n.(*ast.FuncDecl)
@@ -368,6 +387,8 @@ func (p *Parser) parseOperations(file *ast.File) error {
 }
 
 // parseSchemas extracts schema definitions from type declarations.
+// Only processes structs that are referenced in operations or their dependencies.
+// Respects includeTypes filter for type categories.
 func (p *Parser) parseSchemas(file *ast.File) error {
 	processor := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
@@ -382,18 +403,29 @@ func (p *Parser) parseSchemas(file *ast.File) error {
 			return true
 		}
 
+		// Check if struct category should be included
+		if !p.ShouldIncludeTypeCategory("struct") {
+			return true
+		}
+
+		// Use simple name for types in current package
+		schemaName := typeSpec.Name.Name
+
+		// For external packages, use qualified name (package.Type)
+		packageName := file.Name.Name
+		qualifiedName := schemaName
+		if packageName != "main" && packageName != "" {
+			qualifiedName = packageName + "." + typeSpec.Name.Name
+		}
+
+		// Check if this type is referenced (skip if not)
+		if !p.IsTypeReferenced(schemaName) && !p.IsTypeReferenced(qualifiedName) {
+			return true
+		}
+
 		schema := processor.ProcessStruct(structType, typeSpec.Doc, typeSpec.Name.Name)
 		if schema != nil {
-			// Use simple name for types in current package
-			schemaName := typeSpec.Name.Name
-
-			// For external packages, use qualified name (package.Type)
-			packageName := file.Name.Name
 			if packageName != "main" && packageName != "" {
-				// Check if this is from an external dependency
-				// by verifying if it's not in the main module
-				qualifiedName := packageName + "." + typeSpec.Name.Name
-
 				// Register both names to support both reference styles
 				p.openapi.Components.Schemas[qualifiedName] = schema
 				p.typeCache[qualifiedName] = &TypeInfo{
@@ -521,4 +553,200 @@ func (p *Parser) hasExtension(op *openapi.Operation) bool {
 	}
 
 	return false
+}
+
+// AddReferencedType registers a type as referenced by an operation.
+// This method extracts type names from schema references and marks them for processing.
+func (p *Parser) AddReferencedType(typeName string) {
+	if typeName == "" {
+		return
+	}
+
+	// Remove #/components/schemas/ prefix if present
+	const prefix = "#/components/schemas/"
+	if strings.HasPrefix(typeName, prefix) {
+		typeName = strings.TrimPrefix(typeName, prefix)
+	}
+
+	// Remove []prefix for array types
+	typeName = strings.TrimPrefix(typeName, "[]")
+
+	// Handle map types: map[key]value -> extract value type
+	if strings.HasPrefix(typeName, "map[") {
+		// This will be handled during schema processing
+		return
+	}
+
+	// Skip primitive types
+	primitives := map[string]bool{
+		"string": true, "int": true, "int8": true, "int16": true, "int32": true, "int64": true,
+		"uint": true, "uint8": true, "uint16": true, "uint32": true, "uint64": true,
+		"float32": true, "float64": true, "bool": true, "byte": true, "rune": true,
+		"time.Time": true, "interface{}": true, "any": true,
+	}
+
+	if primitives[typeName] {
+		return
+	}
+
+	p.referencedTypes[typeName] = true
+}
+
+// IsTypeReferenced checks if a type is referenced by operations.
+func (p *Parser) IsTypeReferenced(typeName string) bool {
+	return p.referencedTypes[typeName]
+}
+
+// GetReferencedTypes returns all referenced types.
+func (p *Parser) GetReferencedTypes() map[string]bool {
+	return p.referencedTypes
+}
+
+// ResolveTypeDependencies recursively resolves all type dependencies.
+// This method processes structs referenced in operations and extracts their field types,
+// including nested structs, to ensure all related types are included in the schema.
+func (p *Parser) ResolveTypeDependencies() {
+	// Keep processing until no new types are discovered
+	for {
+		newTypesFound := false
+		currentTypes := make([]string, 0, len(p.referencedTypes))
+
+		// Copy current referenced types
+		for typeName := range p.referencedTypes {
+			currentTypes = append(currentTypes, typeName)
+		}
+
+		// Process each referenced type
+		for _, typeName := range currentTypes {
+			// Find the type in parsed files
+			for _, file := range p.files {
+				ast.Inspect(file, func(n ast.Node) bool {
+					typeSpec, ok := n.(*ast.TypeSpec)
+					if !ok {
+						return true
+					}
+
+					// Check if this is the type we're looking for
+					if typeSpec.Name.Name != typeName {
+						// Also check package.Type format
+						packageName := file.Name.Name
+						qualifiedName := packageName + "." + typeSpec.Name.Name
+						if qualifiedName != typeName {
+							return true
+						}
+					}
+
+					// Process struct fields to find dependencies
+					structType, ok := typeSpec.Type.(*ast.StructType)
+					if !ok {
+						return true
+					}
+
+					// Extract field types
+					for _, field := range structType.Fields.List {
+						// Check for swaggertype override first
+						if field.Tag != nil {
+							tagStr := strings.Trim(field.Tag.Value, "`")
+							swaggerType := extractTag(tagStr, "swaggertype")
+
+							// If swaggertype is primitive, skip dependency tracking
+							if swaggerType != "" && !p.isPrimitiveSwaggerType(swaggerType) {
+								// Extract the actual type from swaggertype
+								actualType := p.extractTypeFromSwaggerType(swaggerType)
+								if actualType != "" && !p.referencedTypes[actualType] {
+									p.referencedTypes[actualType] = true
+									newTypesFound = true
+								}
+								continue
+							} else if swaggerType != "" {
+								// Primitive swaggertype override, no need to track original type
+								continue
+							}
+						}
+
+						// Extract dependencies from field type
+						fieldType := p.extractFieldTypeName(field.Type)
+						if fieldType != "" && !p.referencedTypes[fieldType] {
+							p.referencedTypes[fieldType] = true
+							newTypesFound = true
+						}
+					}
+
+					return true
+				})
+			}
+		}
+
+		// Stop if no new types were discovered
+		if !newTypesFound {
+			break
+		}
+	}
+}
+
+// isPrimitiveSwaggerType checks if a swaggertype value represents a primitive type.
+func (p *Parser) isPrimitiveSwaggerType(swaggerType string) bool {
+	// Handle "primitive,type" format
+	parts := strings.Split(swaggerType, ",")
+	if len(parts) > 0 && parts[0] == "primitive" {
+		return true
+	}
+
+	// Handle direct primitive types
+	primitives := map[string]bool{
+		"string": true, "integer": true, "number": true, "boolean": true,
+		"object": true, "array": true,
+	}
+
+	return primitives[swaggerType]
+}
+
+// extractTypeFromSwaggerType extracts the actual type name from swaggertype tag.
+// Example: "array,Product" -> "Product"
+func (p *Parser) extractTypeFromSwaggerType(swaggerType string) string {
+	parts := strings.Split(swaggerType, ",")
+	if len(parts) > 1 {
+		typeName := strings.TrimSpace(parts[1])
+		// Remove []prefix for array types
+		typeName = strings.TrimPrefix(typeName, "[]")
+		return typeName
+	}
+	return ""
+}
+
+// extractFieldTypeName extracts the type name from an AST expression.
+func (p *Parser) extractFieldTypeName(expr ast.Expr) string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		// Simple type in same package
+		return t.Name
+
+	case *ast.StarExpr:
+		// Pointer type - recurse
+		return p.extractFieldTypeName(t.X)
+
+	case *ast.ArrayType:
+		// Array type - get element type
+		return p.extractFieldTypeName(t.Elt)
+
+	case *ast.MapType:
+		// Map type - get value type
+		return p.extractFieldTypeName(t.Value)
+
+	case *ast.SelectorExpr:
+		// External package type: package.Type
+		if ident, ok := t.X.(*ast.Ident); ok {
+			return ident.Name + "." + t.Sel.Name
+		}
+
+	case *ast.StructType:
+		// Inline struct - no external dependency
+		return ""
+
+	case *ast.InterfaceType:
+		// Interface - no concrete type dependency
+		return ""
+	}
+
+	return ""
 }

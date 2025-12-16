@@ -7,7 +7,7 @@
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![Licencia](https://img.shields.io/badge/Licencia-MIT-blue.svg)](LICENSE)
 [![Cobertura](https://img.shields.io/badge/Cobertura-80.1%25-brightgreen.svg)](/)
-[![Ejemplos](https://img.shields.io/badge/Ejemplos-23-blue.svg)](examples/)
+[![Ejemplos](https://img.shields.io/badge/Ejemplos-25-blue.svg)](examples/)
 
 **Genera automáticamente documentación OpenAPI 3.1.0 o Swagger 2.0 a partir de anotaciones en código Go.**
 
@@ -54,7 +54,7 @@ nexs-swag convierte anotaciones Go en especificación OpenAPI 3.1.0 o Swagger 2.
 - ✅ **Múltiples tipos de contenido** - JSON, XML, YAML, CSV, PDF y tipos MIME personalizados
 - ✅ **Extensiones personalizadas** - Soporte completo para x-*
 - ✅ **80.1% de cobertura de pruebas** - Listo para producción con suite de pruebas integral incluyendo pruebas roundtrip
-- ✅ **23 ejemplos funcionales** - Aprende con ejemplos completos y ejecutables
+- ✅ **25 ejemplos funcionales** - Aprende con ejemplos completos y ejecutables
 
 ### ¿Por qué nexs-swag?
 
@@ -70,7 +70,7 @@ nexs-swag convierte anotaciones Go en especificación OpenAPI 3.1.0 o Swagger 2.
 | Headers de Respuesta | Limitado | Soporte Completo |
 | Soporte a Nullable | `x-nullable` | Nativo + `x-nullable` |
 | Cobertura de Pruebas | ~70% | 80.1% |
-| Ejemplos | ~10 | 23 |
+| Ejemplos | ~10 | 25 |
 | Versión Go | 1.19+ | 1.23+ |
 
 ## Primeros Pasos
@@ -387,6 +387,7 @@ nexs-swag init [opciones]
 | `--templateDelims` | `--td` | `{{,}}` | Delimitadores de plantilla personalizados |
 | `--collectionFormat` | `--cf` | `csv` | Formato de array predeterminado |
 | `--parseFuncBody` | | `false` | Analizar cuerpos de función |
+| `--includeTypes` | `--it` | `all` | Filtrar tipos a incluir: `struct`, `interface`, `func`, `const`, `type`, `all` |
 | `--openapi-version` | `--ov` | `3.1` | Versión OpenAPI: `2.0`, `3.0`, `3.1` |
 
 > **⚠️ Importante: Sintaxis de Flags Booleanos**
@@ -438,6 +439,15 @@ nexs-swag init --markdownFiles ./docs/api
 
 # Delimitadores de plantilla personalizados (evitar conflictos)
 nexs-swag init --templateDelims "[[,]]"
+
+# Filtrar tipos a incluir (solo structs)
+nexs-swag init --includeTypes struct
+
+# Filtrar múltiples categorías de tipos
+nexs-swag init --includeTypes "struct,interface"
+
+# Forma corta
+nexs-swag init -it struct
 ```
 
 ### Comando fmt

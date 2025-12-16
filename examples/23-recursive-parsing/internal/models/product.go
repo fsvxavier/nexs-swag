@@ -2,11 +2,13 @@ package models
 
 // Product represents a product in the catalog
 type Product struct {
-	ID          int     `json:"id" example:"1"`
-	Name        string  `json:"name" example:"Laptop"`
-	Description string  `json:"description" example:"High performance laptop"`
-	Price       float64 `json:"price" example:"999.99"`
-	Stock       int     `json:"stock" example:"50"`
+	ID          int       `json:"id" example:"1"`
+	Name        string    `json:"name" example:"Laptop"`
+	Description string    `json:"description" example:"High performance laptop"`
+	Price       float64   `json:"price" example:"999.99"`
+	Stock       int       `json:"stock" example:"50"`
+	Category    *Category `json:"category"`
+	Supplier    *Supplier `json:"supplier"`
 }
 
 // GetProduct retrieves a product

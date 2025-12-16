@@ -335,6 +335,9 @@ func (o *OperationProcessor) processParameter(text string, op *openapi.Operation
 	required := matches[4] == valueTrue
 	description := matches[5]
 
+	// Register referenced type
+	o.parser.AddReferencedType(schemaType)
+
 	// Parse additional attributes if present
 	var attributes map[string]string
 	if len(matches) > 6 && matches[6] != "" {
@@ -370,6 +373,9 @@ func (o *OperationProcessor) processParameter(text string, op *openapi.Operation
 
 // processRequestBody processes body parameter as RequestBody.
 func (o *OperationProcessor) processRequestBody(schemaType string, required bool, description string, op *openapi.Operation) {
+	// Register referenced type
+	o.parser.AddReferencedType(schemaType)
+
 	if op.RequestBody == nil {
 		op.RequestBody = &openapi.RequestBody{
 			Required:    required,
@@ -400,6 +406,9 @@ func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, 
 	if len(matches) > 4 && matches[4] != "" {
 		description = matches[4]
 	}
+
+	// Register referenced type
+	o.parser.AddReferencedType(schemaRef)
 
 	response := &openapi.Response{
 		Description: description,
@@ -440,6 +449,9 @@ func (o *OperationProcessor) processStreamResponse(text string, op *openapi.Oper
 	if len(matches) > 3 && matches[3] != "" {
 		description = matches[3]
 	}
+
+	// Register referenced type
+	o.parser.AddReferencedType(eventType)
 
 	// Parse the event type to get schema
 	schema := o.parseSchemaType(eventType)

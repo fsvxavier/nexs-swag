@@ -7,7 +7,7 @@
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/Coverage-80.1%25-brightgreen.svg)](/)
-[![Examples](https://img.shields.io/badge/Examples-23-blue.svg)](examples/)
+[![Examples](https://img.shields.io/badge/Examples-25-blue.svg)](examples/)
 
 **Automatically generate OpenAPI 3.1.0 or Swagger 2.0 documentation from Go source code annotations.**
 
@@ -54,7 +54,7 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 - ✅ **Multiple content types** - JSON, XML, YAML, CSV, PDF, and custom MIME types
 - ✅ **Custom extensions** - Full x-* extension support
 - ✅ **80.1% test coverage** - Production-ready with comprehensive test suite including roundtrip tests
-- ✅ **23 working examples** - Learn from complete, runnable examples
+- ✅ **25 working examples** - Learn from complete, runnable examples
 
 ### Why nexs-swag?
 
@@ -70,7 +70,7 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 | Response Headers | Limited | Full Support |
 | Nullable Support | `x-nullable` | Native + `x-nullable` |
 | Test Coverage | ~70% | 80.1% |
-| Examples | ~10 | 23 |
+| Examples | ~10 | 25 |
 | Go Version | 1.19+ | 1.23+ |
 
 ## Getting Started
@@ -387,6 +387,7 @@ nexs-swag init [options]
 | `--templateDelims` | `--td` | `{{,}}` | Custom template delimiters |
 | `--collectionFormat` | `--cf` | `csv` | Default array format |
 | `--parseFuncBody` | | `false` | Parse function bodies |
+| `--includeTypes` | `--it` | `all` | Filter types to include: `struct`, `interface`, `func`, `const`, `type`, `all` |
 | `--openapi-version` | `--ov` | `3.1` | OpenAPI version: `2.0`, `3.0`, `3.1` |
 
 > **⚠️ Important: Boolean Flag Syntax**
@@ -438,6 +439,15 @@ nexs-swag init --markdownFiles ./docs/api
 
 # Custom template delimiters (avoid conflicts)
 nexs-swag init --templateDelims "[[,]]"
+
+# Filter types to include (only structs)
+nexs-swag init --includeTypes struct
+
+# Filter multiple type categories
+nexs-swag init --includeTypes "struct,interface"
+
+# Short form
+nexs-swag init -it struct
 ```
 
 ### fmt Command
