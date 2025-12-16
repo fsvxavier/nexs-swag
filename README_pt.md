@@ -26,7 +26,6 @@ nexs-swag converte anotações Go para especificação OpenAPI 3.1.0 ou Swagger 
   - [Comando fmt](#comando-fmt)
 - [Status de Implementação](#status-de-implementação)
 - [Versões OpenAPI](OPENAPI_VERSIONS.md) - Guia completo de todas as versões suportadas
-- [Ajustes do Gerador](GENERATOR_ADJUSTMENTS.md) - Detalhes técnicos sobre features específicas de versão
 - [Formato de Comentários Declarativos](#formato-de-comentários-declarativos)
   - [Informações Gerais da API](#informações-gerais-da-api)
   - [Operação de API](#operação-de-api)
