@@ -2367,3 +2367,239 @@ type Model3 struct {
 		}
 	}
 }
+
+// TestQueryMethod tests support for QUERY HTTP method (OpenAPI 3.2.0)
+func TestQueryMethod(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package main
+
+// @title Test API
+// @version 1.0
+
+// QueryUser searches users
+// @Summary Query user
+// @Description Query user by criteria
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param filter query string false "Filter criteria"
+// @Success 200 {array} string
+// @Router /users [query]
+func QueryUser() {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	p := New()
+	p.SetGeneralInfoFile(testFile)
+
+	if err := p.ParseFile(testFile); err != nil {
+		t.Fatalf("ParseFile() error: %v", err)
+	}
+
+	if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+		t.Fatalf("parseGeneralInfo() error: %v", err)
+	}
+
+	if err := p.parseOperations(p.files[testFile]); err != nil {
+		t.Fatalf("parseOperations() error: %v", err)
+	}
+
+	// Verify QUERY operation was parsed
+	pathItem := p.openapi.Paths["/users"]
+	if pathItem == nil {
+		t.Fatal("Path /users not found")
+	}
+
+	if pathItem.Query == nil {
+		t.Fatal("QUERY operation not found in path /users")
+	}
+
+	if pathItem.Query.Summary != "Query user" {
+		t.Errorf("Query.Summary = %q, want %q", pathItem.Query.Summary, "Query user")
+	}
+
+	if pathItem.Query.Description != "Query user by criteria" {
+		t.Errorf("Query.Description = %q, want %q", pathItem.Query.Description, "Query user by criteria")
+	}
+
+	if len(pathItem.Query.Parameters) == 0 {
+		t.Error("Query operation should have parameters")
+	}
+}
+
+// TestQueryMethodWithOtherMethods tests QUERY alongside other HTTP methods
+func TestQueryMethodWithOtherMethods(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package main
+
+// @title Test API
+// @version 1.0
+
+// GetUser retrieves a user
+// @Summary Get user
+// @Router /users/{id} [get]
+func GetUser() {}
+
+// QueryUsers searches users
+// @Summary Query users
+// @Router /users [query]
+func QueryUsers() {}
+
+// CreateUser creates a user
+// @Summary Create user
+// @Router /users [post]
+func CreateUser() {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	p := New()
+	p.SetGeneralInfoFile(testFile)
+
+	if err := p.ParseFile(testFile); err != nil {
+		t.Fatalf("ParseFile() error: %v", err)
+	}
+
+	if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+		t.Fatalf("parseGeneralInfo() error: %v", err)
+	}
+
+	if err := p.parseOperations(p.files[testFile]); err != nil {
+		t.Fatalf("parseOperations() error: %v", err)
+	}
+
+	// Verify GET on /users/{id}
+	getUserPath := p.openapi.Paths["/users/{id}"]
+	if getUserPath == nil || getUserPath.Get == nil {
+		t.Error("GET /users/{id} not found")
+	}
+
+	// Verify QUERY on /users
+	usersPath := p.openapi.Paths["/users"]
+	if usersPath == nil {
+		t.Fatal("Path /users not found")
+	}
+
+	if usersPath.Query == nil {
+		t.Error("QUERY operation not found on /users")
+	}
+
+	if usersPath.Post == nil {
+		t.Error("POST operation not found on /users")
+	}
+
+	// Ensure QUERY and POST don't interfere with each other
+	if usersPath.Query.Summary != "Query users" {
+		t.Errorf("Query.Summary = %q, want %q", usersPath.Query.Summary, "Query users")
+	}
+
+	if usersPath.Post.Summary != "Create user" {
+		t.Errorf("Post.Summary = %q, want %q", usersPath.Post.Summary, "Create user")
+	}
+}
+
+// TestValidateWithQueryMethod tests validation includes QUERY operations
+func TestValidateWithQueryMethod(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package main
+
+// @title Test API
+// @version 1.0
+
+// QueryUser searches users
+// @Summary Query user
+// @Param filter query string false "Filter"
+// @Success 200 {array} string
+// @Router /users [query]
+func QueryUser() {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	p := New()
+	p.SetGeneralInfoFile(testFile)
+
+	if err := p.ParseFile(testFile); err != nil {
+		t.Fatalf("ParseFile() error: %v", err)
+	}
+
+	if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+		t.Fatalf("parseGeneralInfo() error: %v", err)
+	}
+
+	if err := p.parseOperations(p.files[testFile]); err != nil {
+		t.Fatalf("parseOperations() error: %v", err)
+	}
+
+	// Validate should not error on QUERY operations
+	if err := p.Validate(); err != nil {
+		t.Errorf("Validate() error with QUERY operation: %v", err)
+	}
+}
+
+// TestQueryMethodCaseSensitivity tests that 'query', 'QUERY', 'Query' all work
+func TestQueryMethodCaseSensitivity(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name   string
+		method string
+	}{
+		{"lowercase query", "query"},
+		{"uppercase QUERY", "QUERY"},
+		{"mixed case Query", "Query"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			testFile := filepath.Join(tmpDir, "test.go")
+			content := `package main
+
+// @title Test API
+// @version 1.0
+
+// QueryUser searches users
+// @Summary Query user
+// @Router /users [` + tc.method + `]
+func QueryUser() {}
+`
+			if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+				t.Fatalf("Failed to write test file: %v", err)
+			}
+
+			p := New()
+			p.SetGeneralInfoFile(testFile)
+
+			if err := p.ParseFile(testFile); err != nil {
+				t.Fatalf("ParseFile() error: %v", err)
+			}
+
+			if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+				t.Fatalf("parseGeneralInfo() error: %v", err)
+			}
+
+			if err := p.parseOperations(p.files[testFile]); err != nil {
+				t.Fatalf("parseOperations() error: %v", err)
+			}
+
+			pathItem := p.openapi.Paths["/users"]
+			if pathItem == nil || pathItem.Query == nil {
+				t.Errorf("QUERY operation not found for method case: %s", tc.method)
+			}
+		})
+	}
+}

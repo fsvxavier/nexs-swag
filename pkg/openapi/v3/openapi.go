@@ -111,6 +111,7 @@ type PathItem struct {
 	Head        *Operation  `json:"head,omitempty"        yaml:"head,omitempty"`        // HEAD operation
 	Patch       *Operation  `json:"patch,omitempty"       yaml:"patch,omitempty"`       // PATCH operation
 	Trace       *Operation  `json:"trace,omitempty"       yaml:"trace,omitempty"`       // TRACE operation
+	Query       *Operation  `json:"query,omitempty"       yaml:"query,omitempty"`       // QUERY operation (new in 3.2.0)
 	Servers     []Server    `json:"servers,omitempty"     yaml:"servers,omitempty"`     // Alternative servers
 	Parameters  []Parameter `json:"parameters,omitempty"  yaml:"parameters,omitempty"`  // Common parameters
 }
@@ -154,10 +155,12 @@ type RequestBody struct {
 
 // MediaType provides schema and examples for the media type.
 type MediaType struct {
-	Schema   *Schema              `json:"schema,omitempty"   yaml:"schema,omitempty"`   // Schema
-	Example  interface{}          `json:"example,omitempty"  yaml:"example,omitempty"`  // Example value
-	Examples map[string]*Example  `json:"examples,omitempty" yaml:"examples,omitempty"` // Multiple examples
-	Encoding map[string]*Encoding `json:"encoding,omitempty" yaml:"encoding,omitempty"` // Encoding for multipart
+	Schema       *Schema              `json:"schema,omitempty"       yaml:"schema,omitempty"`       // Schema
+	Example      interface{}          `json:"example,omitempty"      yaml:"example,omitempty"`      // Example value
+	Examples     map[string]*Example  `json:"examples,omitempty"     yaml:"examples,omitempty"`     // Multiple examples
+	Encoding     map[string]*Encoding `json:"encoding,omitempty"     yaml:"encoding,omitempty"`     // Encoding for multipart
+	ItemSchema   *Schema              `json:"itemSchema,omitempty"   yaml:"itemSchema,omitempty"`   // Schema for streaming items (new in 3.2.0)
+	ItemEncoding map[string]*Encoding `json:"itemEncoding,omitempty" yaml:"itemEncoding,omitempty"` // Encoding for streaming items (new in 3.2.0)
 }
 
 // Encoding for request body properties.
@@ -300,22 +303,25 @@ type Components struct {
 
 // SecurityScheme defines a security scheme.
 type SecurityScheme struct {
-	Type             string      `json:"type"                       yaml:"type"`                       // REQUIRED. Type: apiKey, http, oauth2, openIdConnect, mutualTLS
-	Description      string      `json:"description,omitempty"      yaml:"description,omitempty"`      // Description
-	Name             string      `json:"name,omitempty"             yaml:"name,omitempty"`             // Name (for apiKey)
-	In               string      `json:"in,omitempty"               yaml:"in,omitempty"`               // Location (for apiKey): query, header, cookie
-	Scheme           string      `json:"scheme,omitempty"           yaml:"scheme,omitempty"`           // HTTP scheme (for http): basic, bearer, etc.
-	BearerFormat     string      `json:"bearerFormat,omitempty"     yaml:"bearerFormat,omitempty"`     // Bearer token format (for http bearer)
-	Flows            *OAuthFlows `json:"flows,omitempty"            yaml:"flows,omitempty"`            // OAuth flows (for oauth2)
-	OpenIDConnectURL string      `json:"openIdConnectUrl,omitempty" yaml:"openIdConnectUrl,omitempty"` // OpenID Connect URL (for openIdConnect)
+	Type              string      `json:"type"                       yaml:"type"`                         // REQUIRED. Type: apiKey, http, oauth2, openIdConnect, mutualTLS
+	Description       string      `json:"description,omitempty"      yaml:"description,omitempty"`        // Description
+	Name              string      `json:"name,omitempty"             yaml:"name,omitempty"`               // Name (for apiKey)
+	In                string      `json:"in,omitempty"               yaml:"in,omitempty"`                 // Location (for apiKey): query, header, cookie
+	Scheme            string      `json:"scheme,omitempty"           yaml:"scheme,omitempty"`             // HTTP scheme (for http): basic, bearer, etc.
+	BearerFormat      string      `json:"bearerFormat,omitempty"     yaml:"bearerFormat,omitempty"`       // Bearer token format (for http bearer)
+	Flows             *OAuthFlows `json:"flows,omitempty"            yaml:"flows,omitempty"`              // OAuth flows (for oauth2)
+	OpenIDConnectURL  string      `json:"openIdConnectUrl,omitempty" yaml:"openIdConnectUrl,omitempty"`   // OpenID Connect URL (for openIdConnect)
+	Deprecated        bool        `json:"deprecated,omitempty"       yaml:"deprecated,omitempty"`         // Deprecated (new in 3.2.0)
+	OAuth2MetadataURL string      `json:"oauth2MetadataUrl,omitempty" yaml:"oauth2MetadataUrl,omitempty"` // OAuth2 metadata URL (new in 3.2.0)
 }
 
 // OAuthFlows configuration for OAuth 2.0.
 type OAuthFlows struct {
-	Implicit          *OAuthFlow `json:"implicit,omitempty"          yaml:"implicit,omitempty"`          // Implicit flow
-	Password          *OAuthFlow `json:"password,omitempty"          yaml:"password,omitempty"`          // Password flow
-	ClientCredentials *OAuthFlow `json:"clientCredentials,omitempty" yaml:"clientCredentials,omitempty"` // Client credentials flow
-	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty" yaml:"authorizationCode,omitempty"` // Authorization code flow
+	Implicit            *OAuthFlow `json:"implicit,omitempty"          yaml:"implicit,omitempty"`              // Implicit flow
+	Password            *OAuthFlow `json:"password,omitempty"          yaml:"password,omitempty"`              // Password flow
+	ClientCredentials   *OAuthFlow `json:"clientCredentials,omitempty" yaml:"clientCredentials,omitempty"`     // Client credentials flow
+	AuthorizationCode   *OAuthFlow `json:"authorizationCode,omitempty" yaml:"authorizationCode,omitempty"`     // Authorization code flow
+	DeviceAuthorization *OAuthFlow `json:"deviceAuthorization,omitempty" yaml:"deviceAuthorization,omitempty"` // Device authorization flow (new in 3.2.0)
 }
 
 // OAuthFlow configuration for a single OAuth flow.

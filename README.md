@@ -25,6 +25,8 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
   - [init Command](#init-command)
   - [fmt Command](#fmt-command)
 - [Implementation Status](#implementation-status)
+- [OpenAPI Versions](OPENAPI_VERSIONS.md) - Complete guide to all supported versions
+- [Generator Adjustments](GENERATOR_ADJUSTMENTS.md) - Technical details on version-specific features
 - [Declarative Comments Format](#declarative-comments-format)
   - [General API Info](#general-api-info)
   - [API Operation](#api-operation)
@@ -41,8 +43,10 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 ### Key Features
 
 - ✅ **100% swaggo/swag compatible** - Drop-in replacement with all annotations and tags
-- ✅ **Dual version support** - Generate OpenAPI 3.1.0 **or** Swagger 2.0 from the same annotations
-- ✅ **OpenAPI 3.1.0** - Full support for JSON Schema 2020-12, webhooks, and modern features
+- ✅ **Multiple OpenAPI versions support** - Generate v2.0.0, v3.0.x, v3.1.x or v3.2.0
+- ✅ **OpenAPI 3.2.0** - Full support for the latest version (QUERY method, streaming, etc)
+- ✅ **OpenAPI 3.1.x** - Compatible with JSON Schema 2020-12, webhooks, and modern features
+- ✅ **OpenAPI 3.0.x** - All versions from 3.0.0 to 3.0.4
 - ✅ **Swagger 2.0** - Complete backward compatibility with legacy systems
 - ✅ **Automatic conversion** - Internal conversion between formats with warnings for incompatibilities
 - ✅ **20+ validation attributes** - minimum, maximum, pattern, enum, format, and more
@@ -57,11 +61,13 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 
 | Feature | swaggo/swag | nexs-swag |
 |---------|-------------|-----------|
-| OpenAPI 3.1.0 | ❌ | ✅ |
+| OpenAPI 3.2.0 | ❌ | ✅ |
+| OpenAPI 3.1.x | ❌ | ✅ |
+| OpenAPI 3.0.x | ❌ | ✅ |
 | Swagger 2.0 | ✅ | ✅ |
-| Dual Generation | ❌ | ✅ (both from same code) |
+| Multiple Versions | ❌ | ✅ (all from same code) |
 | JSON Schema | Draft 4 | Draft 4 + 2020-12 |
-| Webhooks | ❌ | ✅ (OpenAPI 3.1.0) |
+| Webhooks | ❌ | ✅ (OpenAPI 3.1+) |
 | Response Headers | Limited | Full Support |
 | Nullable Support | `x-nullable` | Native + `x-nullable` |
 | Test Coverage | ~70% | 86.1% |

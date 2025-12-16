@@ -6,16 +6,16 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![Licencia](https://img.shields.io/badge/Licencia-MIT-blue.svg)](LICENSE)
-[![Cobertura](https://img.shields.io/badge/Cobertura-86.1%25-brightgreen.svg)](/))
+[![Cobertura](https://img.shields.io/badge/Cobertura-86.1%25-brightgreen.svg)](/)
 [![Ejemplos](https://img.shields.io/badge/Ejemplos-22-blue.svg)](examples/)
 
-**Genere automáticamente documentación OpenAPI 3.1.0 o Swagger 2.0 a partir de anotaciones en código Go.**
+**Genera automáticamente documentación OpenAPI 3.1.0 o Swagger 2.0 a partir de anotaciones en código Go.**
 
-nexs-swag convierte anotaciones Go a especificación OpenAPI 3.1.0 o Swagger 2.0. Está diseñado como una evolución de [swaggo/swag](https://github.com/swaggo/swag) con soporte completo para la especificación OpenAPI más reciente y compatibilidad total con Swagger 2.0.
+nexs-swag convierte anotaciones Go en especificación OpenAPI 3.1.0 o Swagger 2.0. Fue diseñado como una evolución de [swaggo/swag](https://github.com/swaggo/swag) con soporte completo para la especificación OpenAPI más reciente y compatibilidad total con Swagger 2.0.
 
 ## Índice
 
-- [Descripción General](#descripción-general)
+- [Visión General](#visión-general)
 - [Primeros Pasos](#primeros-pasos)
   - [Instalación](#instalación)
   - [Inicio Rápido](#inicio-rápido)
@@ -25,6 +25,8 @@ nexs-swag convierte anotaciones Go a especificación OpenAPI 3.1.0 o Swagger 2.0
   - [Comando init](#comando-init)
   - [Comando fmt](#comando-fmt)
 - [Estado de Implementación](#estado-de-implementación)
+- [Versiones OpenAPI](OPENAPI_VERSIONS.md) - Guía completa de todas las versiones soportadas
+- [Ajustes del Generador](GENERATOR_ADJUSTMENTS.md) - Detalles técnicos sobre características específicas de versión
 - [Formato de Comentarios Declarativos](#formato-de-comentarios-declarativos)
   - [Información General de la API](#información-general-de-la-api)
   - [Operación de API](#operación-de-api)
@@ -32,38 +34,42 @@ nexs-swag convierte anotaciones Go a especificación OpenAPI 3.1.0 o Swagger 2.0
 - [Ejemplos](#ejemplos)
 - [Calidad y Pruebas](#calidad-y-pruebas)
 - [Compatibilidad con swaggo/swag](#compatibilidad-con-swaggoswag)
-- [Sobre el Proyecto](#sobre-el-proyecto)
+- [Acerca del Proyecto](#acerca-del-proyecto)
 - [Contribuyendo](#contribuyendo)
 - [Licencia](#licencia)
 
-## Descripción General
+## Visión General
 
 ### Características Principales
 
-- ✅ **100% compatible con swaggo/swag** - Reemplazo directo con todas las anotaciones y tags
-- ✅ **Soporte dual de versiones** - Genere OpenAPI 3.1.0 **o** Swagger 2.0 desde las mismas anotaciones
-- ✅ **OpenAPI 3.1.0** - Soporte completo para JSON Schema 2020-12, webhooks y características modernas
-- ✅ **Swagger 2.0** - Compatibilidad total con sistemas legacy
-- ✅ **Conversión automática** - Conversión interna entre formatos con avisos para incompatibilidades
+- ✅ **100% compatible con swaggo/swag** - Sustituto directo con todas las anotaciones y tags
+- ✅ **Soporte a múltiples versiones OpenAPI** - Genera v2.0.0, v3.0.x, v3.1.x o v3.2.0
+- ✅ **OpenAPI 3.2.0** - Soporte completo para la versión más reciente (método QUERY, streaming, etc)
+- ✅ **OpenAPI 3.1.x** - Compatible con JSON Schema 2020-12, webhooks y características modernas
+- ✅ **OpenAPI 3.0.x** - Todas las versiones desde 3.0.0 hasta 3.0.4
+- ✅ **Swagger 2.0** - Compatibilidad total con sistemas legados
+- ✅ **Conversión automática** - Conversión entre formatos con avisos para incompatibilidades
 - ✅ **20+ atributos de validación** - minimum, maximum, pattern, enum, format y más
 - ✅ **Validación de frameworks** - Soporte nativo para Gin (binding) y go-playground/validator
 - ✅ **Headers de respuesta** - Documentación completa de headers
 - ✅ **Múltiples tipos de contenido** - JSON, XML, YAML, CSV, PDF y tipos MIME personalizados
 - ✅ **Extensiones personalizadas** - Soporte completo para x-*
-- ✅ **86.1% de cobertura de pruebas** - Listo para producción con suite de pruebas completa
-- ✅ **22 ejemplos funcionales** - Aprenda con ejemplos completos y ejecutables
+- ✅ **86.1% de cobertura de pruebas** - Listo para producción con suite de pruebas integral
+- ✅ **22 ejemplos funcionales** - Aprende con ejemplos completos y ejecutables
 
 ### ¿Por qué nexs-swag?
 
 | Característica | swaggo/swag | nexs-swag |
-|----------------|-------------|-----------||
-| OpenAPI 3.1.0 | ❌ | ✅ |
+|----------------|-------------|-----------|
+| OpenAPI 3.2.0 | ❌ | ✅ |
+| OpenAPI 3.1.x | ❌ | ✅ |
+| OpenAPI 3.0.x | ❌ | ✅ |
 | Swagger 2.0 | ✅ | ✅ |
-| Generación Dual | ❌ | ✅ (ambos del mismo código) |
+| Múltiples Versiones | ❌ | ✅ (todas del mismo código) |
 | JSON Schema | Draft 4 | Draft 4 + 2020-12 |
-| Webhooks | ❌ | ✅ (OpenAPI 3.1.0) |
+| Webhooks | ❌ | ✅ (OpenAPI 3.1+) |
 | Headers de Respuesta | Limitado | Soporte Completo |
-| Soporte Nullable | `x-nullable` | Nativo + `x-nullable` |
+| Soporte a Nullable | `x-nullable` | Nativo + `x-nullable` |
 | Cobertura de Pruebas | ~70% | 86.1% |
 | Ejemplos | ~10 | 22 |
 | Versión Go | 1.19+ | 1.23+ |
@@ -103,9 +109,9 @@ docker run --rm -v $(pwd):/app ghcr.io/fsvxavier/nexs-swag:latest init
 
 ### Inicio Rápido
 
-#### 1. Agregar Anotaciones de API
+#### 1. Agregar Anotaciones de la API
 
-Agregue anotaciones generales de API a su `main.go`:
+Agrega anotaciones generales de la API a tu `main.go`:
 
 ```go
 package main
@@ -136,7 +142,7 @@ import (
 
 func main() {
     r := gin.Default()
-    // Configuración de su aplicación
+    // Configuración de tu aplicación
     r.Run(":8080")
 }
 
@@ -145,7 +151,7 @@ type User struct {
     // ID del usuario (sql.NullInt64 → integer en OpenAPI)
     ID sql.NullInt64 `json:"id" swaggertype:"integer" extensions:"x-primary-key=true"`
     
-    // Nombre completo (3-100 caracteres requerido)
+    // Nombre completo (3-100 caracteres obligatorio)
     Name string `json:"name" binding:"required" minLength:"3" maxLength:"100" example:"Juan Silva"`
     
     // Dirección de correo electrónico (validado)
@@ -169,7 +175,7 @@ type User struct {
 // @Produce      json
 // @Param        user  body      User  true  "Datos del usuario"
 // @Success      201   {object}  User
-// @Header       201   {string}  X-Request-ID  "Identificador de la solicitud"
+// @Header       201   {string}  X-Request-ID  "Identificador de la petición"
 // @Header       201   {string}  Location      "URL del recurso del usuario"
 // @Failure      400   {object}  ErrorResponse
 // @Failure      500   {object}  ErrorResponse
@@ -182,10 +188,12 @@ func CreateUser(c *gin.Context) {
 
 #### 2. Generar Documentación
 
-**OpenAPI 3.1.0 (por defecto):**
+**OpenAPI 3.1.0 (predeterminado):**
 
 ```bash
 nexs-swag init
+# o explícitamente
+nexs-swag init --openapi-version 3.1
 ```
 
 **Swagger 2.0:**
@@ -197,38 +205,37 @@ nexs-swag init --openapi-version 2.0
 **Generar ambas versiones:**
 
 ```bash
-nexs-swag init -o ./docs/v3 --openapi-version 3.1
-nexs-swag init -o ./docs/v2 --openapi-version 2.0
+# OpenAPI 3.1.0 en ./docs/v3
+nexs-swag init --output ./docs/v3 --openapi-version 3.1
+
+# Swagger 2.0 en ./docs/v2
+nexs-swag init --output ./docs/v2 --openapi-version 2.0
 ```
 
-O especifique los directorios:
+O especifica los directorios:
 
 ```bash
-nexs-swag init -d ./cmd/api -o ./docs
+nexs-swag init -d ./cmd/api -o ./docs --openapi-version 3.1
 ```
 
 #### 3. Archivos Generados
 
-**OpenAPI 3.1.0:**
-Los siguientes archivos se crearán en su directorio de salida (por defecto: `./docs`):
-
-- **`docs/openapi.json`** - Especificación OpenAPI 3.1.0 en formato JSON
-- **`docs/openapi.yaml`** - Especificación OpenAPI 3.1.0 en formato YAML
+**OpenAPI 3.1.0 (predeterminado):**
+- **`docs/openapi.json`** - Especificación OpenAPI 3.1.0 en JSON
+- **`docs/openapi.yaml`** - Especificación OpenAPI 3.1.0 en YAML
 - **`docs/docs.go`** - Archivo de documentación Go embebido
 
-**Swagger 2.0:**
-Cuando use `--openapi-version 2.0`, los archivos generados serán:
-
-- **`docs/swagger.json`** - Especificación Swagger 2.0 en formato JSON
-- **`docs/swagger.yaml`** - Especificación Swagger 2.0 en formato YAML
+**Swagger 2.0 (con `--openapi-version 2.0`):**
+- **`docs/swagger.json`** - Especificación Swagger 2.0 en JSON
+- **`docs/swagger.yaml`** - Especificación Swagger 2.0 en YAML
 - **`docs/docs.go`** - Archivo de documentación Go embebido
 
-#### 4. Integrar con Su Aplicación
+#### 4. Integrar con Tu Aplicación
 
-Importe el paquete docs generado:
+Importa el paquete docs generado:
 
 ```go
-import _ "su-modulo/docs"  // Importar docs generado
+import _ "tu-modulo/docs"  // Importar docs generado
 
 func main() {
     r := gin.Default()
@@ -240,7 +247,7 @@ func main() {
 }
 ```
 
-¡Acceda a http://localhost:8080/swagger/index.html para ver su documentación API!
+¡Accede a http://localhost:8080/swagger/index.html para ver tu documentación API!
 
 ## Frameworks Web Soportados
 
@@ -257,9 +264,93 @@ nexs-swag funciona con todos los frameworks web Go populares a través de paquet
 
 ## Cómo usar con Gin
 
-Ejemplo completo usando framework Gin. Encuentre el código completo en [examples/03-general-info](examples/03-general-info).
+Ejemplo completo usando framework Gin. Encuentra el código completo en [examples/03-general-info](examples/03-general-info).
 
-Consulte la [versión en inglés](README.md#how-to-use-with-gin) para detalles completos.
+**1. Instalar dependencias:**
+
+```bash
+go get -u github.com/gin-gonic/gin
+go get -u github.com/swaggo/gin-swagger
+go get -u github.com/swaggo/files
+```
+
+**2. Agregar información general de la API a `main.go`:**
+
+```go
+package main
+
+import (
+    "github.com/gin-gonic/gin"
+    swaggerFiles "github.com/swaggo/files"
+    ginSwagger "github.com/swaggo/gin-swagger"
+    
+    _ "tu-proyecto/docs"  // Importar docs generado
+)
+
+// @title           API de Ejemplo Swagger
+// @version         1.0
+// @description     Este es un servidor de ejemplo con nexs-swag.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   Soporte de la API
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.basic  BasicAuth
+// @securityDefinitions.apikey  ApiKeyAuth
+// @in header
+// @name Authorization
+
+func main() {
+    r := gin.Default()
+    
+    v1 := r.Group("/api/v1")
+    {
+        v1.GET("/users/:id", GetUser)
+        v1.POST("/users", CreateUser)
+    }
+    
+    // Endpoint Swagger
+    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    
+    r.Run(":8080")
+}
+```
+
+**3. Agregar anotaciones de operación:**
+
+```go
+// GetUser recupera un usuario por ID
+// @Summary      Buscar usuario por ID
+// @Description  Buscar detalles del usuario por su identificador único
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "ID del Usuario"  minimum(1)
+// @Success      200  {object}  User
+// @Failure      400  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Router       /users/{id} [get]
+// @Security     ApiKeyAuth
+func GetUser(c *gin.Context) {
+    // Implementación
+}
+```
+
+**4. Generar y ejecutar:**
+
+```bash
+nexs-swag init
+go run main.go
+```
+
+Visita http://localhost:8080/swagger/index.html
 
 ## Referencia CLI
 
@@ -273,23 +364,40 @@ nexs-swag init [opciones]
 
 **Opciones Principales:**
 
-- `--dir, -d` - Directorios para analizar (por defecto: `./`)
-- `--output, -o` - Directorio de salida (por defecto: `./docs`)
-- `--outputTypes, --ot` - Tipos de archivo de salida (por defecto: `go,json,yaml`)
-- `--openapi-version, --ov` - Versión OpenAPI: `2.0`, `3.0`, `3.1` (por defecto: `3.1`)
-- `--parseDependency, --pd` - Analizar dependencias (por defecto: `false`)
-- `--parseInternal` - Analizar paquetes internos (por defecto: `false`)
-- `--propertyStrategy, -p` - Estrategia de nomenclatura: `snakecase`, `camelcase`, `pascalcase`
-- `--validate` - Validar especificación generada (por defecto: `true`)
+| Flag | Corto | Predeterminado | Descripción |
+|------|-------|----------------|-------------|
+| `--generalInfo` | `-g` | `main.go` | Ruta al archivo con información general de la API |
+| `--dir` | `-d` | `./` | Directorios para analizar (separados por coma) |
+| `--output` | `-o` | `./docs` | Directorio de salida para archivos generados |
+| `--outputTypes` | `--ot` | `go,json,yaml` | Tipos de archivo de salida |
+| `--parseDepth` | | `100` | Profundidad de análisis de dependencia |
+| `--parseDependency` | `--pd` | `false` | Analizar archivos go en dependencias |
+| `--parseDependencyLevel` | `--pdl` | `0` | 0=deshabilitado, 1=modelos, 2=operaciones, 3=todo |
+| `--parseInternal` | | `false` | Analizar paquetes internos |
+| `--parseGoList` | | `true` | Usar `go list` para análisis |
+| `--propertyStrategy` | `-p` | `camelcase` | Nomenclatura de propiedad: `snakecase`, `camelcase`, `pascalcase` |
+| `--requiredByDefault` | | `false` | Marcar todos los campos como obligatorios |
+| `--validate` | | `true` | Validar especificación generada |
+| `--exclude` | | | Excluir directorios (separados por coma) |
+| `--tags` | `-t` | | Filtrar por tags (separados por coma) |
+| `--markdownFiles` | `--md` | | Analizar archivos markdown para descripciones |
+| `--codeExampleFiles` | `--cef` | | Analizar archivos de ejemplo de código |
+| `--generatedTime` | | `false` | Agregar marca de tiempo de generación |
+| `--instanceName` | | `swagger` | Nombre de instancia para múltiples docs |
+| `--overridesFile` | | `.swaggo` | Archivo de overrides de tipo |
+| `--templateDelims` | `--td` | `{{,}}` | Delimitadores de plantilla personalizados |
+| `--collectionFormat` | `--cf` | `csv` | Formato de array predeterminado |
+| `--parseFuncBody` | | `false` | Analizar cuerpos de función |
+| `--openapi-version` | `--ov` | `3.1` | Versión OpenAPI: `2.0`, `3.0`, `3.1` |
 
-> **⚠️ Importante: Sintaxis de Flags Booleanas**
+> **⚠️ Importante: Sintaxis de Flags Booleanos**
 >
-> Las flags booleanas aceptan dos sintaxis válidas:
+> Los flags booleanos aceptan dos sintaxis válidas:
 > - ✅ **Sin valor** (presencia = true): `--parseInternal`, `--pd`
-> - ✅ **Con signo igual**: `--parseInternal=true`, `--pd=false`
+> - ✅ **Con signo de igual**: `--parseInternal=true`, `--pd=false`
 > - ❌ **Incorrecto** (separado por espacio): `--parseInternal true`, `--pd true`
 >
-> La sintaxis separada por espacio no funciona porque el parser CLI trata la palabra después de la flag como un argumento posicional separado, no como el valor de la flag.
+> La sintaxis separada por espacio no funciona porque el parser CLI trata la palabra después del flag como un argumento posicional separado, no como el valor del flag.
 
 **Ejemplos:**
 
@@ -317,11 +425,20 @@ nexs-swag init --parseInternal
 # O explícitamente:
 nexs-swag init --parseInternal=true
 
-# Solo salida JSON
+# Salida solo JSON
 nexs-swag init --outputTypes json
 
 # Nombres de propiedad en snake_case
 nexs-swag init --propertyStrategy snakecase
+
+# Filtrar por tags
+nexs-swag init --tags "users,products"
+
+# Usar descripciones en markdown
+nexs-swag init --markdownFiles ./docs/api
+
+# Delimitadores de plantilla personalizados (evitar conflictos)
+nexs-swag init --templateDelims "[[,]]"
 ```
 
 ### Comando fmt
@@ -332,6 +449,14 @@ Formatea comentarios swagger automáticamente.
 nexs-swag fmt [opciones]
 ```
 
+**Opciones:**
+
+| Flag | Corto | Predeterminado | Descripción |
+|------|-------|----------------|-------------|
+| `--dir` | `-d` | `./` | Directorios para formatear |
+| `--exclude` | | | Excluir directorios |
+| `--generalInfo` | `-g` | `main.go` | Archivo de información general |
+
 **Ejemplo:**
 
 ```bash
@@ -340,42 +465,381 @@ nexs-swag fmt
 
 # Formatear directorio específico
 nexs-swag fmt -d ./internal/api
+
+# Excluir vendor
+nexs-swag fmt --exclude ./vendor
 ```
+
+## Estado de Implementación
+
+### Soporte OpenAPI 3.1.0
+
+✅ **Totalmente Implementado:**
+- JSON Schema 2020-12
+- Estructura básica (Info, Servers, Paths, Components)
+- Request bodies con múltiples content types
+- Definiciones de respuesta con headers
+- Definiciones de parámetros (path, query, header, cookie)
+- Security schemes (Basic, Bearer, API Key, OAuth2)
+- Composición de schemas (allOf, oneOf, anyOf)
+- Validación de schemas (min, max, pattern, enum, format)
+- Ejemplos y descripciones
+- Documentación externa
+- Extensiones personalizadas (x-*)
+- Webhooks
+- Tags y agrupamiento
+
+### Soporte Swagger 2.0
+
+✅ **Totalmente Compatible:**
+- Estructura básica (Info, Host, BasePath, Paths, Definitions)
+- Definiciones de request/response
+- Definiciones de parámetros (path, query, header, body, formData)
+- Definiciones de seguridad (Basic, API Key, OAuth2)
+- Composición de schemas (allOf)
+- Validación de schemas (min, max, pattern, enum, format)
+- Ejemplos y descripciones
+- Documentación externa
+- Extensiones personalizadas (x-*)
+- Tags y agrupamiento
+
+⚠️ **Conversión Automática con Avisos:**
+- Servers → Host + BasePath (usa la primera URL de server)
+- Webhooks → ⚠️ No soportado en Swagger 2.0
+- Callbacks → ⚠️ No soportado en Swagger 2.0
+- oneOf/anyOf → ⚠️ Soporte limitado (convertido a object)
+- propiedad nullable → Usa extensión `x-nullable`
+
+### Compatibilidad con swaggo/swag
+
+✅ **100% Compatible:**
+- Todas las anotaciones (@title, @version, @description, etc.)
+- Todas las tags de struct (json, binding, validate, swaggertype, swaggerignore, extensions)
+- Todos los flags CLI (28/28 implementados)
+- Comandos: init, fmt
+- Type overrides vía archivo .swaggo
+- Descripciones en Markdown
+- Ejemplos de código
 
 ## Formato de Comentarios Declarativos
 
-Para documentación completa de todas las anotaciones, parámetros, tags de struct y ejemplos, consulte la [versión en inglés](README.md#declarative-comments-format).
+### Información General de la API
 
-### Resumen Rápido
+Agrega a tu `main.go` o punto de entrada:
 
-**Información General de la API:**
-- `@title` - Título de la API (requerido)
-- `@version` - Versión de la API (requerido)
-- `@description` - Descripción de la API
-- `@host` - Host de la API
-- `@BasePath` - Ruta base
-- `@securityDefinitions.*` - Definiciones de seguridad
+| Anotación | Ejemplo | Descripción |
+|-----------|---------|-------------|
+| `@title` | `@title Mi API` | **Obligatorio.** Título de la API |
+| `@version` | `@version 1.0` | **Obligatorio.** Versión de la API |
+| `@description` | `@description Esta es mi API` | Descripción de la API |
+| `@description.markdown` | `@description.markdown` | Cargar descripción de api.md |
+| `@termsOfService` | `@termsOfService http://example.com/terms` | URL de los términos de servicio |
+| `@contact.name` | `@contact.name Soporte de la API` | Nombre del contacto |
+| `@contact.url` | `@contact.url http://example.com` | URL del contacto |
+| `@contact.email` | `@contact.email support@example.com` | Email del contacto |
+| `@license.name` | `@license.name Apache 2.0` | **Obligatorio.** Nombre de la licencia |
+| `@license.url` | `@license.url http://apache.org/licenses` | URL de la licencia |
+| `@host` | `@host localhost:8080` | Host de la API |
+| `@BasePath` | `@BasePath /api/v1` | Ruta base |
+| `@schemes` | `@schemes http https` | Protocolos de transferencia |
+| `@accept` | `@accept json xml` | Tipos MIME Accept predeterminados |
+| `@produce` | `@produce json xml` | Tipos MIME Produce predeterminados |
+| `@tag.name` | `@tag.name Users` | Nombre de la tag |
+| `@tag.description` | `@tag.description Operaciones de usuario` | Descripción de la tag |
+| `@externalDocs.description` | `@externalDocs.description OpenAPI` | Descripción de docs externos |
+| `@externalDocs.url` | `@externalDocs.url https://swagger.io` | URL de docs externos |
+| `@x-<nombre>` | `@x-custom-info value` | Extensión personalizada |
 
-**Operación de API:**
-- `@Summary` - Resumen corto
-- `@Description` - Descripción detallada
-- `@Tags` - Tags de la operación
-- `@Param` - Definición de parámetro
-- `@Success` - Respuesta exitosa
-- `@Failure` - Respuesta de error
-- `@Router` - Ruta y método de la ruta
+**Anotaciones Específicas de Versión:**
 
-**Tags de Struct:**
-- `json` - Serialización JSON
-- `binding` - Validación Gin
-- `validate` - Validación go-playground
-- `swaggertype` - Override de tipo
-- `swaggerignore` - Ocultar campo
-- `extensions` - Extensiones personalizadas
+Al generar **Swagger 2.0** (`--openapi-version 2.0`):
+- Usa anotaciones `@host`, `@BasePath` y `@schemes`
+- Estas son automáticamente convertidas a los campos `host`, `basePath` y `schemes`
+
+Al generar **OpenAPI 3.x** (`--openapi-version 3.0` o `3.1`):
+- Usa anotación `@server`: `// @server http://localhost:8080/api/v1 Servidor de desarrollo`
+- Alternativamente, usa `@host`, `@BasePath` y `@schemes` que serán convertidos a servers
+
+Ambos estilos de anotación funcionan con cualquier versión - el conversor maneja la transformación automáticamente.
+
+**Definiciones de Seguridad:**
+
+```go
+// Autenticación Basic
+// @securityDefinitions.basic BasicAuth
+
+// API Key
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
+
+// OAuth2 Application Flow
+// @securitydefinitions.oauth2.application OAuth2Application
+// @tokenUrl https://example.com/oauth/token
+// @scope.write Concede acceso de escritura
+// @scope.admin Concede acceso de administrador
+```
+
+### Operación de API
+
+Agrega a las funciones handler:
+
+| Anotación | Ejemplo | Descripción |
+|-----------|---------|-------------|
+| `@Summary` | `@Summary Buscar usuario` | Resumen corto |
+| `@Description` | `@Description Buscar usuario por ID` | Descripción detallada |
+| `@Description.markdown` | `@Description.markdown details` | Cargar de details.md |
+| `@Tags` | `@Tags users,accounts` | Tags de la operación |
+| `@Accept` | `@Accept json` | Tipo de contenido de la petición |
+| `@Produce` | `@Produce json,xml` | Tipos de contenido de la respuesta |
+| `@Param` | Ver abajo | Definición de parámetro |
+| `@Success` | `@Success 200 {object} User` | Respuesta de éxito |
+| `@Failure` | `@Failure 400 {object} Error` | Respuesta de error |
+| `@Header` | `@Header 200 {string} Token` | Header de respuesta |
+| `@Router` | `@Router /users/{id} [get]` | Ruta y método de la ruta |
+| `@Security` | `@Security ApiKeyAuth` | Requisito de seguridad |
+| `@Deprecated` | `@Deprecated` | Marcar como deprecated |
+| `@x-<nombre>` | `@x-code-samples file.json` | Extensión personalizada |
+
+**Sintaxis de Parámetro:**
+
+```
+@Param <nombre> <en> <tipo> <obligatorio> <descripción> [atributos]
+```
+
+- **nombre**: Nombre del parámetro
+- **en**: `query`, `path`, `header`, `body`, `formData`
+- **tipo**: Tipo de dato (string, int, bool, object, array, file)
+- **obligatorio**: `true` o `false`
+- **descripción**: Descripción (entre comillas si contiene espacios)
+- **atributos**: Atributos de validación opcionales
+
+**Ejemplos:**
+
+```go
+// Parámetro de ruta
+// @Param id path int true "ID del Usuario" minimum(1) maximum(1000)
+
+// Parámetro de query con validación
+// @Param name query string false "Nombre del usuario" minLength(3) maxLength(50)
+
+// Parámetro de query con enum
+// @Param status query string false "Filtro de estado" Enums(active,inactive,pending)
+
+// Array de query con formato de colección
+// @Param tags query []string false "Tags" collectionFormat(multi)
+
+// Parámetro de header
+// @Param X-Request-ID header string true "ID de la Petición" format(uuid)
+
+// Parámetro de body
+// @Param user body User true "Objeto del usuario"
+
+// Form data con archivo
+// @Param avatar formData file true "Imagen del avatar"
+```
+
+**Sintaxis de Respuesta:**
+
+```go
+// Respuesta simple
+// @Success 200 {object} User
+
+// Respuesta con descripción
+// @Success 201 {object} User "Usuario creado con éxito"
+
+// Respuesta de array
+// @Success 200 {array} User "Lista de usuarios"
+
+// Respuesta primitiva
+// @Success 200 {string} string "Mensaje de éxito"
+
+// Respuesta genérica
+// @Success 200 {object} Response{data=User} "Respuesta del usuario"
+
+// Múltiples campos de datos
+// @Success 200 {object} Response{data=User,meta=Metadata}
+```
+
+**Sintaxis de Header:**
+
+```go
+// Código de estado único
+// @Header 200 {string} X-Request-ID "Identificador de la petición"
+
+// Múltiples códigos de estado
+// @Header 200,201 {string} Location "URL del recurso"
+
+// Todas las respuestas
+// @Header all {string} X-API-Version "Versión de la API"
+```
+
+### Tags de Struct
+
+#### Tags Estándar
+
+```go
+type User struct {
+    // Serialización JSON
+    ID   int    `json:"id"`
+    Name string `json:"name,omitempty"`  // omitempty = no obligatorio
+    
+    // Validación (Gin binding)
+    Email string `json:"email" binding:"required,email"`
+    Age   int    `json:"age" binding:"gte=0,lte=150"`
+    
+    // Validación (go-playground/validator)
+    UUID  string `json:"uuid" validate:"required,uuid"`
+    
+    // Atributos OpenAPI
+    Price  float64  `json:"price" minimum:"0" maximum:"9999.99"`
+    Status string   `json:"status" enum:"active,inactive" default:"active"`
+    SKU    string   `json:"sku" pattern:"^[A-Z]{3}-[0-9]{6}$"`
+    Items  []string `json:"items" minLength:"1" maxLength:"100"`
+    
+    // Valor de ejemplo
+    Bio string `json:"bio" example:"Desarrollador de software"`
+    
+    // Formato
+    CreatedAt string `json:"created_at" format:"date-time"`
+}
+```
+
+#### swaggertype - Override de Tipo
+
+Convertir tipos personalizados a tipos OpenAPI:
+
+```go
+type Account struct {
+    // Override sql.NullInt64 a integer
+    ID sql.NullInt64 `json:"id" swaggertype:"integer"`
+    
+    // Tipo de tiempo personalizado a unix timestamp (integer)
+    CreatedAt TimestampTime `json:"created_at" swaggertype:"primitive,integer"`
+    
+    // Array de bytes a string base64
+    Certificate []byte `json:"cert" swaggertype:"string" format:"base64"`
+    
+    // Array de número personalizado
+    Coeffs []big.Float `json:"coeffs" swaggertype:"array,number"`
+    
+    // Tipos personalizados anidados
+    Metadata map[string]interface{} `json:"metadata" swaggertype:"object"`
+}
+```
+
+**Formato:** `swaggertype:"[primitive,]<tipo>"`
+
+- Para tipos primitivos: `swaggertype:"string"`, `swaggertype:"integer"`, `swaggertype:"number"`, `swaggertype:"boolean"`
+- Para arrays: `swaggertype:"array,<tipo-elemento>"`
+- Para objetos: `swaggertype:"object"`
+
+#### swaggerignore - Ocultar Campos
+
+Excluir campos de la documentación (todavía presente en el JSON):
+
+```go
+type User struct {
+    ID       int    `json:"id"`
+    Name     string `json:"name"`
+    Email    string `json:"email"`
+    
+    // Presente en el JSON, oculto en los docs
+    Password string `json:"password" swaggerignore:"true"`
+    
+    // Campo interno, no en JSON o docs
+    internal string `swaggerignore:"true"`
+    
+    // Dato sensible
+    SSN string `json:"ssn" swaggerignore:"true"`
+}
+```
+
+#### extensions - Extensiones Personalizadas
+
+Agregar metadatos personalizados con prefijo `x-*`:
+
+```go
+type Product struct {
+    // Indicador de clave primaria
+    ID int `json:"id" extensions:"x-primary-key=true"`
+    
+    // Formato de moneda
+    Price float64 `json:"price" extensions:"x-currency=USD,x-format=currency"`
+    
+    // Múltiples extensiones
+    Name string `json:"name" extensions:"x-order=1,x-searchable=true,x-filterable=true"`
+    
+    // Extensión booleana
+    Featured bool `json:"featured" extensions:"x-promoted=true"`
+    
+    // Extensión nullable
+    Discount float64 `json:"discount" extensions:"x-nullable"`
+}
+```
+
+OpenAPI Generado:
+
+```json
+{
+  "properties": {
+    "id": {
+      "type": "integer",
+      "x-primary-key": true
+    },
+    "price": {
+      "type": "number",
+      "x-currency": "USD",
+      "x-format": "currency"
+    }
+  }
+}
+```
 
 ## Ejemplos
 
-nexs-swag incluye 22 ejemplos completos y ejecutables demostrando todas las funcionalidades, incluyendo generación de OpenAPI 3.1.0 y Swagger 2.0. Consulte la [sección de ejemplos](README.md#examples) en la versión en inglés para la lista completa.
+nexs-swag incluye 21 ejemplos completos y ejecutables. Cada ejemplo demuestra características específicas e incluye un README y script de ejecución.
+
+### Ejemplos Básicos
+
+| Ejemplo | Descripción | Características Principales |
+|---------|-------------|----------------------------|
+| [01-basic](examples/01-basic) | Uso básico | Configuración mínima, API simple |
+| [02-formats](examples/02-formats) | Formatos de salida | Salida JSON, YAML, Go |
+| [03-general-info](examples/03-general-info) | Información general de la API | Metadatos completos de la API |
+
+### Características Avanzadas
+
+| Ejemplo | Descripción | Características Principales |
+|---------|-------------|----------------------------|
+| [04-property-strategy](examples/04-property-strategy) | Estrategias de nomenclatura | Snake_case, camelCase, PascalCase |
+| [05-required-default](examples/05-required-default) | Obligatorio por defecto | Auto-require todos los campos |
+| [06-exclude](examples/06-exclude) | Excluir directorios | Filtrar rutas no deseadas |
+| [07-tags-filter](examples/07-tags-filter) | Filtrado por tag | Generar subconjunto de APIs |
+| [08-parse-internal](examples/08-parse-internal) | Paquetes internos | Analizar directorio internal/ |
+| [09-parse-dependency](examples/09-parse-dependency) | Dependencias | Analizar paquetes vendor/go.mod |
+| [10-dependency-level](examples/10-dependency-level) | Profundidad de dependencia | Controlar nivel de análisis (0-3) |
+| [11-parse-golist](examples/11-parse-golist) | Análisis de go list | Usar `go list` para descubrimiento |
+
+### Características de Documentación
+
+| Ejemplo | Descripción | Características Principales |
+|---------|-------------|----------------------------|
+| [12-markdown-files](examples/12-markdown-files) | Descripciones en Markdown | Cargar docs de archivos .md |
+| [13-code-examples](examples/13-code-examples) | Muestras de código | Ejemplos en múltiples lenguajes |
+| [14-overrides-file](examples/14-overrides-file) | Overrides de tipo | Configuración de archivo .swaggo |
+| [15-generated-time](examples/15-generated-time) | Marca de tiempo de generación | Agregar fecha de generación |
+| [16-instance-name](examples/16-instance-name) | Múltiples instancias | Conjuntos de documentación nombrados |
+| [17-template-delims](examples/17-template-delims) | Delimitadores personalizados | Evitar conflictos de plantilla |
+
+### Validación y Estructura
+
+| Ejemplo | Descripción | Características Principales |
+|---------|-------------|----------------------------|
+| [18-collection-format](examples/18-collection-format) | Formatos de array | CSV, multi, pipes, SSV, TSV |
+| [19-parse-func-body](examples/19-parse-func-body) | Cuerpos de función | Analizar anotaciones inline |
+| [20-fmt-command](examples/20-fmt-command) | Comando de formato | Auto-formatear comentarios |
+| [21-struct-tags](examples/21-struct-tags) | Todas las tags de struct | Referencia completa de tags |
 
 ### Ejecutando Ejemplos
 
@@ -386,12 +850,42 @@ cd examples/01-basic
 ./run.sh
 ```
 
+O manualmente (OpenAPI 3.1.0):
+
+```bash
+cd examples/01-basic
+nexs-swag init -d . -o ./docs
+cat docs/openapi.json
+```
+
+O generar Swagger 2.0:
+
+```bash
+cd examples/01-basic
+nexs-swag init -d . -o ./docs --openapi-version 2.0
+cat docs/swagger.json
+```
+
+### Ejemplo: API CRUD Completa
+
+Consulta [examples/03-general-info](examples/03-general-info) para una API CRUD completa con:
+- Múltiples endpoints (GET, POST, PUT, DELETE)
+- Modelos de request/response
+- Reglas de validación
+- Respuestas de error
+- Esquemas de seguridad
+- Headers de respuesta
+
 ## Calidad y Pruebas
 
 ### Cobertura de Pruebas
 
+```bash
+$ go test ./pkg/... -cover
+```
+
 | Paquete | Cobertura | Pruebas |
-|---------|-----------|---------||
+|---------|-----------|---------|
 | pkg/converter | 92.3% | 13 pruebas |
 | pkg/format | 95.1% | 15 pruebas |
 | pkg/generator | 71.6% | 16 pruebas |
@@ -405,27 +899,46 @@ cd examples/01-basic
 
 ### Métricas de Calidad
 
-- ✅ **0 advertencias de linter** (golangci-lint con 20+ linters)
+- ✅ **0 avisos de linter** (golangci-lint con 20+ linters)
 - ✅ **0 condiciones de carrera** (probado con flag `-race`)
 - ✅ **22 pruebas de integración** (ejemplos ejecutables)
 - ✅ **~8.500 líneas de código de prueba**
 - ✅ **Listo para producción** (mantenido activamente)
 - ✅ **100% compatible con swaggo/swag**
-- ✅ **Soporte dual de versiones** (OpenAPI 3.1.0 + Swagger 2.0)
+- ✅ **Soporte a múltiples versiones** (OpenAPI 3.1.0 + Swagger 2.0)
+
+### Ejecutando Pruebas
+
+```bash
+# Pruebas unitarias
+go test ./pkg/... -v
+
+# Con cobertura
+go test ./pkg/... -cover
+
+# Con detección de race condition
+go test ./pkg/... -race
+
+# Paquete específico
+go test ./pkg/parser -v
+
+# Ejecutar ejemplos
+cd examples && for d in */; do cd "$d" && ./run.sh && cd ..; done
+```
 
 ## Compatibilidad con swaggo/swag
 
-nexs-swag está diseñado como un **reemplazo directo** para swaggo/swag con características mejoradas.
+nexs-swag está diseñado como un **sustituto directo** para swaggo/swag con características mejoradas.
 
 ### Migración desde swaggo/swag
 
-**¡No se necesitan cambios!** Simplemente reemplace el binario:
+**¡Ningún cambio necesario!** Simplemente reemplaza el binario:
 
 ```bash
 # En lugar de
 go install github.com/swaggo/swag/cmd/swag@latest
 
-# Use
+# Usa
 go install github.com/fsvxavier/nexs-swag/cmd/nexs-swag@latest
 
 # Los mismos comandos funcionan
@@ -433,7 +946,40 @@ nexs-swag init
 nexs-swag fmt
 ```
 
-## Sobre el Proyecto
+### Tabla de Compatibilidad
+
+| Característica | swaggo/swag | nexs-swag | Notas |
+|----------------|-------------|-----------|-------|
+| Versión OpenAPI | 2.0 | 3.1.0 | Retrocompatible |
+| Todas las anotaciones | ✅ | ✅ | 100% compatible |
+| Tags de struct | ✅ | ✅ | swaggertype, swaggerignore, extensions |
+| Flags CLI | ✅ | ✅ | Todos los 28 flags soportados |
+| Archivo .swaggo | ✅ | ✅ | Overrides de tipo |
+| Markdown | ✅ | ✅ | Descripciones basadas en archivo |
+| Ejemplos de código | ✅ | ✅ | Muestras en múltiples lenguajes |
+| Webhooks | ❌ | ✅ | Característica OpenAPI 3.1 |
+| JSON Schema 2020-12 | ❌ | ✅ | Schema moderno |
+| Headers de respuesta | Limitado | ✅ | Soporte completo |
+| Cobertura de pruebas | ~70% | 86.1% | Mayor calidad |
+| Versión Go | 1.19+ | 1.23+ | Características Go modernas |
+
+### ¿Qué es Diferente?
+
+**Mejorado (retrocompatible):**
+- Salida OpenAPI 3.1.0 (vs 2.0)
+- Mejor manejo de nullable
+- Más atributos de validación
+- Mensajes de error mejorados
+- Mejor cobertura de pruebas
+
+**Misma API:**
+- Todos los flags de línea de comandos
+- Todas las anotaciones
+- Todas las tags de struct
+- Estructura generada de docs.go
+- Integración con Swagger UI
+
+## Acerca del Proyecto
 
 ### Estadísticas del Proyecto
 
@@ -446,30 +992,125 @@ nexs-swag fmt
 - **Cobertura de Pruebas:** 87.9%
 - **Versiones OpenAPI:** 2 (Swagger 2.0 + OpenAPI 3.1.0)
 - **Dependencias:** 3 dependencias directas
+  - urfave/cli/v2 (framework CLI)
+  - golang.org/x/tools (análisis AST Go)
+  - gopkg.in/yaml.v3 (soporte YAML)
+
+### Estructura del Proyecto
+
+```
+nexs-swag/
+├── cmd/
+│   └── nexs-swag/          # Punto de entrada CLI
+├── pkg/
+│   ├── converter/          # Conversión de versión (v3 ↔ v2)
+│   ├── format/             # Formateo de código
+│   ├── generator/          # Generación OpenAPI
+│   │   ├── v2/             # Generador Swagger 2.0
+│   │   └── v3/             # Generador OpenAPI 3.x
+│   ├── openapi/            # Modelos OpenAPI
+│   │   ├── v2/             # Modelos Swagger 2.0
+│   │   └── v3/             # Modelos OpenAPI 3.x
+│   └── parser/             # Análisis de código Go (AST)
+├── examples/               # 22 ejemplos
+│   ├── 01-basic/
+│   ├── 02-formats/
+│   └── ...
+├── docs/                   # Documentación del proyecto
+├── README.md               # Versión en inglés
+├── README_pt.md            # Versión en portugués
+├── README_es.md            # Este archivo
+└── LICENSE                 # Licencia MIT
+```
 
 ### Inspiración y Créditos
 
-Este proyecto fue inspirado por [swaggo/swag](https://github.com/swaggo/swag) y construido para extender sus capacidades con soporte completo para OpenAPI 3.1.0, manteniendo 100% de compatibilidad retroactiva.
+Este proyecto fue inspirado por [swaggo/swag](https://github.com/swaggo/swag) y construido para extender sus capacidades con soporte completo a OpenAPI 3.1.0, manteniendo 100% de compatibilidad retroactiva.
+
+**Créditos:**
+- [swaggo/swag](https://github.com/swaggo/swag) - Generador Swagger 2.0 original
+- [OpenAPI Initiative](https://www.openapis.org/) - Especificación OpenAPI
+- [Go Team](https://go.dev/) - Lenguaje y herramientas increíbles
+- Todos los contribuyentes y la comunidad Go
 
 ## Contribuyendo
 
-¡Las contribuciones son bienvenidas! Consulte la [versión en inglés](README.md#contributing) para directrices detalladas.
+¡Las contribuciones son bienvenidas! Por favor, sigue estas directrices:
 
 ### Cómo Contribuir
 
 1. **Fork** el repositorio
-2. **Cree** una rama de característica (`git checkout -b feature/caracteristica-increible`)
-3. **Haga** sus cambios
-4. **Agregue** pruebas para nueva funcionalidad
-5. **Ejecute** las pruebas (`go test ./...`)
-6. **Ejecute** el linter (`golangci-lint run`)
-7. **Commit** sus cambios (`git commit -m 'Agrega característica increíble'`)
+2. **Crea** una rama de característica (`git checkout -b feature/caracteristica-increible`)
+3. **Haz** tus cambios
+4. **Agrega** pruebas para nueva funcionalidad
+5. **Ejecuta** las pruebas (`go test ./...`)
+6. **Ejecuta** el linter (`golangci-lint run`)
+7. **Commit** tus cambios (`git commit -m 'Agrega característica increíble'`)
 8. **Push** a la rama (`git push origin feature/caracteristica-increible`)
-9. **Abra** un Pull Request
+9. **Abre** un Pull Request
+
+### Configuración de Desarrollo
+
+```bash
+# Clonar repositorio
+git clone https://github.com/fsvxavier/nexs-swag.git
+cd nexs-swag
+
+# Instalar dependencias
+go mod download
+
+# Ejecutar pruebas
+go test ./... -v
+
+# Ejecutar linter
+golangci-lint run
+
+# Build
+go build -o nexs-swag ./cmd/nexs-swag
+```
+
+### Reportando Issues
+
+Por favor incluye:
+- Versión de Go (`go version`)
+- Versión de nexs-swag (`nexs-swag --version`)
+- Ejemplo reproducible mínimo
+- Comportamiento esperado vs real
+
+### Solicitudes de Características
+
+Abre una issue con:
+- Descripción clara de la característica
+- Caso de uso y beneficios
+- Implementación propuesta (si existe)
 
 ## Licencia
 
-Este proyecto está licenciado bajo la **Licencia MIT** - consulte el archivo [LICENSE](LICENSE) para detalles.
+Este proyecto está licenciado bajo la **Licencia MIT** - consulta el archivo [LICENSE](LICENSE) para detalles.
+
+```
+MIT License
+
+Copyright (c) 2024 Fabricio Xavier
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Soporte y Comunidad
 

@@ -190,6 +190,14 @@ func (c *Converter) convertPathItem(pathItem *openapi.PathItem) *swagger.PathIte
 		v2PathItem.Patch = c.convertOperation(pathItem.Patch)
 	}
 
+	// QUERY method is new in OpenAPI 3.2.0 - not supported in Swagger 2.0
+	// But we still need to process it to generate warnings for its content
+	if pathItem.Query != nil {
+		c.warnings = append(c.warnings, "QUERY HTTP method is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
+		// Process the operation to generate warnings for responses, request body, etc.
+		_ = c.convertOperation(pathItem.Query)
+	}
+
 	return v2PathItem
 }
 
@@ -396,6 +404,14 @@ func (c *Converter) convertRequestBodyToParameter(rb *openapi.RequestBody) *swag
 		return nil
 	}
 
+	// Warn about OpenAPI 3.2.0 streaming features in request body
+	if mediaType.ItemSchema != nil {
+		c.warnings = append(c.warnings, "MediaType.itemSchema for streaming is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
+	}
+	if len(mediaType.ItemEncoding) > 0 {
+		c.warnings = append(c.warnings, "MediaType.itemEncoding for streaming is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
+	}
+
 	param := &swagger.Parameter{
 		Name:        "body",
 		In:          "body",
@@ -492,6 +508,19 @@ func (c *Converter) convertResponse(resp *openapi.Response) *swagger.Response {
 
 		if mediaType != nil && mediaType.Schema != nil {
 			v2Resp.Schema = c.convertSchema(mediaType.Schema)
+		}
+
+		// Warn about OpenAPI 3.2.0 streaming features in all media types
+		for contentType, mt := range resp.Content {
+			if mt.ItemSchema != nil {
+				c.warnings = append(c.warnings, "MediaType.itemSchema for streaming is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
+				break // Only warn once
+			}
+			if len(mt.ItemEncoding) > 0 {
+				c.warnings = append(c.warnings, "MediaType.itemEncoding for streaming is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
+				break // Only warn once
+			}
+			_ = contentType // avoid unused variable
 		}
 
 		// Convert examples
@@ -851,11 +880,25 @@ func (c *Converter) convertSecurityScheme(scheme *openapi.SecurityScheme) *swagg
 	case "oauth2":
 		v2Scheme.Type = "oauth2"
 		c.convertOAuth2Flows(scheme, v2Scheme)
+
+		// Warn about OpenAPI 3.2.0 features
+		if scheme.OAuth2MetadataURL != "" {
+			c.warnings = append(c.warnings, "OAuth2MetadataURL is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
+		}
 	case "openIdConnect":
 		c.warnings = append(c.warnings, "openIdConnect is not supported in Swagger 2.0, converted to oauth2")
 		v2Scheme.Type = "oauth2"
 	default:
 		c.warnings = append(c.warnings, fmt.Sprintf("security scheme type %q is not supported in Swagger 2.0", scheme.Type))
+	}
+
+	// Warn about deprecated field (OpenAPI 3.2.0)
+	if scheme.Deprecated {
+		if v2Scheme.Extensions == nil {
+			v2Scheme.Extensions = make(map[string]interface{})
+		}
+		v2Scheme.Extensions["x-deprecated"] = true
+		c.warnings = append(c.warnings, "SecurityScheme.deprecated is not natively supported in Swagger 2.0, converted to x-deprecated extension")
 	}
 
 	return v2Scheme
@@ -901,6 +944,10 @@ func (c *Converter) convertOAuth2Flows(scheme *openapi.SecurityScheme, v2Scheme 
 	}
 	if scheme.Flows.AuthorizationCode != nil {
 		flowCount++
+	}
+	if scheme.Flows.DeviceAuthorization != nil {
+		flowCount++
+		c.warnings = append(c.warnings, "DeviceAuthorization OAuth2 flow is not supported in Swagger 2.0 (OpenAPI 3.2.0 feature) and was ignored")
 	}
 	if flowCount > 1 {
 		c.warnings = append(c.warnings, "multiple OAuth2 flows detected: Swagger 2.0 supports only one flow per security scheme")

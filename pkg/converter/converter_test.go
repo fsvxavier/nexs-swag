@@ -503,3 +503,403 @@ func TestConvertNilInputs(t *testing.T) {
 		t.Error("ConvertToV3(nil) should return error")
 	}
 }
+
+// TestConvertQueryMethodToV2 tests conversion of QUERY method to Swagger 2.0
+func TestConvertQueryMethodToV2(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Paths: map[string]*openapi.PathItem{
+			"/users": {
+				Query: &openapi.Operation{
+					Summary:     "Query users",
+					Description: "Search users by criteria",
+					OperationID: "queryUsers",
+					Responses: map[string]*openapi.Response{
+						"200": {Description: "Success"},
+					},
+				},
+			},
+		},
+	}
+
+	conv := New()
+	result, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	// Verify QUERY method triggers warning
+	warnings := conv.GetWarnings()
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "QUERY") && strings.Contains(w, "not supported in Swagger 2.0") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected warning about QUERY method not supported in Swagger 2.0")
+	}
+
+	// Verify QUERY method is NOT in converted spec
+	pathItem := result.Paths["/users"]
+	if pathItem != nil {
+		// PathItem in Swagger 2.0 doesn't have Query field, so this is just to ensure
+		// the conversion completes without panic
+		if pathItem.Get != nil {
+			t.Error("QUERY should not be converted to GET")
+		}
+	}
+}
+
+// TestConvertSecuritySchemeDeprecatedToV2 tests deprecated field conversion
+func TestConvertSecuritySchemeDeprecatedToV2(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Components: &openapi.Components{
+			SecuritySchemes: map[string]*openapi.SecurityScheme{
+				"OldApiKey": {
+					Type:       "apiKey",
+					Name:       "X-API-Key",
+					In:         "header",
+					Deprecated: true,
+				},
+			},
+		},
+	}
+
+	conv := New()
+	result, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	// Verify deprecated field triggers warning
+	warnings := conv.GetWarnings()
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "deprecated") && strings.Contains(w, "x-deprecated") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected warning about deprecated field conversion to x-deprecated extension")
+	}
+
+	// Verify x-deprecated extension is added
+	scheme := result.SecurityDefinitions["OldApiKey"]
+	if scheme == nil {
+		t.Fatal("SecurityScheme OldApiKey not found")
+	}
+
+	if scheme.Extensions == nil {
+		t.Fatal("Extensions should be set")
+	}
+
+	deprecated, ok := scheme.Extensions["x-deprecated"].(bool)
+	if !ok || !deprecated {
+		t.Error("x-deprecated extension should be true")
+	}
+}
+
+// TestConvertOAuth2MetadataURLToV2 tests OAuth2MetadataURL conversion
+func TestConvertOAuth2MetadataURLToV2(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Components: &openapi.Components{
+			SecuritySchemes: map[string]*openapi.SecurityScheme{
+				"OAuth2": {
+					Type:              "oauth2",
+					OAuth2MetadataURL: "https://example.com/.well-known/oauth-authorization-server",
+					Flows: &openapi.OAuthFlows{
+						AuthorizationCode: &openapi.OAuthFlow{
+							AuthorizationURL: "https://example.com/oauth/authorize",
+							TokenURL:         "https://example.com/oauth/token",
+							Scopes:           map[string]string{"read": "Read access"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	conv := New()
+	_, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	// Verify warning about OAuth2MetadataURL
+	warnings := conv.GetWarnings()
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "OAuth2MetadataURL") && strings.Contains(w, "not supported") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected warning about OAuth2MetadataURL not supported in Swagger 2.0")
+	}
+}
+
+// TestConvertDeviceAuthorizationFlowToV2 tests device authorization flow conversion
+func TestConvertDeviceAuthorizationFlowToV2(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Components: &openapi.Components{
+			SecuritySchemes: map[string]*openapi.SecurityScheme{
+				"OAuth2": {
+					Type: "oauth2",
+					Flows: &openapi.OAuthFlows{
+						DeviceAuthorization: &openapi.OAuthFlow{
+							TokenURL: "https://example.com/oauth/device/token",
+							Scopes:   map[string]string{"read": "Read access"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	conv := New()
+	_, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	// Verify warning about DeviceAuthorization flow
+	warnings := conv.GetWarnings()
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "DeviceAuthorization") && strings.Contains(w, "not supported") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected warning about DeviceAuthorization flow not supported in Swagger 2.0")
+	}
+}
+
+// TestConvertItemSchemaToV2 tests streaming ItemSchema conversion
+func TestConvertItemSchemaToV2(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Paths: map[string]*openapi.PathItem{
+			"/stream": {
+				Get: &openapi.Operation{
+					Summary: "Stream data",
+					Responses: map[string]*openapi.Response{
+						"200": {
+							Description: "Streaming response",
+							Content: map[string]*openapi.MediaType{
+								"text/event-stream": {
+									Schema: &openapi.Schema{
+										Type: "string",
+									},
+									ItemSchema: &openapi.Schema{
+										Type: "object",
+										Properties: map[string]*openapi.Schema{
+											"id":   {Type: "integer"},
+											"data": {Type: "string"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	conv := New()
+	_, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	// Verify warning about ItemSchema
+	warnings := conv.GetWarnings()
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "itemSchema") && strings.Contains(w, "streaming") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected warning about itemSchema for streaming not supported in Swagger 2.0")
+	}
+}
+
+// TestConvertItemEncodingToV2 tests streaming ItemEncoding conversion
+func TestConvertItemEncodingToV2(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Paths: map[string]*openapi.PathItem{
+			"/upload": {
+				Post: &openapi.Operation{
+					Summary: "Upload streaming data",
+					RequestBody: &openapi.RequestBody{
+						Content: map[string]*openapi.MediaType{
+							"multipart/form-data": {
+								Schema: &openapi.Schema{
+									Type: "object",
+								},
+								ItemEncoding: map[string]*openapi.Encoding{
+									"file": {
+										ContentType: "application/octet-stream",
+									},
+								},
+							},
+						},
+					},
+					Responses: map[string]*openapi.Response{
+						"200": {Description: "Success"},
+					},
+				},
+			},
+		},
+	}
+
+	conv := New()
+	_, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	// Verify warning about ItemEncoding
+	warnings := conv.GetWarnings()
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "itemEncoding") && strings.Contains(w, "streaming") {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected warning about itemEncoding for streaming not supported in Swagger 2.0")
+	}
+}
+
+// TestMultipleOpenAPI32Features tests multiple 3.2.0 features together
+func TestMultipleOpenAPI32Features(t *testing.T) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: openapi.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Paths: map[string]*openapi.PathItem{
+			"/users": {
+				Query: &openapi.Operation{
+					Summary: "Query users",
+					Responses: map[string]*openapi.Response{
+						"200": {
+							Description: "Streaming results",
+							Content: map[string]*openapi.MediaType{
+								"text/event-stream": {
+									ItemSchema: &openapi.Schema{Type: "object"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Components: &openapi.Components{
+			SecuritySchemes: map[string]*openapi.SecurityScheme{
+				"OAuth2": {
+					Type:              "oauth2",
+					Deprecated:        true,
+					OAuth2MetadataURL: "https://example.com/.well-known/oauth",
+					Flows: &openapi.OAuthFlows{
+						DeviceAuthorization: &openapi.OAuthFlow{
+							TokenURL: "https://example.com/token",
+							Scopes:   map[string]string{"read": "Read"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	conv := New()
+	result, err := conv.ConvertToV2(spec)
+
+	if err != nil {
+		t.Fatalf("ConvertToV2() error: %v", err)
+	}
+
+	if result == nil {
+		t.Fatal("ConvertToV2() returned nil")
+	}
+
+	// Verify all warnings are generated
+	warnings := conv.GetWarnings()
+
+	expectedWarnings := []string{
+		"QUERY",
+		"itemSchema",
+		"deprecated",
+		"OAuth2MetadataURL",
+		"DeviceAuthorization",
+	}
+
+	for _, expected := range expectedWarnings {
+		found := false
+		for _, w := range warnings {
+			if strings.Contains(w, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected warning containing %q, got warnings: %v", expected, warnings)
+		}
+	}
+
+	// Should have at least 5 warnings (one for each feature)
+	if len(warnings) < 5 {
+		t.Errorf("Expected at least 5 warnings, got %d: %v", len(warnings), warnings)
+	}
+}
