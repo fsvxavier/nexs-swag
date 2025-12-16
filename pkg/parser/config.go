@@ -214,6 +214,72 @@ func (p *Parser) SetParseDependencyLevel(level int) {
 	p.parseDependencyLevel = level
 }
 
+// SetIncludeTypes sets the categories of Go types to include in parsing.
+// Valid categories: struct, model (alias for struct), interface, func, const, type, all
+// Default: all
+func (p *Parser) SetIncludeTypes(types string) {
+	if types == "" {
+		p.includeTypes = []string{"all"}
+		return
+	}
+
+	// Split by comma and trim spaces
+	parts := strings.Split(types, ",")
+	p.includeTypes = make([]string, 0, len(parts))
+
+	for _, t := range parts {
+		t = strings.TrimSpace(strings.ToLower(t))
+
+		// Normalize aliases
+		if t == "model" {
+			t = "struct"
+		}
+
+		// Validate category
+		validTypes := map[string]bool{
+			"struct": true, "interface": true, "func": true,
+			"const": true, "type": true, "all": true,
+		}
+
+		if validTypes[t] {
+			// Avoid duplicates
+			found := false
+			for _, existing := range p.includeTypes {
+				if existing == t {
+					found = true
+					break
+				}
+			}
+			if !found {
+				p.includeTypes = append(p.includeTypes, t)
+			}
+		}
+	}
+
+	// If no valid types, default to all
+	if len(p.includeTypes) == 0 {
+		p.includeTypes = []string{"all"}
+	}
+}
+
+// ShouldIncludeTypeCategory checks if a specific Go type category should be included.
+// category: "struct", "interface", "func", "const", "type"
+func (p *Parser) ShouldIncludeTypeCategory(category string) bool {
+	category = strings.ToLower(category)
+
+	// Check if "all" is in the list
+	for _, t := range p.includeTypes {
+		if t == "all" {
+			return true
+		}
+		if t == category {
+			return true
+		}
+	}
+
+	return false
+}
+
 // SetCodeExampleFilesDir sets the directory containing code example files.
 func (p *Parser) SetCodeExampleFilesDir(dir string) {
 	p.codeExampleFilesDir = dir

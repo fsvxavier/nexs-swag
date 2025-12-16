@@ -143,6 +143,12 @@ func main() {
 						Usage:   "Dependency parse level (0=disabled, 1=models, 2=operations, 3=all)",
 					},
 					&cli.StringFlag{
+						Name:    "includeTypes",
+						Aliases: []string{"it"},
+						Value:   "all",
+						Usage:   "Go type categories to include (struct, interface, func, const, type, all) - comma-separated",
+					},
+					&cli.StringFlag{
 						Name:    "codeExampleFilesDir",
 						Aliases: []string{"cef"},
 						Value:   "",
@@ -306,6 +312,12 @@ func main() {
 						Usage:   "Dependency parse level (0=disabled, 1=models, 2=operations, 3=all)",
 					},
 					&cli.StringFlag{
+						Name:    "includeTypes",
+						Aliases: []string{"it"},
+						Value:   "all",
+						Usage:   "Filter types to include (comma-separated: struct,interface,func,const,type,all)",
+					},
+					&cli.StringFlag{
 						Name:    "codeExampleFilesDir",
 						Aliases: []string{"cef"},
 						Value:   "",
@@ -404,6 +416,7 @@ func initAction(c *cli.Context) error {
 	quiet := c.Bool("quiet")
 	validate := c.Bool("validate")
 	parseDependencyLevel := c.Int("parseDependencyLevel")
+	includeTypes := c.String("includeTypes")
 	codeExampleFilesDir := c.String("codeExampleFilesDir")
 	generatedTime := c.Bool("generatedTime")
 	instanceName := c.String("instanceName")
@@ -485,6 +498,7 @@ func initAction(c *cli.Context) error {
 	p.SetParseFuncBody(parseFuncBody)
 	p.SetParseVendor(parseVendor)
 	p.SetParseDependencyLevel(parseDependencyLevel)
+	p.SetIncludeTypes(includeTypes)
 	p.SetCodeExampleFilesDir(codeExampleFilesDir)
 	p.SetGeneratedTime(generatedTime)
 	p.SetInstanceName(instanceName)
