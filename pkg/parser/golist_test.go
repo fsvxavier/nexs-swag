@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -62,5 +64,125 @@ func TestGoListPackageInfo(t *testing.T) {
 
 	if !p.parseGoList {
 		t.Error("parseGoList should be true")
+	}
+}
+
+func TestParsePackageFromGoList(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name          string
+		pkg           *GoListPackage
+		parseInternal bool
+		expectError   bool
+	}{
+		{
+			name: "Valid package with Go files",
+			pkg: &GoListPackage{
+				Dir:     tmpDir,
+				GoFiles: []string{"main.go"},
+				Goroot:  false,
+			},
+			parseInternal: false,
+			expectError:   true, // File doesn't exist, but that's ok for testing the function flow
+		},
+		{
+			name: "Goroot package with parseInternal disabled",
+			pkg: &GoListPackage{
+				Dir:     tmpDir,
+				GoFiles: []string{"main.go"},
+				Goroot:  true,
+			},
+			parseInternal: false,
+			expectError:   false, // Should skip without error
+		},
+		{
+			name: "Goroot package with parseInternal enabled",
+			pkg: &GoListPackage{
+				Dir:     tmpDir,
+				GoFiles: []string{"main.go"},
+				Goroot:  true,
+			},
+			parseInternal: true,
+			expectError:   true, // File doesn't exist
+		},
+		{
+			name: "Package with CGO files",
+			pkg: &GoListPackage{
+				Dir:      tmpDir,
+				CgoFiles: []string{"cgo.go"},
+				Goroot:   false,
+			},
+			parseInternal: false,
+			expectError:   true, // File doesn't exist
+		},
+		{
+			name: "Package with both Go and CGO files",
+			pkg: &GoListPackage{
+				Dir:      tmpDir,
+				GoFiles:  []string{"main.go"},
+				CgoFiles: []string{"cgo.go"},
+				Goroot:   false,
+			},
+			parseInternal: false,
+			expectError:   true, // Files don't exist
+		},
+		{
+			name: "Empty package",
+			pkg: &GoListPackage{
+				Dir:    tmpDir,
+				Goroot: false,
+			},
+			parseInternal: false,
+			expectError:   false, // No files to parse
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New()
+			p.parseInternal = tt.parseInternal
+
+			err := p.parsePackageFromGoList(tt.pkg)
+
+			if tt.expectError && err == nil {
+				t.Error("parsePackageFromGoList() expected error but got nil")
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("parsePackageFromGoList() unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestParsePackageFromGoListWithRealFiles(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	// Create a simple Go file
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package testpkg
+
+// User represents a user
+type User struct {
+	ID   int    ` + "`json:\"id\"`" + `
+	Name string ` + "`json:\"name\"`" + `
+}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	p := New()
+	pkg := &GoListPackage{
+		Dir:     tmpDir,
+		GoFiles: []string{"test.go"},
+		Goroot:  false,
+	}
+
+	err := p.parsePackageFromGoList(pkg)
+	if err != nil {
+		t.Errorf("parsePackageFromGoList() with valid file returned error: %v", err)
 	}
 }

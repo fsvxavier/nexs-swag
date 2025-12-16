@@ -53,6 +53,9 @@ var (
 	failureRegex  = regexp.MustCompile(`^@Failure\s+(\d+)\s+\{(\w+)\}\s+(\S+)(?:\s+"([^"]*)")?`)
 	responseRegex = regexp.MustCompile(`^@Response\s+(\d+)\s+\{(\w+)\}\s+(\S+)(?:\s+"([^"]*)")?`)
 
+	// OpenAPI 3.2.0: Streaming response annotation.
+	streamSuccessRegex = regexp.MustCompile(`^@Success\s+(\d+)\s+\{stream\}\s+(\S+)(?:\s+"([^"]*)")?`)
+
 	// Header annotation.
 	headerRegex = regexp.MustCompile(`^@Header\s+(\d+)\s+\{(\w+)\}\s+(\S+)\s+"([^"]*)"`)
 
@@ -107,6 +110,9 @@ func (o *OperationProcessor) Process(doc *ast.CommentGroup) *openapi.Operation {
 		case successRegex.MatchString(text):
 			o.processResponse(text, successRegex, op)
 
+		case streamSuccessRegex.MatchString(text):
+			o.processStreamResponse(text, op)
+
 		case failureRegex.MatchString(text):
 			o.processResponse(text, failureRegex, op)
 
@@ -124,6 +130,9 @@ func (o *OperationProcessor) Process(doc *ast.CommentGroup) *openapi.Operation {
 
 		case stateRegex.MatchString(text):
 			o.processState(text, op)
+
+		case callbackRegex.MatchString(text):
+			o.processCallback(text, op)
 
 		case xCodeSamplesRegex.MatchString(text):
 			o.processCodeSamples(text, op)
@@ -412,6 +421,40 @@ func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, 
 			Schema: schema,
 		}
 		response.Content = content
+	}
+
+	op.Responses[statusCode] = response
+}
+
+// processStreamResponse processes @Success with {stream} type (OpenAPI 3.2.0).
+// Example: @Success 200 {stream} EventType "SSE stream"
+func (o *OperationProcessor) processStreamResponse(text string, op *openapi.Operation) {
+	matches := streamSuccessRegex.FindStringSubmatch(text)
+	if len(matches) < 3 {
+		return
+	}
+
+	statusCode := matches[1]
+	eventType := matches[2]
+	description := "Streaming response"
+	if len(matches) > 3 && matches[3] != "" {
+		description = matches[3]
+	}
+
+	// Parse the event type to get schema
+	schema := o.parseSchemaType(eventType)
+
+	response := &openapi.Response{
+		Description: description,
+		Content: map[string]*openapi.MediaType{
+			"text/event-stream": {
+				Schema: &openapi.Schema{
+					Type:   "string",
+					Format: "binary",
+				},
+				ItemSchema: schema, // OpenAPI 3.2.0 feature
+			},
+		},
 	}
 
 	op.Responses[statusCode] = response
@@ -730,6 +773,10 @@ func (o *OperationProcessor) parseSchemaType(typeName string) *openapi.Schema {
 	case "file":
 		schema.Type = typeString
 		schema.Format = formatBinary
+	case typeObject:
+		schema.Type = typeObject
+	case typeArray:
+		schema.Type = typeArray
 	default:
 		// Assume it's a reference to a schema
 		schema.Ref = "#/components/schemas/" + typeName
@@ -798,6 +845,65 @@ func (o *OperationProcessor) processCodeSamples(text string, op *openapi.Operati
 	})
 
 	op.Extensions["x-codeSamples"] = samples
+}
+
+// processCallback processes @Callback annotation.
+// Format: @Callback callbackName expression [method]
+// Example: @Callback orderHook {$request.body#/callbackUrl}/orders [post]
+func (o *OperationProcessor) processCallback(text string, op *openapi.Operation) {
+	matches := callbackRegex.FindStringSubmatch(text)
+	if len(matches) < 4 {
+		return
+	}
+
+	callbackName := matches[1]
+	expression := matches[2]
+	method := strings.ToLower(matches[3])
+
+	if op.Callbacks == nil {
+		op.Callbacks = make(map[string]*openapi.Callback)
+	}
+
+	// Get or create callback
+	callback, exists := op.Callbacks[callbackName]
+	if !exists {
+		callback = &openapi.Callback{}
+		op.Callbacks[callbackName] = callback
+	}
+
+	// Get or create PathItem for the expression
+	pathItem, exists := (*callback)[expression]
+	if !exists {
+		pathItem = &openapi.PathItem{}
+		(*callback)[expression] = pathItem
+	}
+
+	// Create a basic operation for the callback
+	callbackOp := &openapi.Operation{
+		Description: "Callback operation",
+		Responses:   make(openapi.Responses),
+	}
+
+	// Add default response
+	callbackOp.Responses["200"] = &openapi.Response{
+		Description: "Callback processed successfully",
+	}
+
+	// Assign operation to appropriate method
+	switch method {
+	case "get":
+		pathItem.Get = callbackOp
+	case "post":
+		pathItem.Post = callbackOp
+	case "put":
+		pathItem.Put = callbackOp
+	case "delete":
+		pathItem.Delete = callbackOp
+	case "patch":
+		pathItem.Patch = callbackOp
+	default:
+		pathItem.Post = callbackOp // Default to POST
+	}
 }
 
 // TransToValidCollectionFormat validates and normalizes collection format.

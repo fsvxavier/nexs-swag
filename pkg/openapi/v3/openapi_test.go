@@ -28,6 +28,188 @@ func TestNewOpenAPI(t *testing.T) {
 	}
 }
 
+func TestOpenAPIGetVersion(t *testing.T) {
+	t.Parallel()
+	api := &OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	version := api.GetVersion()
+	if version != "3.1.0" {
+		t.Errorf("GetVersion() = %v, want 3.1.0", version)
+	}
+}
+
+func TestOpenAPIGetTitle(t *testing.T) {
+	t.Parallel()
+	api := &OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: Info{
+			Title:   "My API",
+			Version: "1.0.0",
+		},
+	}
+
+	title := api.GetTitle()
+	if title != "My API" {
+		t.Errorf("GetTitle() = %v, want 'My API'", title)
+	}
+}
+
+func TestOpenAPIGetInfo(t *testing.T) {
+	t.Parallel()
+	api := &OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: Info{
+			Title:       "Test API",
+			Description: "Test Description",
+			Version:     "2.0.0",
+			Summary:     "API Summary",
+		},
+	}
+
+	info := api.GetInfo()
+	if info == nil {
+		t.Fatal("GetInfo() returned nil")
+	}
+
+	apiInfo, ok := info.(Info)
+	if !ok {
+		t.Fatal("GetInfo() did not return Info type")
+	}
+
+	if apiInfo.Title != "Test API" {
+		t.Errorf("Info.Title = %v, want 'Test API'", apiInfo.Title)
+	}
+
+	if apiInfo.Summary != "API Summary" {
+		t.Errorf("Info.Summary = %v, want 'API Summary'", apiInfo.Summary)
+	}
+}
+
+func TestOpenAPIValidate(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		api     *OpenAPI
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid openapi",
+			api: &OpenAPI{
+				OpenAPI: "3.1.0",
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing openapi version",
+			api: &OpenAPI{
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+			},
+			wantErr: true,
+			errMsg:  "openapi version is required",
+		},
+		{
+			name: "missing title",
+			api: &OpenAPI{
+				OpenAPI: "3.1.0",
+				Info: Info{
+					Version: "1.0.0",
+				},
+			},
+			wantErr: true,
+			errMsg:  "info.title is required",
+		},
+		{
+			name: "missing info version",
+			api: &OpenAPI{
+				OpenAPI: "3.1.0",
+				Info: Info{
+					Title: "Test API",
+				},
+			},
+			wantErr: true,
+			errMsg:  "info.version is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.api.Validate()
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Validate() error = nil, want error containing %q", tt.errMsg)
+					return
+				}
+				if tt.errMsg != "" && !containsString(err.Error(), tt.errMsg) {
+					t.Errorf("Validate() error = %v, want error containing %q", err, tt.errMsg)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Validate() error = %v, want nil", err)
+				}
+			}
+		})
+	}
+}
+
+func TestOpenAPIMarshalJSON(t *testing.T) {
+	t.Parallel()
+	api := &OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Servers: []Server{
+			{
+				URL:         "https://api.example.com",
+				Description: "Production server",
+			},
+		},
+	}
+
+	data, err := api.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON() error = %v", err)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("Unmarshal error = %v", err)
+	}
+
+	if result["openapi"] != "3.1.0" {
+		t.Errorf("openapi field = %v, want '3.1.0'", result["openapi"])
+	}
+}
+
+func containsString(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && findSubstr(s, substr)))
+}
+
+func findSubstr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 func TestInfoFields(t *testing.T) {
 	t.Parallel()
 	info := &Info{

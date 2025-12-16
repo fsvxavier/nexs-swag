@@ -796,6 +796,141 @@ Generated OpenAPI:
 }
 ```
 
+## OpenAPI 3.2.0 Features
+
+nexs-swag provides full support for OpenAPI 3.2.0, the latest version of the specification. Below are practical examples of the new features.
+
+### QUERY HTTP Method
+
+OpenAPI 3.2.0 introduces the `QUERY` HTTP method for safe, cacheable queries with request bodies.
+
+```go
+// QueryProducts searches products with complex filters
+// @Summary      Search products with filters
+// @Description  Performs a complex product search using the QUERY method
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Param        filter  body      ProductFilter  true  "Search filters"
+// @Success      200     {array}   Product        "Products found"
+// @Failure      400     {object}  Error          "Invalid filter"
+// @Router       /products/search [query]
+func QueryProducts(c *gin.Context) {
+    // Implementation
+}
+```
+
+### Security Scheme Deprecated
+
+Mark security schemes as deprecated while maintaining backward compatibility.
+
+```go
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
+// @description Legacy API Key authentication
+
+// @securityDefinitions.ApiKeyAuth.deprecated true
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Preferred: Bearer token authentication
+```
+
+### OAuth2 Metadata URL
+
+Specify OAuth2 metadata discovery URL (RFC 8414).
+
+```go
+// @securityDefinitions.oauth2.application OAuth2App
+// @tokenUrl https://auth.example.com/token
+// @scope.read Read access
+// @scope.write Write access
+
+// @securityDefinitions.OAuth2App.oauth2metadataurl https://auth.example.com/.well-known/oauth-authorization-server
+```
+
+### Device Authorization Flow
+
+Support for OAuth 2.0 Device Authorization Grant (RFC 8628).
+
+```go
+// @securityDefinitions.oauth2.deviceAuthorization DeviceAuth https://auth.example.com/device https://auth.example.com/token
+// @scope.device Device access
+// @scope.profile Profile access
+```
+
+### Streaming Responses
+
+Document Server-Sent Events (SSE) and streaming endpoints.
+
+```go
+// StreamEvents sends real-time events to clients
+// @Summary      Stream real-time events
+// @Description  Establishes an SSE connection for real-time updates
+// @Tags         events
+// @Produce      text/event-stream
+// @Success      200  {stream}  Event  "Event stream"
+// @Failure      401  {object}  Error  "Unauthorized"
+// @Router       /events/stream [get]
+func StreamEvents(c *gin.Context) {
+    // SSE implementation
+}
+```
+
+The `{stream}` type automatically sets:
+- Content-Type: `text/event-stream`
+- Uses `itemSchema` for individual event types
+- Appropriate schema format for streaming
+
+### Webhooks
+
+Define webhook callbacks that your API sends to external systems (OpenAPI 3.1+).
+
+```go
+// @webhook orderCreated
+// @description Webhook sent when a new order is created
+```
+
+### Callbacks
+
+Document callback requests that your API expects from external systems.
+
+```go
+// ProcessPayment processes a payment with callback
+// @Summary      Process payment
+// @Description  Processes payment and calls back the provided URL
+// @Tags         payments
+// @Accept       json
+// @Produce      json
+// @Param        payment  body      Payment  true  "Payment details"
+// @Success      202      {object}  PaymentReceipt
+// @Callback     paymentCallback {$request.body#/callbackUrl}/status [post]
+// @Router       /payments [post]
+func ProcessPayment(c *gin.Context) {
+    // Implementation
+}
+```
+
+### Migration from 3.1.x
+
+When using OpenAPI 3.2.0 features with automatic conversion to Swagger 2.0 or OpenAPI 3.0.x, nexs-swag will:
+
+1. **Generate warnings** for unsupported features
+2. **Convert when possible** (e.g., `deprecated` → `x-deprecated`)
+3. **Preserve data** in vendor extensions when needed
+4. **Maintain compatibility** with older versions
+
+Example warning output:
+```
+WARN: QUERY method not supported in Swagger 2.0 (OpenAPI 3.2.0 feature)
+WARN: SecurityScheme.deprecated converted to x-deprecated extension
+WARN: itemSchema for streaming not supported in OpenAPI 3.0.x
+```
+
+For complete migration details, see [OPENAPI_32_IMPLEMENTATION_STATUS.md](OPENAPI_32_IMPLEMENTATION_STATUS.md).
+
 ## Examples
 
 nexs-swag includes 21 comprehensive, runnable examples. Each example demonstrates specific features and includes a README and run script.
@@ -840,6 +975,8 @@ nexs-swag includes 21 comprehensive, runnable examples. Each example demonstrate
 | [19-parse-func-body](examples/19-parse-func-body) | Function bodies | Parse inline annotations |
 | [20-fmt-command](examples/20-fmt-command) | Format command | Auto-format comments |
 | [21-struct-tags](examples/21-struct-tags) | All struct tags | Complete tag reference |
+| [22-openapi-v2](examples/22-openapi-v2) | OpenAPI versioning | Swagger 2.0 & OpenAPI 3.1.0 |
+| [23-recursive-parsing](examples/23-recursive-parsing) | Recursive parsing | parseInternal, exclude, parseDependency |
 
 ### Running Examples
 

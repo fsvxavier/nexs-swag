@@ -66,6 +66,92 @@ func TestGetOpenAPIWithGeneratedTime(t *testing.T) {
 	}
 }
 
+func TestSetOpenAPIVersion(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		version string
+	}{
+		{
+			name:    "Set version 3.0.0",
+			version: "3.0.0",
+		},
+		{
+			name:    "Set version 3.0.3",
+			version: "3.0.3",
+		},
+		{
+			name:    "Set version 3.1.0",
+			version: "3.1.0",
+		},
+		{
+			name:    "Set version 3.2.0",
+			version: "3.2.0",
+		},
+		{
+			name:    "Set empty version",
+			version: "",
+		},
+		{
+			name:    "Set custom version",
+			version: "3.1.1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := New()
+			p.SetOpenAPIVersion(tt.version)
+			if p.openapiVersion != tt.version {
+				t.Errorf("SetOpenAPIVersion(%q) = %q, want %q", tt.version, p.openapiVersion, tt.version)
+			}
+		})
+	}
+}
+
+func TestGetOpenAPIVersion(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name            string
+		setVersion      string
+		expectedVersion string
+	}{
+		{
+			name:            "Get version 3.0.0",
+			setVersion:      "3.0.0",
+			expectedVersion: "3.0.0",
+		},
+		{
+			name:            "Get version 3.1.0",
+			setVersion:      "3.1.0",
+			expectedVersion: "3.1.0",
+		},
+		{
+			name:            "Get default version (empty)",
+			setVersion:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "Get version 3.2.0",
+			setVersion:      "3.2.0",
+			expectedVersion: "3.2.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := New()
+			p.SetOpenAPIVersion(tt.setVersion)
+			version := p.GetOpenAPIVersion()
+			if version != tt.expectedVersion {
+				t.Errorf("GetOpenAPIVersion() = %q, want %q", version, tt.expectedVersion)
+			}
+		})
+	}
+}
+
 func TestParseFile(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
@@ -2599,6 +2685,225 @@ func QueryUser() {}
 			pathItem := p.openapi.Paths["/users"]
 			if pathItem == nil || pathItem.Query == nil {
 				t.Errorf("QUERY operation not found for method case: %s", tc.method)
+			}
+		})
+	}
+}
+
+func TestValidateOperationSchemaRefs(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		op          *openapi.Operation
+		path        string
+		setupSchema func(*Parser)
+		expectError bool
+	}{
+		{
+			name: "Valid operation with no references",
+			op: &openapi.Operation{
+				Summary: "Test operation",
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+					},
+				},
+			},
+			path:        "/test",
+			setupSchema: nil,
+			expectError: false,
+		},
+		{
+			name: "Valid operation with valid parameter schema ref",
+			op: &openapi.Operation{
+				Parameters: []openapi.Parameter{
+					{
+						Name: "id",
+						In:   "query",
+						Schema: &openapi.Schema{
+							Ref: "#/components/schemas/User",
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
+				},
+			},
+			path: "/users",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["User"] = &openapi.Schema{
+					Type: "object",
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid parameter schema reference",
+			op: &openapi.Operation{
+				Parameters: []openapi.Parameter{
+					{
+						Name: "id",
+						Schema: &openapi.Schema{
+							Ref: "#/components/schemas/NonExistent",
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
+				},
+			},
+			path:        "/test",
+			setupSchema: nil,
+			expectError: true,
+		},
+		{
+			name: "Valid request body with schema ref",
+			op: &openapi.Operation{
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{
+								Ref: "#/components/schemas/CreateUser",
+							},
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"201": &openapi.Response{Description: "Created"},
+				},
+			},
+			path: "/users",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["CreateUser"] = &openapi.Schema{
+					Type: "object",
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid request body schema reference",
+			op: &openapi.Operation{
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{
+								Ref: "#/components/schemas/MissingSchema",
+							},
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"201": &openapi.Response{Description: "Created"},
+				},
+			},
+			path:        "/users",
+			setupSchema: nil,
+			expectError: true,
+		},
+		{
+			name: "Valid response with schema ref",
+			op: &openapi.Operation{
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{
+									Ref: "#/components/schemas/UserResponse",
+								},
+							},
+						},
+					},
+				},
+			},
+			path: "/users",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["UserResponse"] = &openapi.Schema{
+					Type: "object",
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid response schema reference",
+			op: &openapi.Operation{
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{
+									Ref: "#/components/schemas/InvalidResponse",
+								},
+							},
+						},
+					},
+				},
+			},
+			path:        "/users",
+			setupSchema: nil,
+			expectError: true,
+		},
+		{
+			name: "Multiple valid references",
+			op: &openapi.Operation{
+				Parameters: []openapi.Parameter{
+					{
+						Name: "filter",
+						Schema: &openapi.Schema{
+							Ref: "#/components/schemas/Filter",
+						},
+					},
+				},
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{
+								Ref: "#/components/schemas/Input",
+							},
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{
+									Ref: "#/components/schemas/Output",
+								},
+							},
+						},
+					},
+				},
+			},
+			path: "/process",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["Filter"] = &openapi.Schema{Type: "object"}
+				p.openapi.Components.Schemas["Input"] = &openapi.Schema{Type: "object"}
+				p.openapi.Components.Schemas["Output"] = &openapi.Schema{Type: "object"}
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := New()
+
+			if tt.setupSchema != nil {
+				tt.setupSchema(p)
+			}
+
+			err := p.validateOperation(tt.op, tt.path)
+
+			if tt.expectError && err == nil {
+				t.Error("validateOperation() expected error but got nil")
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("validateOperation() unexpected error: %v", err)
 			}
 		})
 	}

@@ -796,6 +796,162 @@ OpenAPI Gerado:
 }
 ```
 
+## Recursos OpenAPI 3.2.0
+
+nexs-swag oferece suporte completo aos recursos do OpenAPI 3.2.0, mantendo total compatibilidade com versões anteriores (OpenAPI 2.0, 3.0.x, 3.1.x).
+
+### Método HTTP QUERY
+
+O OpenAPI 3.2.0 introduz o método HTTP `QUERY` para consultas seguras com corpo de requisição:
+
+```go
+// @Summary      Buscar produtos complexa
+// @Description  Buscar produtos usando parâmetros complexos no corpo da requisição
+// @Tags         produtos
+// @Accept       json
+// @Produce      json
+// @Param        filtros body ProductFilter true "Critérios de busca"
+// @Success      200 {array} Product
+// @Router       /products/query [query]
+func QueryProducts(c *gin.Context) {}
+```
+
+### SecurityScheme Deprecated
+
+Marque esquemas de segurança obsoletos com `@securityDefinitions.*.deprecated`:
+
+```go
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
+// @deprecated true
+// @description ⚠️ Este método de autenticação será descontinuado. Use OAuth2 em vez disso.
+```
+
+Resultado no OpenAPI:
+```yaml
+securitySchemes:
+  ApiKeyAuth:
+    type: apiKey
+    name: X-API-Key
+    in: header
+    deprecated: true
+    description: ⚠️ Este método de autenticação será descontinuado. Use OAuth2 em vez disso.
+```
+
+### OAuth2 Metadata URL
+
+Para descoberta automática de configuração OAuth2 via `@securityDefinitions.*.oauth2metadataurl`:
+
+```go
+// @securityDefinitions.oauth2.application OAuth2Application
+// @tokenUrl https://auth.example.com/token
+// @oauth2metadataurl https://auth.example.com/.well-known/oauth-authorization-server
+```
+
+Resultado no OpenAPI:
+```yaml
+securitySchemes:
+  OAuth2Application:
+    type: oauth2
+    flows:
+      clientCredentials:
+        tokenUrl: https://auth.example.com/token
+    oauth2MetadataUrl: https://auth.example.com/.well-known/oauth-authorization-server
+```
+
+### Device Authorization Flow
+
+Suporte ao OAuth 2.0 Device Authorization Grant (RFC 8628) via `@securityDefinitions.*.deviceAuthorization`:
+
+```go
+// @securityDefinitions.oauth2.deviceAuth OAuth2Device
+// @deviceAuthorization https://auth.example.com/device https://auth.example.com/token device-code
+// @scopes.tv:watch Assistir canais de TV
+// @scopes.tv:record Gravar conteúdo
+```
+
+Resultado no OpenAPI:
+```yaml
+securitySchemes:
+  OAuth2Device:
+    type: oauth2
+    flows:
+      urn:ietf:params:oauth:grant-type:device_code:
+        deviceAuthorizationUrl: https://auth.example.com/device
+        tokenUrl: https://auth.example.com/token
+        scopes:
+          tv:watch: Assistir canais de TV
+          tv:record: Gravar conteúdo
+```
+
+### Respostas de Streaming
+
+Para respostas SSE (Server-Sent Events) ou streaming, use `@Success {stream}`:
+
+```go
+// @Summary      Stream de eventos
+// @Description  Recebe atualizações em tempo real de eventos do sistema
+// @Tags         eventos
+// @Produce      text/event-stream
+// @Success      200 {stream} SystemEvent "Stream de eventos em tempo real"
+// @Router       /events/stream [get]
+func StreamEvents(c *gin.Context) {}
+```
+
+Resultado no OpenAPI:
+```yaml
+responses:
+  '200':
+    description: Stream de eventos em tempo real
+    content:
+      text/event-stream:
+        itemSchema:
+          $ref: '#/components/schemas/SystemEvent'
+```
+
+### Webhooks
+
+Documentar webhooks que sua API envia para clientes via `@webhook`:
+
+```go
+// @webhook      OrderCreated
+// @Description  Webhook enviado quando um novo pedido é criado
+// @Tags         webhooks
+// @Accept       json
+// @Param        order body Order true "Dados do pedido criado"
+// @Success      200 {object} WebhookResponse
+func DocumentOrderWebhook() {}
+```
+
+### Callbacks
+
+Para operações assíncronas com callbacks, use `@Callback`:
+
+```go
+// @Summary      Processar pagamento assíncrono
+// @Description  Inicia processamento de pagamento e chama URL de callback
+// @Tags         pagamentos
+// @Accept       json
+// @Param        payment body PaymentRequest true "Dados do pagamento"
+// @Success      202 {object} PaymentResponse
+// @Callback     paymentStatus {$request.body#/callbackUrl} post PaymentStatusCallback
+// @Router       /payments/async [post]
+func ProcessAsyncPayment(c *gin.Context) {}
+```
+
+### Migração 3.1.x → 3.2.0
+
+nexs-swag detecta automaticamente a versão OpenAPI. Para ativar recursos 3.2.0:
+
+1. **Não requer alterações** - recursos são ativados ao usar as anotações
+2. **Compatível** - anotações antigas continuam funcionando
+3. **Progressivo** - adicione recursos 3.2.0 gradualmente
+
+**Avisos de depreciação** aparecem automaticamente se você usar:
+- `@securityDefinitions.*.deprecated true` - mostra badge de descontinuação
+- Esquemas obsoletos sem migração - sugestão para atualizar
+
 ## Exemplos
 
 nexs-swag inclui 21 exemplos abrangentes e executáveis. Cada exemplo demonstra recursos específicos e inclui um README e script de execução.
@@ -840,6 +996,8 @@ nexs-swag inclui 21 exemplos abrangentes e executáveis. Cada exemplo demonstra 
 | [19-parse-func-body](examples/19-parse-func-body) | Corpos de função | Analisar anotações inline |
 | [20-fmt-command](examples/20-fmt-command) | Comando de formatação | Auto-formatar comentários |
 | [21-struct-tags](examples/21-struct-tags) | Todas as tags de struct | Referência completa de tags |
+| [22-openapi-v2](examples/22-openapi-v2) | Versionamento OpenAPI | Swagger 2.0 & OpenAPI 3.1.0 |
+| [23-recursive-parsing](examples/23-recursive-parsing) | Análise recursiva | parseInternal, exclude, parseDependency |
 
 ### Executando Exemplos
 

@@ -903,3 +903,2513 @@ func TestMultipleOpenAPI32Features(t *testing.T) {
 		t.Errorf("Expected at least 5 warnings, got %d: %v", len(warnings), warnings)
 	}
 }
+
+// TestConvertParameter tests the convertParameter function
+func TestConvertParameter(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		param    *openapi.Parameter
+		expected *swagger.Parameter
+	}{
+		{
+			name:     "nil parameter",
+			param:    nil,
+			expected: nil,
+		},
+		{
+			name: "simple string parameter",
+			param: &openapi.Parameter{
+				Name:        "username",
+				In:          "query",
+				Description: "Username parameter",
+				Required:    true,
+				Schema: &openapi.Schema{
+					Type:   "string",
+					Format: "email",
+				},
+			},
+			expected: &swagger.Parameter{
+				Name:        "username",
+				In:          "query",
+				Description: "Username parameter",
+				Required:    true,
+				Type:        "string",
+				Format:      "email",
+			},
+		},
+		{
+			name: "deprecated parameter",
+			param: &openapi.Parameter{
+				Name:       "oldParam",
+				In:         "header",
+				Deprecated: true,
+				Schema: &openapi.Schema{
+					Type: "string",
+				},
+			},
+			expected: &swagger.Parameter{
+				Name: "oldParam",
+				In:   "header",
+				Type: "string",
+				Extensions: map[string]interface{}{
+					"x-deprecated": true,
+				},
+			},
+		},
+		{
+			name: "integer parameter with constraints",
+			param: &openapi.Parameter{
+				Name:     "limit",
+				In:       "query",
+				Required: false,
+				Schema: &openapi.Schema{
+					Type:    "integer",
+					Format:  "int32",
+					Minimum: 1,
+					Maximum: 100,
+					Default: 10,
+				},
+			},
+			expected: &swagger.Parameter{
+				Name:    "limit",
+				In:      "query",
+				Type:    "integer",
+				Format:  "int32",
+				Default: 10,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertParameter(tt.param)
+
+			if tt.expected == nil {
+				if result != nil {
+					t.Errorf("Expected nil, got %+v", result)
+				}
+				return
+			}
+
+			if result == nil {
+				t.Fatal("Expected parameter, got nil")
+			}
+
+			if result.Name != tt.expected.Name {
+				t.Errorf("Name = %v, want %v", result.Name, tt.expected.Name)
+			}
+
+			if result.In != tt.expected.In {
+				t.Errorf("In = %v, want %v", result.In, tt.expected.In)
+			}
+
+			if result.Type != tt.expected.Type {
+				t.Errorf("Type = %v, want %v", result.Type, tt.expected.Type)
+			}
+
+			if tt.param != nil && tt.param.Deprecated {
+				if result.Extensions == nil {
+					t.Error("Expected Extensions for deprecated parameter")
+				} else if result.Extensions["x-deprecated"] != true {
+					t.Error("Expected x-deprecated extension to be true")
+				}
+			}
+		})
+	}
+}
+
+// TestConvertSchemaToParameter tests schema to parameter conversion
+func TestConvertSchemaToParameter(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		schema *openapi.Schema
+		verify func(*testing.T, *swagger.Parameter)
+	}{
+		{
+			name:   "nil schema",
+			schema: nil,
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.Type != "" {
+					t.Errorf("Expected empty type for nil schema, got %v", p.Type)
+				}
+			},
+		},
+		{
+			name: "string with pattern",
+			schema: &openapi.Schema{
+				Type:    "string",
+				Format:  "email",
+				Pattern: "^[a-z]+@[a-z]+\\.[a-z]+$",
+			},
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.Type != "string" {
+					t.Errorf("Type = %v, want string", p.Type)
+				}
+				if p.Format != "email" {
+					t.Errorf("Format = %v, want email", p.Format)
+				}
+				if p.Pattern != "^[a-z]+@[a-z]+\\.[a-z]+$" {
+					t.Errorf("Pattern = %v, want pattern", p.Pattern)
+				}
+			},
+		},
+		{
+			name: "number with min/max",
+			schema: &openapi.Schema{
+				Type:    "number",
+				Format:  "double",
+				Minimum: 1.0,
+				Maximum: 100.0,
+			},
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.Type != "number" {
+					t.Errorf("Type = %v, want number", p.Type)
+				}
+				if p.Minimum == nil || *p.Minimum != 1.0 {
+					t.Errorf("Minimum = %v, want 1.0", p.Minimum)
+				}
+				if p.Maximum == nil || *p.Maximum != 100.0 {
+					t.Errorf("Maximum = %v, want 100.0", p.Maximum)
+				}
+			},
+		},
+		{
+			name: "string with length constraints",
+			schema: &openapi.Schema{
+				Type:      "string",
+				MinLength: 5,
+				MaxLength: 50,
+			},
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.MinLength == nil || *p.MinLength != 5 {
+					t.Errorf("MinLength = %v, want 5", p.MinLength)
+				}
+				if p.MaxLength == nil || *p.MaxLength != 50 {
+					t.Errorf("MaxLength = %v, want 50", p.MaxLength)
+				}
+			},
+		},
+		{
+			name: "array with items",
+			schema: &openapi.Schema{
+				Type:        "array",
+				MinItems:    1,
+				MaxItems:    10,
+				UniqueItems: true,
+				Items: &openapi.Schema{
+					Type:   "string",
+					Format: "uuid",
+				},
+			},
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.Type != "array" {
+					t.Errorf("Type = %v, want array", p.Type)
+				}
+				if p.MinItems == nil || *p.MinItems != 1 {
+					t.Errorf("MinItems = %v, want 1", p.MinItems)
+				}
+				if p.MaxItems == nil || *p.MaxItems != 10 {
+					t.Errorf("MaxItems = %v, want 10", p.MaxItems)
+				}
+				if !p.UniqueItems {
+					t.Error("UniqueItems should be true")
+				}
+				if p.Items == nil {
+					t.Fatal("Items should not be nil")
+				}
+				if p.Items.Type != "string" {
+					t.Errorf("Items.Type = %v, want string", p.Items.Type)
+				}
+				if p.Items.Format != "uuid" {
+					t.Errorf("Items.Format = %v, want uuid", p.Items.Format)
+				}
+			},
+		},
+		{
+			name: "enum values",
+			schema: &openapi.Schema{
+				Type: "string",
+				Enum: []interface{}{"active", "inactive", "pending"},
+			},
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.Enum == nil || len(p.Enum) != 3 {
+					t.Errorf("Enum = %v, want 3 values", p.Enum)
+				}
+			},
+		},
+		{
+			name: "default value",
+			schema: &openapi.Schema{
+				Type:    "integer",
+				Default: 42,
+			},
+			verify: func(t *testing.T, p *swagger.Parameter) {
+				if p.Default != 42 {
+					t.Errorf("Default = %v, want 42", p.Default)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			param := &swagger.Parameter{}
+			conv.convertSchemaToParameter(tt.schema, param)
+			tt.verify(t, param)
+		})
+	}
+}
+
+// TestConvertSchemaToItems tests schema to items conversion
+func TestConvertSchemaToItems(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		schema   *openapi.Schema
+		expected *swagger.Items
+	}{
+		{
+			name:     "nil schema",
+			schema:   nil,
+			expected: nil,
+		},
+		{
+			name: "simple string items",
+			schema: &openapi.Schema{
+				Type:   "string",
+				Format: "date-time",
+			},
+			expected: &swagger.Items{
+				Type:   "string",
+				Format: "date-time",
+			},
+		},
+		{
+			name: "integer items with default",
+			schema: &openapi.Schema{
+				Type:    "integer",
+				Format:  "int64",
+				Default: 100,
+			},
+			expected: &swagger.Items{
+				Type:    "integer",
+				Format:  "int64",
+				Default: 100,
+			},
+		},
+		{
+			name: "boolean items",
+			schema: &openapi.Schema{
+				Type:    "boolean",
+				Default: true,
+			},
+			expected: &swagger.Items{
+				Type:    "boolean",
+				Default: true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertSchemaToItems(tt.schema)
+
+			if tt.expected == nil {
+				if result != nil {
+					t.Errorf("Expected nil, got %+v", result)
+				}
+				return
+			}
+
+			if result == nil {
+				t.Fatal("Expected items, got nil")
+			}
+
+			if result.Type != tt.expected.Type {
+				t.Errorf("Type = %v, want %v", result.Type, tt.expected.Type)
+			}
+
+			if result.Format != tt.expected.Format {
+				t.Errorf("Format = %v, want %v", result.Format, tt.expected.Format)
+			}
+
+			if result.Default != tt.expected.Default {
+				t.Errorf("Default = %v, want %v", result.Default, tt.expected.Default)
+			}
+		})
+	}
+}
+
+// TestExtractType tests type extraction from various formats
+func TestExtractType(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		typeVal  interface{}
+		expected string
+	}{
+		{
+			name:     "nil type",
+			typeVal:  nil,
+			expected: "",
+		},
+		{
+			name:     "simple string",
+			typeVal:  "string",
+			expected: "string",
+		},
+		{
+			name:     "integer type",
+			typeVal:  "integer",
+			expected: "integer",
+		},
+		{
+			name:     "array type",
+			typeVal:  "array",
+			expected: "array",
+		},
+		{
+			name:     "nullable string (interface slice)",
+			typeVal:  []interface{}{"string", "null"},
+			expected: "string",
+		},
+		{
+			name:     "nullable integer (interface slice)",
+			typeVal:  []interface{}{"integer", "null"},
+			expected: "integer",
+		},
+		{
+			name:     "only null (interface slice)",
+			typeVal:  []interface{}{"null"},
+			expected: "",
+		},
+		{
+			name:     "nullable string (string slice)",
+			typeVal:  []string{"string", "null"},
+			expected: "string",
+		},
+		{
+			name:     "nullable number (string slice)",
+			typeVal:  []string{"number", "null"},
+			expected: "number",
+		},
+		{
+			name:     "multiple types (first non-null)",
+			typeVal:  []interface{}{"null", "string", "integer"},
+			expected: "string",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.extractType(tt.typeVal)
+
+			if result != tt.expected {
+				t.Errorf("extractType(%v) = %v, want %v", tt.typeVal, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestConvertHeader tests header conversion
+func TestConvertHeader(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		header   *openapi.Header
+		expected *swagger.Header
+	}{
+		{
+			name:     "nil header",
+			header:   nil,
+			expected: nil,
+		},
+		{
+			name: "simple string header",
+			header: &openapi.Header{
+				Description: "API version header",
+				Schema: &openapi.Schema{
+					Type:   "string",
+					Format: "version",
+				},
+			},
+			expected: &swagger.Header{
+				Description: "API version header",
+				Type:        "string",
+				Format:      "version",
+			},
+		},
+		{
+			name: "integer header with default",
+			header: &openapi.Header{
+				Description: "Rate limit",
+				Schema: &openapi.Schema{
+					Type:    "integer",
+					Format:  "int64",
+					Default: 1000,
+				},
+			},
+			expected: &swagger.Header{
+				Description: "Rate limit",
+				Type:        "integer",
+				Format:      "int64",
+				Default:     1000,
+			},
+		},
+		{
+			name: "header without schema",
+			header: &openapi.Header{
+				Description: "Custom header",
+			},
+			expected: &swagger.Header{
+				Description: "Custom header",
+			},
+		},
+		{
+			name: "boolean header",
+			header: &openapi.Header{
+				Description: "Feature flag",
+				Schema: &openapi.Schema{
+					Type:    "boolean",
+					Default: false,
+				},
+			},
+			expected: &swagger.Header{
+				Description: "Feature flag",
+				Type:        "boolean",
+				Default:     false,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertHeader(tt.header)
+
+			if tt.expected == nil {
+				if result != nil {
+					t.Errorf("Expected nil, got %+v", result)
+				}
+				return
+			}
+
+			if result == nil {
+				t.Fatal("Expected header, got nil")
+			}
+
+			if result.Description != tt.expected.Description {
+				t.Errorf("Description = %v, want %v", result.Description, tt.expected.Description)
+			}
+
+			if result.Type != tt.expected.Type {
+				t.Errorf("Type = %v, want %v", result.Type, tt.expected.Type)
+			}
+
+			if result.Format != tt.expected.Format {
+				t.Errorf("Format = %v, want %v", result.Format, tt.expected.Format)
+			}
+
+			if result.Default != tt.expected.Default {
+				t.Errorf("Default = %v, want %v", result.Default, tt.expected.Default)
+			}
+		})
+	}
+}
+
+// TestConvertHeaders tests headers conversion
+func TestConvertHeaders(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		headers  map[string]*openapi.Header
+		expected int
+	}{
+		{
+			name:     "nil headers",
+			headers:  nil,
+			expected: 0,
+		},
+		{
+			name:     "empty headers",
+			headers:  map[string]*openapi.Header{},
+			expected: 0,
+		},
+		{
+			name: "single header",
+			headers: map[string]*openapi.Header{
+				"X-RateLimit": {
+					Description: "Rate limit",
+					Schema: &openapi.Schema{
+						Type: "integer",
+					},
+				},
+			},
+			expected: 1,
+		},
+		{
+			name: "multiple headers",
+			headers: map[string]*openapi.Header{
+				"X-RateLimit": {
+					Schema: &openapi.Schema{Type: "integer"},
+				},
+				"X-API-Version": {
+					Schema: &openapi.Schema{Type: "string"},
+				},
+				"X-Request-ID": {
+					Schema: &openapi.Schema{Type: "string", Format: "uuid"},
+				},
+			},
+			expected: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertHeaders(tt.headers)
+
+			if tt.headers == nil {
+				if result != nil {
+					t.Errorf("Expected nil for nil input, got %v", result)
+				}
+				return
+			}
+
+			if len(result) != tt.expected {
+				t.Errorf("Got %d headers, want %d", len(result), tt.expected)
+			}
+
+			for name := range tt.headers {
+				if _, ok := result[name]; !ok {
+					t.Errorf("Header %q not found in result", name)
+				}
+			}
+		})
+	}
+}
+
+// TestConvertExamples tests examples conversion
+func TestConvertExamples(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		content  map[string]*openapi.MediaType
+		expected map[string]interface{}
+	}{
+		{
+			name:     "nil content",
+			content:  nil,
+			expected: nil,
+		},
+		{
+			name:     "empty content",
+			content:  map[string]*openapi.MediaType{},
+			expected: nil,
+		},
+		{
+			name: "single example",
+			content: map[string]*openapi.MediaType{
+				"application/json": {
+					Example: map[string]interface{}{
+						"id":   1,
+						"name": "Test",
+					},
+				},
+			},
+			expected: map[string]interface{}{
+				"application/json": map[string]interface{}{
+					"id":   1,
+					"name": "Test",
+				},
+			},
+		},
+		{
+			name: "multiple examples",
+			content: map[string]*openapi.MediaType{
+				"application/json": {
+					Example: map[string]interface{}{"id": 1},
+				},
+				"application/xml": {
+					Example: "<root><id>1</id></root>",
+				},
+			},
+			expected: map[string]interface{}{
+				"application/json": map[string]interface{}{"id": 1},
+				"application/xml":  "<root><id>1</id></root>",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertExamples(tt.content)
+
+			if tt.expected == nil {
+				if result != nil {
+					t.Errorf("Expected nil, got %v", result)
+				}
+				return
+			}
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("Got %d examples, want %d", len(result), len(tt.expected))
+			}
+
+			for key := range tt.expected {
+				if _, ok := result[key]; !ok {
+					t.Errorf("Example for %q not found", key)
+				}
+			}
+		})
+	}
+}
+
+// TestConvertRefFunctions tests ref conversion functions
+func TestConvertRefToV2(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		ref      string
+		expected string
+	}{
+		{
+			name:     "empty ref",
+			ref:      "",
+			expected: "",
+		},
+		{
+			name:     "v3 schema ref",
+			ref:      "#/components/schemas/User",
+			expected: "#/definitions/User",
+		},
+		{
+			name:     "v3 parameter ref",
+			ref:      "#/components/parameters/limit",
+			expected: "#/parameters/limit",
+		},
+		{
+			name:     "v3 response ref",
+			ref:      "#/components/responses/NotFound",
+			expected: "#/responses/NotFound",
+		},
+		{
+			name:     "already v2 format",
+			ref:      "#/definitions/Product",
+			expected: "#/definitions/Product",
+		},
+		{
+			name:     "external ref",
+			ref:      "common.yaml#/components/schemas/Error",
+			expected: "common.yaml#/definitions/Error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertRefToV2(tt.ref)
+
+			if result != tt.expected {
+				t.Errorf("convertRefToV2(%q) = %q, want %q", tt.ref, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestConvertRefToV3(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		ref      string
+		expected string
+	}{
+		{
+			name:     "empty ref",
+			ref:      "",
+			expected: "",
+		},
+		{
+			name:     "v2 definition ref",
+			ref:      "#/definitions/User",
+			expected: "#/components/schemas/User",
+		},
+		{
+			name:     "v2 parameter ref",
+			ref:      "#/parameters/limit",
+			expected: "#/components/parameters/limit",
+		},
+		{
+			name:     "v2 response ref",
+			ref:      "#/responses/NotFound",
+			expected: "#/components/responses/NotFound",
+		},
+		{
+			name:     "already v3 format",
+			ref:      "#/components/schemas/Product",
+			expected: "#/components/schemas/Product",
+		},
+		{
+			name:     "external ref",
+			ref:      "common.yaml#/definitions/Error",
+			expected: "common.yaml#/components/schemas/Error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertRefToV3(tt.ref)
+
+			if result != tt.expected {
+				t.Errorf("convertRefToV3(%q) = %q, want %q", tt.ref, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestConvertSchemaComplex tests complex schema conversion scenarios
+func TestConvertSchemaComplex(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		schema *openapi.Schema
+		verify func(*testing.T, *swagger.Schema)
+	}{
+		{
+			name: "schema with all numeric constraints",
+			schema: &openapi.Schema{
+				Type:          "number",
+				MultipleOf:    0.5,
+				Minimum:       float64(1.0),
+				Maximum:       float64(100.0),
+				MinLength:     int(5),
+				MaxLength:     int(50),
+				MinItems:      int(1),
+				MaxItems:      int(10),
+				MinProperties: int(2),
+				MaxProperties: int(20),
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if s.MultipleOf == nil || *s.MultipleOf != 0.5 {
+					t.Errorf("MultipleOf = %v, want 0.5", s.MultipleOf)
+				}
+				if s.Minimum == nil || *s.Minimum != 1.0 {
+					t.Errorf("Minimum = %v, want 1.0", s.Minimum)
+				}
+				if s.Maximum == nil || *s.Maximum != 100.0 {
+					t.Errorf("Maximum = %v, want 100.0", s.Maximum)
+				}
+			},
+		},
+		{
+			name: "schema with properties",
+			schema: &openapi.Schema{
+				Type: "object",
+				Properties: map[string]*openapi.Schema{
+					"name": {Type: "string"},
+					"age":  {Type: "integer"},
+				},
+				Required: []string{"name"},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if len(s.Properties) != 2 {
+					t.Errorf("Properties count = %d, want 2", len(s.Properties))
+				}
+				if len(s.Required) != 1 || s.Required[0] != "name" {
+					t.Errorf("Required = %v, want [name]", s.Required)
+				}
+			},
+		},
+		{
+			name: "schema with allOf",
+			schema: &openapi.Schema{
+				AllOf: []openapi.Schema{
+					{Ref: "#/components/schemas/Base"},
+					{Type: "object", Properties: map[string]*openapi.Schema{
+						"extra": {Type: "string"},
+					}},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if len(s.AllOf) != 2 {
+					t.Errorf("AllOf count = %d, want 2", len(s.AllOf))
+				}
+				if s.AllOf[0].Ref != "#/definitions/Base" {
+					t.Errorf("AllOf[0].Ref = %v, want #/definitions/Base", s.AllOf[0].Ref)
+				}
+			},
+		},
+		{
+			name: "schema with items",
+			schema: &openapi.Schema{
+				Type: "array",
+				Items: &openapi.Schema{
+					Type:   "string",
+					Format: "uuid",
+				},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if s.Items == nil {
+					t.Fatal("Items should not be nil")
+				}
+				if s.Items.Type != "string" {
+					t.Errorf("Items.Type = %v, want string", s.Items.Type)
+				}
+			},
+		},
+		{
+			name: "schema with additionalProperties (bool)",
+			schema: &openapi.Schema{
+				Type:                 "object",
+				AdditionalProperties: true,
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if b, ok := s.AdditionalProperties.(bool); !ok || !b {
+					t.Errorf("AdditionalProperties = %v, want true", s.AdditionalProperties)
+				}
+			},
+		},
+		{
+			name: "schema with additionalProperties (schema)",
+			schema: &openapi.Schema{
+				Type: "object",
+				AdditionalProperties: &openapi.Schema{
+					Type: "integer",
+				},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if schema, ok := s.AdditionalProperties.(*swagger.Schema); !ok {
+					t.Error("AdditionalProperties should be a schema")
+				} else if schema.Type != "integer" {
+					t.Errorf("AdditionalProperties.Type = %v, want integer", schema.Type)
+				}
+			},
+		},
+		{
+			name: "nullable schema",
+			schema: &openapi.Schema{
+				Type: []interface{}{"string", "null"},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if s.Type != "string" {
+					t.Errorf("Type = %v, want string", s.Type)
+				}
+				if s.Extensions == nil || s.Extensions["x-nullable"] != true {
+					t.Error("Expected x-nullable extension")
+				}
+			},
+		},
+		{
+			name: "schema with XML",
+			schema: &openapi.Schema{
+				Type: "object",
+				XML: &openapi.XML{
+					Name:      "user",
+					Namespace: "http://example.com",
+					Prefix:    "ex",
+					Attribute: false,
+					Wrapped:   true,
+				},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if s.XML == nil {
+					t.Fatal("XML should not be nil")
+				}
+				if s.XML.Name != "user" {
+					t.Errorf("XML.Name = %v, want user", s.XML.Name)
+				}
+			},
+		},
+		{
+			name: "schema with discriminator",
+			schema: &openapi.Schema{
+				Discriminator: &openapi.Discriminator{
+					PropertyName: "type",
+				},
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if s.Discriminator != "type" {
+					t.Errorf("Discriminator = %v, want type", s.Discriminator)
+				}
+			},
+		},
+		{
+			name: "schema with exclusive maximum/minimum (bool)",
+			schema: &openapi.Schema{
+				Type:             "number",
+				Maximum:          100.0,
+				ExclusiveMaximum: true,
+				Minimum:          0.0,
+				ExclusiveMinimum: true,
+			},
+			verify: func(t *testing.T, s *swagger.Schema) {
+				if !s.ExclusiveMaximum {
+					t.Error("ExclusiveMaximum should be true")
+				}
+				if !s.ExclusiveMinimum {
+					t.Error("ExclusiveMinimum should be true")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertSchema(tt.schema)
+			if result == nil {
+				t.Fatal("Expected schema, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertSecuritySchemeComplex tests complex security scheme conversions
+func TestConvertSecuritySchemeComplex(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		scheme *openapi.SecurityScheme
+		verify func(*testing.T, *swagger.SecurityScheme)
+	}{
+		{
+			name: "http basic auth",
+			scheme: &openapi.SecurityScheme{
+				Type:   "http",
+				Scheme: "basic",
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Type != "basic" {
+					t.Errorf("Type = %v, want basic", s.Type)
+				}
+			},
+		},
+		{
+			name: "http bearer auth",
+			scheme: &openapi.SecurityScheme{
+				Type:   "http",
+				Scheme: "bearer",
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Type != "apiKey" {
+					t.Errorf("Type = %v, want apiKey", s.Type)
+				}
+				if s.In != "header" {
+					t.Errorf("In = %v, want header", s.In)
+				}
+				if s.Name != "Authorization" {
+					t.Errorf("Name = %v, want Authorization", s.Name)
+				}
+			},
+		},
+		{
+			name: "apiKey scheme",
+			scheme: &openapi.SecurityScheme{
+				Type: "apiKey",
+				Name: "X-API-Key",
+				In:   "header",
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Type != "apiKey" {
+					t.Errorf("Type = %v, want apiKey", s.Type)
+				}
+				if s.Name != "X-API-Key" {
+					t.Errorf("Name = %v, want X-API-Key", s.Name)
+				}
+			},
+		},
+		{
+			name: "oauth2 with flows",
+			scheme: &openapi.SecurityScheme{
+				Type: "oauth2",
+				Flows: &openapi.OAuthFlows{
+					Implicit: &openapi.OAuthFlow{
+						AuthorizationURL: "https://example.com/auth",
+						Scopes: map[string]string{
+							"read":  "Read access",
+							"write": "Write access",
+						},
+					},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Type != "oauth2" {
+					t.Errorf("Type = %v, want oauth2", s.Type)
+				}
+				if s.AuthorizationURL != "https://example.com/auth" {
+					t.Errorf("AuthorizationURL = %v", s.AuthorizationURL)
+				}
+				if len(s.Scopes) != 2 {
+					t.Errorf("Scopes count = %d, want 2", len(s.Scopes))
+				}
+			},
+		},
+		{
+			name: "openIdConnect",
+			scheme: &openapi.SecurityScheme{
+				Type:             "openIdConnect",
+				OpenIDConnectURL: "https://example.com/.well-known/openid-configuration",
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				// openIdConnect is converted to oauth2 in Swagger 2.0
+				if s.Type != "oauth2" {
+					t.Errorf("Type = %v, want oauth2", s.Type)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertSecurityScheme(tt.scheme)
+			if result == nil {
+				t.Fatal("Expected security scheme, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertOAuth2FlowsComplex tests OAuth2 flows conversion
+func TestConvertOAuth2FlowsComplex(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		flows  *openapi.OAuthFlows
+		verify func(*testing.T, *swagger.SecurityScheme)
+	}{
+		{
+			name: "implicit flow",
+			flows: &openapi.OAuthFlows{
+				Implicit: &openapi.OAuthFlow{
+					AuthorizationURL: "https://example.com/oauth/authorize",
+					Scopes: map[string]string{
+						"read":  "Read scope",
+						"write": "Write scope",
+					},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Flow != "implicit" {
+					t.Errorf("Flow = %v, want implicit", s.Flow)
+				}
+				if s.AuthorizationURL != "https://example.com/oauth/authorize" {
+					t.Errorf("AuthorizationURL = %v", s.AuthorizationURL)
+				}
+			},
+		},
+		{
+			name: "password flow",
+			flows: &openapi.OAuthFlows{
+				Password: &openapi.OAuthFlow{
+					TokenURL: "https://example.com/oauth/token",
+					Scopes: map[string]string{
+						"admin": "Admin scope",
+					},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Flow != "password" {
+					t.Errorf("Flow = %v, want password", s.Flow)
+				}
+				if s.TokenURL != "https://example.com/oauth/token" {
+					t.Errorf("TokenURL = %v", s.TokenURL)
+				}
+			},
+		},
+		{
+			name: "application (client credentials) flow",
+			flows: &openapi.OAuthFlows{
+				ClientCredentials: &openapi.OAuthFlow{
+					TokenURL: "https://example.com/oauth/token",
+					Scopes: map[string]string{
+						"api": "API access",
+					},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Flow != "application" {
+					t.Errorf("Flow = %v, want application", s.Flow)
+				}
+				if s.TokenURL != "https://example.com/oauth/token" {
+					t.Errorf("TokenURL = %v", s.TokenURL)
+				}
+			},
+		},
+		{
+			name: "authorization code flow",
+			flows: &openapi.OAuthFlows{
+				AuthorizationCode: &openapi.OAuthFlow{
+					AuthorizationURL: "https://example.com/oauth/authorize",
+					TokenURL:         "https://example.com/oauth/token",
+					Scopes: map[string]string{
+						"openid": "OpenID",
+					},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Flow != "accessCode" {
+					t.Errorf("Flow = %v, want accessCode", s.Flow)
+				}
+				if s.AuthorizationURL != "https://example.com/oauth/authorize" {
+					t.Errorf("AuthorizationURL = %v", s.AuthorizationURL)
+				}
+				if s.TokenURL != "https://example.com/oauth/token" {
+					t.Errorf("TokenURL = %v", s.TokenURL)
+				}
+			},
+		},
+		{
+			name: "multiple flows (uses first)",
+			flows: &openapi.OAuthFlows{
+				Implicit: &openapi.OAuthFlow{
+					AuthorizationURL: "https://example.com/auth",
+					Scopes:           map[string]string{"read": "Read"},
+				},
+				Password: &openapi.OAuthFlow{
+					TokenURL: "https://example.com/token",
+					Scopes:   map[string]string{"write": "Write"},
+				},
+			},
+			verify: func(t *testing.T, s *swagger.SecurityScheme) {
+				if s.Flow != "implicit" {
+					t.Errorf("Flow = %v, want implicit (first flow)", s.Flow)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v2Scheme := &swagger.SecurityScheme{Type: "oauth2"}
+			v3Scheme := &openapi.SecurityScheme{Type: "oauth2", Flows: tt.flows}
+			conv.convertOAuth2Flows(v3Scheme, v2Scheme)
+			tt.verify(t, v2Scheme)
+		})
+	}
+}
+
+// TestConvertParametersV2ToV3 tests parameter array conversion
+func TestConvertParametersV2ToV3(t *testing.T) {
+	conv := New()
+
+	params := []*swagger.Parameter{
+		{
+			Name:        "id",
+			In:          "path",
+			Description: "User ID",
+			Required:    true,
+			Type:        "integer",
+		},
+		{
+			Name:        "name",
+			In:          "query",
+			Description: "User name",
+			Type:        "string",
+		},
+	}
+
+	result := conv.convertParametersToV3(params)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 parameters, got %d", len(result))
+	}
+
+	if result[0].Name != "id" {
+		t.Errorf("Parameter[0].Name = %v, want id", result[0].Name)
+	}
+
+	if result[0].Schema == nil {
+		t.Fatal("Parameter[0].Schema should not be nil")
+	}
+
+	if result[0].Schema.Type != "integer" {
+		t.Errorf("Parameter[0].Schema.Type = %v, want integer", result[0].Schema.Type)
+	}
+}
+
+// TestConvertSecurity tests security requirements conversion
+func TestConvertSecurity(t *testing.T) {
+	conv := New()
+
+	security := []openapi.SecurityRequirement{
+		{"api_key": []string{}},
+		{"oauth2": []string{"read", "write"}},
+	}
+
+	result := conv.convertSecurity(security)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 security requirements, got %d", len(result))
+	}
+
+	if _, ok := result[0]["api_key"]; !ok {
+		t.Error("Expected api_key in first requirement")
+	}
+
+	if scopes, ok := result[1]["oauth2"]; !ok {
+		t.Error("Expected oauth2 in second requirement")
+	} else if len(scopes) != 2 {
+		t.Errorf("Expected 2 scopes for oauth2, got %d", len(scopes))
+	}
+}
+
+// TestConvertTags tests tags conversion
+func TestConvertTags(t *testing.T) {
+	conv := New()
+
+	tags := []openapi.Tag{
+		{
+			Name:        "users",
+			Description: "User operations",
+		},
+		{
+			Name:        "products",
+			Description: "Product operations",
+			ExternalDocs: &openapi.ExternalDocs{
+				Description: "External docs",
+				URL:         "https://example.com/docs",
+			},
+		},
+	}
+
+	result := conv.convertTags(tags)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 tags, got %d", len(result))
+	}
+
+	if result[0].Name != "users" {
+		t.Errorf("Tag[0].Name = %v, want users", result[0].Name)
+	}
+
+	if result[1].ExternalDocs == nil {
+		t.Error("Tag[1].ExternalDocs should not be nil")
+	}
+}
+
+// TestConvertBodyParameterToRequestBody tests body parameter to request body conversion
+func TestConvertBodyParameterToRequestBody(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		param    *swagger.Parameter
+		consumes []string
+		verify   func(*testing.T, *openapi.RequestBody)
+	}{
+		{
+			name: "simple body parameter",
+			param: &swagger.Parameter{
+				Name:        "body",
+				In:          "body",
+				Description: "User object",
+				Required:    true,
+				Schema: &swagger.Schema{
+					Type: "object",
+					Properties: map[string]*swagger.Schema{
+						"name": {Type: "string"},
+						"age":  {Type: "integer"},
+					},
+				},
+			},
+			consumes: []string{"application/json"},
+			verify: func(t *testing.T, rb *openapi.RequestBody) {
+				if !rb.Required {
+					t.Error("RequestBody should be required")
+				}
+				if rb.Description != "User object" {
+					t.Errorf("Description = %v, want 'User object'", rb.Description)
+				}
+				if rb.Content == nil {
+					t.Fatal("Content should not be nil")
+				}
+				if _, ok := rb.Content["application/json"]; !ok {
+					t.Error("Expected application/json media type")
+				}
+			},
+		},
+		{
+			name: "body parameter with example",
+			param: &swagger.Parameter{
+				Name:     "body",
+				In:       "body",
+				Required: false,
+				Schema: &swagger.Schema{
+					Type:    "string",
+					Example: "test data",
+				},
+			},
+			consumes: []string{"application/xml"},
+			verify: func(t *testing.T, rb *openapi.RequestBody) {
+				if rb.Required {
+					t.Error("RequestBody should not be required")
+				}
+				if rb.Content == nil {
+					t.Fatal("Content should not be nil")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertBodyParameterToRequestBody(tt.param, tt.consumes)
+			if result == nil {
+				t.Fatal("Expected request body, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertParameterToV3 tests single parameter conversion to V3
+func TestConvertParameterToV3(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		param  *swagger.Parameter
+		verify func(*testing.T, *openapi.Parameter)
+	}{
+		{
+			name: "simple query parameter",
+			param: &swagger.Parameter{
+				Name:        "limit",
+				In:          "query",
+				Description: "Limit results",
+				Required:    false,
+				Type:        "integer",
+				Format:      "int32",
+				Default:     10,
+			},
+			verify: func(t *testing.T, p *openapi.Parameter) {
+				if p.Name != "limit" {
+					t.Errorf("Name = %v, want limit", p.Name)
+				}
+				if p.In != "query" {
+					t.Errorf("In = %v, want query", p.In)
+				}
+				if p.Schema == nil {
+					t.Fatal("Schema should not be nil")
+				}
+				if p.Schema.Type != "integer" {
+					t.Errorf("Schema.Type = %v, want integer", p.Schema.Type)
+				}
+			},
+		},
+		{
+			name: "path parameter",
+			param: &swagger.Parameter{
+				Name:     "id",
+				In:       "path",
+				Required: true,
+				Type:     "string",
+				Format:   "uuid",
+			},
+			verify: func(t *testing.T, p *openapi.Parameter) {
+				if !p.Required {
+					t.Error("Path parameter should be required")
+				}
+				if p.Schema.Format != "uuid" {
+					t.Errorf("Schema.Format = %v, want uuid", p.Schema.Format)
+				}
+			},
+		},
+		{
+			name: "header parameter",
+			param: &swagger.Parameter{
+				Name:        "X-Request-ID",
+				In:          "header",
+				Description: "Request ID",
+				Type:        "string",
+			},
+			verify: func(t *testing.T, p *openapi.Parameter) {
+				if p.In != "header" {
+					t.Errorf("In = %v, want header", p.In)
+				}
+			},
+		},
+		{
+			name: "parameter with enum",
+			param: &swagger.Parameter{
+				Name: "status",
+				In:   "query",
+				Type: "string",
+				Enum: []interface{}{"active", "inactive"},
+			},
+			verify: func(t *testing.T, p *openapi.Parameter) {
+				if len(p.Schema.Enum) != 2 {
+					t.Errorf("Schema.Enum count = %d, want 2", len(p.Schema.Enum))
+				}
+			},
+		},
+		{
+			name: "array parameter",
+			param: &swagger.Parameter{
+				Name:             "tags",
+				In:               "query",
+				Type:             "array",
+				CollectionFormat: "csv",
+				Items: &swagger.Items{
+					Type: "string",
+				},
+			},
+			verify: func(t *testing.T, p *openapi.Parameter) {
+				if p.Schema.Type != "array" {
+					t.Errorf("Schema.Type = %v, want array", p.Schema.Type)
+				}
+				if p.Schema.Items == nil {
+					t.Fatal("Schema.Items should not be nil")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertParameterToV3(tt.param)
+			if result == nil {
+				t.Fatal("Expected parameter, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestIsNullable tests nullable type detection
+func TestIsNullable(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		typ      interface{}
+		expected bool
+	}{
+		{
+			name:     "null type only",
+			typ:      []interface{}{"null"},
+			expected: true,
+		},
+		{
+			name:     "string and null",
+			typ:      []interface{}{"string", "null"},
+			expected: true,
+		},
+		{
+			name:     "integer and null",
+			typ:      []interface{}{"integer", "null"},
+			expected: true,
+		},
+		{
+			name:     "multiple types with null",
+			typ:      []interface{}{"string", "integer", "null"},
+			expected: true,
+		},
+		{
+			name:     "no null type",
+			typ:      []interface{}{"string", "integer"},
+			expected: false,
+		},
+		{
+			name:     "string only",
+			typ:      "string",
+			expected: false,
+		},
+		{
+			name:     "empty array",
+			typ:      []interface{}{},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.isNullable(tt.typ)
+			if result != tt.expected {
+				t.Errorf("isNullable(%v) = %v, want %v", tt.typ, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestConvertParameterDefinitions tests parameter definitions conversion
+func TestConvertParameterDefinitions(t *testing.T) {
+	conv := New()
+
+	defs := map[string]*openapi.Parameter{
+		"limitParam": {
+			Name:        "limit",
+			In:          "query",
+			Description: "Limit results",
+			Schema: &openapi.Schema{
+				Type: "integer",
+			},
+		},
+		"offsetParam": {
+			Name:        "offset",
+			In:          "query",
+			Description: "Offset results",
+			Schema: &openapi.Schema{
+				Type: "integer",
+			},
+		},
+	}
+
+	result := conv.convertParameterDefinitions(defs)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 parameters, got %d", len(result))
+	}
+
+	if _, ok := result["limitParam"]; !ok {
+		t.Error("Expected limitParam in result")
+	}
+
+	if _, ok := result["offsetParam"]; !ok {
+		t.Error("Expected offsetParam in result")
+	}
+}
+
+// TestConvertResponseDefinitions tests response definitions conversion
+func TestConvertResponseDefinitions(t *testing.T) {
+	conv := New()
+
+	defs := map[string]*openapi.Response{
+		"NotFound": {
+			Description: "Resource not found",
+			Content: map[string]*openapi.MediaType{
+				"application/json": {
+					Schema: &openapi.Schema{
+						Type: "object",
+						Properties: map[string]*openapi.Schema{
+							"error": {Type: "string"},
+						},
+					},
+				},
+			},
+		},
+		"Success": {
+			Description: "Success response",
+			Content: map[string]*openapi.MediaType{
+				"application/json": {
+					Schema: &openapi.Schema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	}
+
+	result := conv.convertResponseDefinitions(defs)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 responses, got %d", len(result))
+	}
+
+	if _, ok := result["NotFound"]; !ok {
+		t.Error("Expected NotFound in result")
+	}
+
+	notFound := result["NotFound"]
+	if notFound.Description != "Resource not found" {
+		t.Errorf("NotFound.Description = %v, want 'Resource not found'", notFound.Description)
+	}
+}
+
+// TestSeparateBodyParameter tests body parameter separation
+func TestSeparateBodyParameter(t *testing.T) {
+	conv := New()
+
+	params := []*swagger.Parameter{
+		{Name: "id", In: "path", Type: "string"},
+		{Name: "body", In: "body", Schema: &swagger.Schema{Type: "object"}},
+		{Name: "limit", In: "query", Type: "integer"},
+	}
+
+	nonBody, bodyParam := conv.separateBodyParameter(params)
+
+	if bodyParam == nil {
+		t.Fatal("Expected body parameter, got nil")
+	}
+
+	if bodyParam.Name != "body" {
+		t.Errorf("bodyParam.Name = %v, want body", bodyParam.Name)
+	}
+
+	if len(nonBody) != 2 {
+		t.Errorf("Expected 2 other parameters, got %d", len(nonBody))
+	}
+
+	// Test with no body parameter
+	noBodyParams := []*swagger.Parameter{
+		{Name: "id", In: "path", Type: "string"},
+		{Name: "limit", In: "query", Type: "integer"},
+	}
+
+	nonBody2, bodyParam2 := conv.separateBodyParameter(noBodyParams)
+
+	if bodyParam2 != nil {
+		t.Error("Expected nil body parameter")
+	}
+
+	if len(nonBody2) != 2 {
+		t.Errorf("Expected 2 parameters, got %d", len(nonBody2))
+	}
+}
+
+// TestConvertResponseToV3 tests response conversion to V3
+func TestConvertResponseToV3(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		resp     *swagger.Response
+		produces []string
+		verify   func(*testing.T, *openapi.Response)
+	}{
+		{
+			name: "response with schema",
+			resp: &swagger.Response{
+				Description: "User response",
+				Schema: &swagger.Schema{
+					Type: "object",
+					Properties: map[string]*swagger.Schema{
+						"id":   {Type: "integer"},
+						"name": {Type: "string"},
+					},
+				},
+			},
+			produces: []string{"application/json"},
+			verify: func(t *testing.T, r *openapi.Response) {
+				if r.Description != "User response" {
+					t.Errorf("Description = %v, want 'User response'", r.Description)
+				}
+				if r.Content == nil {
+					t.Fatal("Content should not be nil")
+				}
+				if _, ok := r.Content["application/json"]; !ok {
+					t.Error("Expected application/json media type")
+				}
+			},
+		},
+		{
+			name: "response with headers",
+			resp: &swagger.Response{
+				Description: "Success",
+				Headers: map[string]*swagger.Header{
+					"X-Rate-Limit": {
+						Type:        "integer",
+						Description: "Rate limit",
+					},
+				},
+			},
+			produces: []string{"application/json"},
+			verify: func(t *testing.T, r *openapi.Response) {
+				if r.Headers == nil {
+					t.Fatal("Headers should not be nil")
+				}
+				if _, ok := r.Headers["X-Rate-Limit"]; !ok {
+					t.Error("Expected X-Rate-Limit header")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertResponseToV3(tt.resp, tt.produces)
+			if result == nil {
+				t.Fatal("Expected response, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertHeadersToV3 tests headers conversion to V3
+func TestConvertHeadersToV3(t *testing.T) {
+	conv := New()
+
+	headers := map[string]*swagger.Header{
+		"X-Rate-Limit": {
+			Type:        "integer",
+			Description: "Rate limit remaining",
+			Format:      "int32",
+		},
+		"X-Request-ID": {
+			Type:        "string",
+			Description: "Request identifier",
+			Format:      "uuid",
+		},
+	}
+
+	result := conv.convertHeadersToV3(headers)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 headers, got %d", len(result))
+	}
+
+	if rateLimit, ok := result["X-Rate-Limit"]; !ok {
+		t.Error("Expected X-Rate-Limit header")
+	} else {
+		if rateLimit.Schema == nil {
+			t.Fatal("X-Rate-Limit.Schema should not be nil")
+		}
+		if rateLimit.Schema.Type != "integer" {
+			t.Errorf("X-Rate-Limit.Schema.Type = %v, want integer", rateLimit.Schema.Type)
+		}
+	}
+}
+
+// TestConvertItemsToSchema tests items conversion to schema
+func TestConvertItemsToSchema(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		items  *swagger.Items
+		verify func(*testing.T, *openapi.Schema)
+	}{
+		{
+			name: "simple string items",
+			items: &swagger.Items{
+				Type:   "string",
+				Format: "uuid",
+			},
+			verify: func(t *testing.T, s *openapi.Schema) {
+				if s.Type != "string" {
+					t.Errorf("Type = %v, want string", s.Type)
+				}
+				if s.Format != "uuid" {
+					t.Errorf("Format = %v, want uuid", s.Format)
+				}
+			},
+		},
+		{
+			name: "items with enum",
+			items: &swagger.Items{
+				Type: "string",
+				Enum: []interface{}{"red", "green", "blue"},
+			},
+			verify: func(t *testing.T, s *openapi.Schema) {
+				if len(s.Enum) != 3 {
+					t.Errorf("Enum count = %d, want 3", len(s.Enum))
+				}
+			},
+		},
+		{
+			name: "items with min/max",
+			items: &swagger.Items{
+				Type:      "integer",
+				Minimum:   &[]float64{0.0}[0],
+				Maximum:   &[]float64{100.0}[0],
+				MinLength: &[]int{5}[0],
+				MaxLength: &[]int{50}[0],
+			},
+			verify: func(t *testing.T, s *openapi.Schema) {
+				if s.Minimum != 0 {
+					t.Errorf("Minimum = %v, want 0", s.Minimum)
+				}
+				if s.Maximum != 100 {
+					t.Errorf("Maximum = %v, want 100", s.Maximum)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertItemsToSchema(tt.items)
+			if result == nil {
+				t.Fatal("Expected schema, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertParameterPropertiesToSchema tests parameter properties to schema conversion
+func TestConvertParameterPropertiesToSchema(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		param  *swagger.Parameter
+		verify func(*testing.T, *openapi.Schema)
+	}{
+		{
+			name: "simple type parameter",
+			param: &swagger.Parameter{
+				Type:    "string",
+				Format:  "email",
+				Default: "test@example.com",
+			},
+			verify: func(t *testing.T, s *openapi.Schema) {
+				if s.Type != "string" {
+					t.Errorf("Type = %v, want string", s.Type)
+				}
+				if s.Format != "email" {
+					t.Errorf("Format = %v, want email", s.Format)
+				}
+			},
+		},
+		{
+			name: "array parameter",
+			param: &swagger.Parameter{
+				Type: "array",
+				Items: &swagger.Items{
+					Type: "integer",
+				},
+			},
+			verify: func(t *testing.T, s *openapi.Schema) {
+				if s.Type != "array" {
+					t.Errorf("Type = %v, want array", s.Type)
+				}
+				if s.Items == nil {
+					t.Fatal("Items should not be nil")
+				}
+			},
+		},
+		{
+			name: "parameter with constraints",
+			param: &swagger.Parameter{
+				Type:      "integer",
+				Minimum:   &[]float64{1.0}[0],
+				Maximum:   &[]float64{100.0}[0],
+				MinLength: &[]int{5}[0],
+				MaxLength: &[]int{50}[0],
+			},
+			verify: func(t *testing.T, s *openapi.Schema) {
+				if s.Minimum != 1 {
+					t.Errorf("Minimum = %v, want 1", s.Minimum)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertParameterPropertiesToSchema(tt.param)
+			if result == nil {
+				t.Fatal("Expected schema, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertPathItem tests path item conversion
+func TestConvertPathItem(t *testing.T) {
+	conv := New()
+
+	pathItem := &openapi.PathItem{
+		Summary:     "User operations",
+		Description: "Operations for users",
+		Get: &openapi.Operation{
+			Summary:     "Get user",
+			Description: "Get user by ID",
+			OperationID: "getUser",
+			Responses: openapi.Responses{
+				"200": &openapi.Response{
+					Description: "Success",
+				},
+			},
+		},
+		Post: &openapi.Operation{
+			Summary:     "Create user",
+			Description: "Create new user",
+			OperationID: "createUser",
+		},
+	}
+
+	result := conv.convertPathItem(pathItem)
+
+	if result.Get == nil {
+		t.Error("Expected Get operation")
+	}
+	if result.Post == nil {
+		t.Error("Expected Post operation")
+	}
+}
+
+// TestConvertOperation tests operation conversion
+func TestConvertOperation(t *testing.T) {
+	conv := New()
+
+	op := &openapi.Operation{
+		Summary:     "Get items",
+		Description: "Get all items",
+		OperationID: "getItems",
+		Tags:        []string{"items"},
+		Deprecated:  true,
+		Responses: openapi.Responses{
+			"200": &openapi.Response{
+				Description: "Success",
+				Content: map[string]*openapi.MediaType{
+					"application/json": {
+						Schema: &openapi.Schema{
+							Type: "array",
+						},
+					},
+				},
+			},
+		},
+		Security: []openapi.SecurityRequirement{
+			{"api_key": []string{}},
+		},
+	}
+
+	result := conv.convertOperation(op)
+
+	if result.Summary != "Get items" {
+		t.Errorf("Summary = %v, want 'Get items'", result.Summary)
+	}
+	if !result.Deprecated {
+		t.Error("Operation should be deprecated")
+	}
+}
+
+// TestConvertParameters tests parameters array conversion V3 to V2
+func TestConvertParameters(t *testing.T) {
+	conv := New()
+
+	params := []openapi.Parameter{
+		{
+			Name:        "id",
+			In:          "path",
+			Required:    true,
+			Description: "Item ID",
+			Schema: &openapi.Schema{
+				Type: "string",
+			},
+		},
+		{
+			Name: "filter",
+			In:   "query",
+			Schema: &openapi.Schema{
+				Type: "string",
+			},
+		},
+	}
+
+	result := conv.convertParameters(params)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 parameters, got %d", len(result))
+	}
+	if result[0].Name != "id" {
+		t.Errorf("Parameter[0].Name = %v, want id", result[0].Name)
+	}
+	if result[0].Type != "string" {
+		t.Errorf("Parameter[0].Type = %v, want string", result[0].Type)
+	}
+}
+
+// TestConvertRequestBodyToParameter tests request body to body parameter conversion
+func TestConvertRequestBodyToParameter(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name string
+		rb   *openapi.RequestBody
+		want string
+	}{
+		{
+			name: "JSON request body",
+			rb: &openapi.RequestBody{
+				Description: "User data",
+				Required:    true,
+				Content: map[string]*openapi.MediaType{
+					"application/json": {
+						Schema: &openapi.Schema{
+							Type: "object",
+							Properties: map[string]*openapi.Schema{
+								"name": {Type: "string"},
+							},
+						},
+					},
+				},
+			},
+			want: "body",
+		},
+		{
+			name: "XML request body",
+			rb: &openapi.RequestBody{
+				Description: "XML data",
+				Content: map[string]*openapi.MediaType{
+					"application/xml": {
+						Schema: &openapi.Schema{
+							Type: "string",
+						},
+					},
+				},
+			},
+			want: "body",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertRequestBodyToParameter(tt.rb)
+			if result == nil {
+				t.Fatal("Expected parameter, got nil")
+			}
+			if result.Name != tt.want {
+				t.Errorf("Name = %v, want %v", result.Name, tt.want)
+			}
+			if result.In != "body" {
+				t.Errorf("In = %v, want body", result.In)
+			}
+		})
+	}
+}
+
+// TestConvertExamplesMediaType tests media type examples conversion
+func TestConvertExamplesMediaType(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		examples map[string]*openapi.MediaType
+		expected interface{}
+	}{
+		{
+			name: "single media type with example",
+			examples: map[string]*openapi.MediaType{
+				"application/json": {
+					Example: "test value",
+				},
+			},
+			expected: "test value",
+		},
+		{
+			name: "multiple media types",
+			examples: map[string]*openapi.MediaType{
+				"application/json": {Example: "value1"},
+				"application/xml":  {Example: "value2"},
+			},
+			expected: nil, // First value found
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertExamples(tt.examples)
+			if tt.expected != nil && result == nil {
+				t.Error("Expected example value, got nil")
+			}
+		})
+	}
+}
+
+// TestIsNullableEdgeCases tests edge cases for nullable detection
+func TestIsNullableEdgeCases(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name     string
+		typ      interface{}
+		expected bool
+	}{
+		{
+			name:     "nil type",
+			typ:      nil,
+			expected: false,
+		},
+		{
+			name:     "non-array type",
+			typ:      "string",
+			expected: false,
+		},
+		{
+			name:     "array with numbers",
+			typ:      []interface{}{1, 2, 3},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.isNullable(tt.typ)
+			if result != tt.expected {
+				t.Errorf("isNullable(%v) = %v, want %v", tt.typ, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestConvertInfoToV3 tests info conversion to V3
+func TestConvertInfoToV3(t *testing.T) {
+	conv := New()
+
+	info := &swagger.Info{
+		Title:          "Test API",
+		Description:    "API description",
+		Version:        "1.0.0",
+		TermsOfService: "https://example.com/terms",
+		Contact: &swagger.Contact{
+			Name:  "Support",
+			Email: "support@example.com",
+			URL:   "https://example.com",
+		},
+		License: &swagger.License{
+			Name: "MIT",
+			URL:  "https://opensource.org/licenses/MIT",
+		},
+	}
+
+	result := conv.convertInfoToV3(*info)
+
+	if result.Title != "Test API" {
+		t.Errorf("Title = %v, want 'Test API'", result.Title)
+	}
+	if result.Version != "1.0.0" {
+		t.Errorf("Version = %v, want '1.0.0'", result.Version)
+	}
+	if result.Contact == nil {
+		t.Error("Contact should not be nil")
+	}
+	if result.License == nil {
+		t.Error("License should not be nil")
+	}
+}
+
+// TestConvertPathItemToV3 tests path item conversion to V3
+func TestConvertPathItemToV3(t *testing.T) {
+	conv := New()
+
+	pathItem := &swagger.PathItem{
+		Get: &swagger.Operation{
+			Summary:     "Get user",
+			Description: "Get user by ID",
+			OperationID: "getUser",
+			Produces:    []string{"application/json"},
+			Responses: swagger.Responses{
+				"200": &swagger.Response{
+					Description: "Success",
+				},
+			},
+		},
+		Post: &swagger.Operation{
+			Summary:     "Create user",
+			Description: "Create new user",
+			Consumes:    []string{"application/json"},
+		},
+		Parameters: []*swagger.Parameter{
+			{
+				Name:     "id",
+				In:       "path",
+				Required: true,
+				Type:     "string",
+			},
+		},
+	}
+
+	result := conv.convertPathItemToV3(pathItem)
+
+	if result.Get == nil {
+		t.Error("Expected Get operation")
+	}
+	if result.Post == nil {
+		t.Error("Expected Post operation")
+	}
+	if len(result.Parameters) != 1 {
+		t.Errorf("Expected 1 parameter, got %d", len(result.Parameters))
+	}
+}
+
+// TestConvertParameterDefinitionsToV3 tests parameter definitions conversion to V3
+func TestConvertParameterDefinitionsToV3(t *testing.T) {
+	conv := New()
+
+	defs := map[string]*swagger.Parameter{
+		"limitParam": {
+			Name:     "limit",
+			In:       "query",
+			Type:     "integer",
+			Required: false,
+		},
+		"pageParam": {
+			Name:     "page",
+			In:       "query",
+			Type:     "integer",
+			Required: false,
+		},
+	}
+
+	result := conv.convertParameterDefinitionsToV3(defs)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 parameters, got %d", len(result))
+	}
+	if _, ok := result["limitParam"]; !ok {
+		t.Error("Expected limitParam in result")
+	}
+	if _, ok := result["pageParam"]; !ok {
+		t.Error("Expected pageParam in result")
+	}
+}
+
+// TestConvertResponseDefinitionsToV3 tests response definitions conversion to V3
+func TestConvertResponseDefinitionsToV3(t *testing.T) {
+	conv := New()
+
+	defs := map[string]*swagger.Response{
+		"ErrorResponse": {
+			Description: "Error occurred",
+			Schema: &swagger.Schema{
+				Type: "object",
+				Properties: map[string]*swagger.Schema{
+					"message": {Type: "string"},
+				},
+			},
+		},
+		"SuccessResponse": {
+			Description: "Operation successful",
+		},
+	}
+
+	result := conv.convertResponseDefinitionsToV3(defs)
+
+	if len(result) != 2 {
+		t.Errorf("Expected 2 responses, got %d", len(result))
+	}
+	if _, ok := result["ErrorResponse"]; !ok {
+		t.Error("Expected ErrorResponse in result")
+	}
+}
+
+// TestConvertSecurityDefinitionsToV3 tests security definitions conversion to V3
+func TestConvertSecurityDefinitionsToV3(t *testing.T) {
+	conv := New()
+
+	defs := map[string]*swagger.SecurityScheme{
+		"api_key": {
+			Type: "apiKey",
+			Name: "X-API-Key",
+			In:   "header",
+		},
+		"basic_auth": {
+			Type: "basic",
+		},
+		"oauth": {
+			Type:             "oauth2",
+			Flow:             "implicit",
+			AuthorizationURL: "https://example.com/oauth/authorize",
+			Scopes: map[string]string{
+				"read":  "Read access",
+				"write": "Write access",
+			},
+		},
+	}
+
+	result := conv.convertSecurityDefinitionsToV3(defs)
+
+	if len(result) != 3 {
+		t.Errorf("Expected 3 security schemes, got %d", len(result))
+	}
+	if _, ok := result["api_key"]; !ok {
+		t.Error("Expected api_key in result")
+	}
+	if _, ok := result["basic_auth"]; !ok {
+		t.Error("Expected basic_auth in result")
+	}
+	if _, ok := result["oauth"]; !ok {
+		t.Error("Expected oauth in result")
+	}
+
+	// Verify api_key conversion
+	if result["api_key"].Type != "apiKey" {
+		t.Errorf("api_key type = %v, want apiKey", result["api_key"].Type)
+	}
+
+	// Verify basic_auth conversion
+	if result["basic_auth"].Type != "http" {
+		t.Errorf("basic_auth type = %v, want http", result["basic_auth"].Type)
+	}
+	if result["basic_auth"].Scheme != "basic" {
+		t.Errorf("basic_auth scheme = %v, want basic", result["basic_auth"].Scheme)
+	}
+
+	// Verify oauth conversion
+	if result["oauth"].Type != "oauth2" {
+		t.Errorf("oauth type = %v, want oauth2", result["oauth"].Type)
+	}
+}
+
+// TestConvertSecuritySchemeToV3 tests individual security scheme conversion to V3
+func TestConvertSecuritySchemeToV3(t *testing.T) {
+	conv := New()
+
+	tests := []struct {
+		name   string
+		scheme *swagger.SecurityScheme
+		verify func(*testing.T, *openapi.SecurityScheme)
+	}{
+		{
+			name: "basic auth",
+			scheme: &swagger.SecurityScheme{
+				Type:        "basic",
+				Description: "Basic authentication",
+			},
+			verify: func(t *testing.T, s *openapi.SecurityScheme) {
+				if s.Type != "http" {
+					t.Errorf("Type = %v, want http", s.Type)
+				}
+				if s.Scheme != "basic" {
+					t.Errorf("Scheme = %v, want basic", s.Scheme)
+				}
+			},
+		},
+		{
+			name: "apiKey in header",
+			scheme: &swagger.SecurityScheme{
+				Type: "apiKey",
+				Name: "Authorization",
+				In:   "header",
+			},
+			verify: func(t *testing.T, s *openapi.SecurityScheme) {
+				if s.Type != "apiKey" {
+					t.Errorf("Type = %v, want apiKey", s.Type)
+				}
+				if s.In != "header" {
+					t.Errorf("In = %v, want header", s.In)
+				}
+			},
+		},
+		{
+			name: "oauth2 implicit flow",
+			scheme: &swagger.SecurityScheme{
+				Type:             "oauth2",
+				Flow:             "implicit",
+				AuthorizationURL: "https://example.com/oauth",
+				Scopes: map[string]string{
+					"read": "Read access",
+				},
+			},
+			verify: func(t *testing.T, s *openapi.SecurityScheme) {
+				if s.Type != "oauth2" {
+					t.Errorf("Type = %v, want oauth2", s.Type)
+				}
+				if s.Flows == nil {
+					t.Fatal("Flows should not be nil")
+				}
+				if s.Flows.Implicit == nil {
+					t.Fatal("Implicit flow should not be nil")
+				}
+			},
+		},
+		{
+			name: "oauth2 password flow",
+			scheme: &swagger.SecurityScheme{
+				Type:     "oauth2",
+				Flow:     "password",
+				TokenURL: "https://example.com/token",
+				Scopes: map[string]string{
+					"admin": "Admin access",
+				},
+			},
+			verify: func(t *testing.T, s *openapi.SecurityScheme) {
+				if s.Flows == nil || s.Flows.Password == nil {
+					t.Fatal("Password flow should not be nil")
+				}
+			},
+		},
+		{
+			name: "oauth2 application flow",
+			scheme: &swagger.SecurityScheme{
+				Type:     "oauth2",
+				Flow:     "application",
+				TokenURL: "https://example.com/token",
+				Scopes:   map[string]string{},
+			},
+			verify: func(t *testing.T, s *openapi.SecurityScheme) {
+				if s.Flows == nil || s.Flows.ClientCredentials == nil {
+					t.Fatal("ClientCredentials flow should not be nil")
+				}
+			},
+		},
+		{
+			name: "oauth2 accessCode flow",
+			scheme: &swagger.SecurityScheme{
+				Type:             "oauth2",
+				Flow:             "accessCode",
+				AuthorizationURL: "https://example.com/oauth",
+				TokenURL:         "https://example.com/token",
+				Scopes:           map[string]string{"openid": "OpenID"},
+			},
+			verify: func(t *testing.T, s *openapi.SecurityScheme) {
+				if s.Flows == nil || s.Flows.AuthorizationCode == nil {
+					t.Fatal("AuthorizationCode flow should not be nil")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := conv.convertSecuritySchemeToV3(tt.scheme)
+			if result == nil {
+				t.Fatal("Expected security scheme, got nil")
+			}
+			tt.verify(t, result)
+		})
+	}
+}
+
+// TestConvertOperationToV3 tests operation conversion to V3
+func TestConvertOperationToV3(t *testing.T) {
+	conv := New()
+
+	op := &swagger.Operation{
+		Summary:     "List items",
+		Description: "Get all items",
+		OperationID: "listItems",
+		Tags:        []string{"items"},
+		Deprecated:  false,
+		Consumes:    []string{"application/json"},
+		Produces:    []string{"application/json", "application/xml"},
+		Parameters: []*swagger.Parameter{
+			{
+				Name: "limit",
+				In:   "query",
+				Type: "integer",
+			},
+		},
+		Responses: swagger.Responses{
+			"200": &swagger.Response{
+				Description: "Success",
+				Schema: &swagger.Schema{
+					Type: "array",
+				},
+			},
+		},
+	}
+
+	result := conv.convertOperationToV3(op)
+
+	if result.Summary != "List items" {
+		t.Errorf("Summary = %v, want 'List items'", result.Summary)
+	}
+	if result.OperationID != "listItems" {
+		t.Errorf("OperationID = %v, want 'listItems'", result.OperationID)
+	}
+	if len(result.Parameters) != 1 {
+		t.Errorf("Expected 1 parameter, got %d", len(result.Parameters))
+	}
+	if result.Responses == nil {
+		t.Fatal("Responses should not be nil")
+	}
+}

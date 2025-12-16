@@ -322,19 +322,26 @@ Linha 768:   func TestMultipleOpenAPI32Features(t *testing.T)
 
 ### Melhorias Futuras Sugeridas
 
-1. **Parser Annotations** (baixa prioridade)
-   - [ ] `@securityDefinitions.*.deprecated true`
-   - [ ] `@securityDefinitions.*.oauth2metadataurl <url>`
-   - [ ] `@securityDefinitions.oauth2.deviceAuthorization`
+1. **Parser Annotations** (COMPLETO ✅)
+   - ✅ `@securityDefinitions.*.deprecated true|false`
+   - ✅ `@securityDefinitions.*.oauth2metadataurl <url>`
+   - ✅ `@securityDefinitions.oauth2.deviceAuthorization`
+   - ✅ `@Success 200 {stream} EventType "SSE stream"`
+   - ✅ `@webhook webhookName "description"` (OpenAPI 3.1+)
+   - ✅ `@Callback callbackName expression [method]`
+   - ✅ `@server.description` para atualizar descrição de servidor
 
-2. **Streaming Annotations** (baixa prioridade)
-   - [ ] `@Success 200 {stream} EventType "SSE stream"`
-   - [ ] Documentação de uso de ItemSchema/ItemEncoding
+2. **Documentação** (COMPLETO ✅)
+   - ✅ Exemplos práticos no README.md principal
+   - ✅ Exemplos práticos no README_pt.md (tradução português)
+   - ✅ Exemplos práticos no README_es.md (tradução espanhol)
+   - ✅ Seção dedicada sobre features OpenAPI 3.2.0
+   - ✅ Documentação técnica de ItemSchema/ItemEncoding (STREAMING_TECHNICAL_GUIDE.md)
+   - ✅ Migration guide completo de 3.1.x → 3.2.0 (MIGRATION_GUIDE_3.1_TO_3.2.md)
 
-3. **Documentação** (média prioridade)
-   - [ ] Exemplos de uso no README
-   - [ ] Seção sobre OpenAPI 3.2.0 features
-   - [ ] Migration guide de 3.1.x → 3.2.0
+3. **Exemplos Executáveis** (COMPLETO ✅)
+   - ✅ Exemplo 22-openapi-v2 adicionado nas tabelas dos READMEs
+   - ✅ Exemplo 23-recursive-parsing adicionado nas tabelas dos READMEs
 
 4. **Testes Adicionais** (baixa prioridade)
    - [ ] Testes end-to-end com specs 3.2.0 completas

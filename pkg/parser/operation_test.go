@@ -679,4 +679,530 @@ func TestProcessCodeSamples(t *testing.T) {
 	// Code samples are stored in extensions
 }
 
-// TestTransToValidCollectionFormat removed - already exists in operation_test.go
+// TestStreamResponseAnnotation tests @Success with {stream} type (OpenAPI 3.2.0).
+func TestStreamResponseAnnotation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                 string
+		annotation           string
+		expectedStatusCode   string
+		expectedContentType  string
+		expectedDescription  string
+		shouldHaveItemSchema bool
+	}{
+		{
+			name:                 "basic_stream_response",
+			annotation:           `@Success 200 {stream} EventType "SSE stream"`,
+			expectedStatusCode:   "200",
+			expectedContentType:  "text/event-stream",
+			expectedDescription:  "SSE stream",
+			shouldHaveItemSchema: true,
+		},
+		{
+			name:                 "stream_without_description",
+			annotation:           `@Success 201 {stream} MessageEvent`,
+			expectedStatusCode:   "201",
+			expectedContentType:  "text/event-stream",
+			expectedDescription:  "Streaming response",
+			shouldHaveItemSchema: true,
+		},
+		{
+			name:                 "stream_with_custom_type",
+			annotation:           `@Success 200 {stream} models.StreamData "Real-time data stream"`,
+			expectedStatusCode:   "200",
+			expectedContentType:  "text/event-stream",
+			expectedDescription:  "Real-time data stream",
+			shouldHaveItemSchema: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			p := New()
+			spec := p.openapi
+			oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+			op := &openapi.Operation{
+				Responses: make(openapi.Responses),
+			}
+
+			oproc.processStreamResponse(tt.annotation, op)
+
+			response, exists := op.Responses[tt.expectedStatusCode]
+			if !exists {
+				t.Fatalf("Expected response for status code %s", tt.expectedStatusCode)
+			}
+
+			if response.Description != tt.expectedDescription {
+				t.Errorf("Expected description = %q, got %q", tt.expectedDescription, response.Description)
+			}
+
+			if response.Content == nil {
+				t.Fatal("Expected Content to be non-nil")
+			}
+
+			mediaType, exists := response.Content[tt.expectedContentType]
+			if !exists {
+				t.Fatalf("Expected content type %s", tt.expectedContentType)
+			}
+
+			if tt.shouldHaveItemSchema && mediaType.ItemSchema == nil {
+				t.Error("Expected ItemSchema to be set (OpenAPI 3.2.0 feature)")
+			}
+
+			if mediaType.Schema == nil {
+				t.Fatal("Expected Schema to be non-nil")
+			}
+
+			if mediaType.Schema.Type != "string" {
+				t.Errorf("Expected Schema.Type = string, got %s", mediaType.Schema.Type)
+			}
+
+			if mediaType.Schema.Format != "binary" {
+				t.Errorf("Expected Schema.Format = binary, got %s", mediaType.Schema.Format)
+			}
+		})
+	}
+}
+
+// TestStreamResponseWithComplexTypes tests streaming responses with complex types.
+func TestStreamResponseWithComplexTypes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		annotation   string
+		expectedType string
+	}{
+		{
+			name:         "stream_with_primitive_type",
+			annotation:   `@Success 200 {stream} string "String stream"`,
+			expectedType: "string",
+		},
+		{
+			name:         "stream_with_integer_type",
+			annotation:   `@Success 200 {stream} integer "Number stream"`,
+			expectedType: "integer",
+		},
+		{
+			name:         "stream_with_object_type",
+			annotation:   `@Success 200 {stream} object "JSON stream"`,
+			expectedType: "object",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			p := New()
+			spec := p.openapi
+			oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+			op := &openapi.Operation{
+				Responses: make(openapi.Responses),
+			}
+
+			oproc.processStreamResponse(tt.annotation, op)
+
+			response := op.Responses["200"]
+			if response == nil {
+				t.Fatal("Expected response for 200")
+			}
+
+			mediaType := response.Content["text/event-stream"]
+			if mediaType == nil {
+				t.Fatal("Expected text/event-stream content type")
+			}
+
+			if mediaType.ItemSchema == nil {
+				t.Fatal("Expected ItemSchema to be set")
+			}
+
+			if mediaType.ItemSchema.Type != tt.expectedType {
+				t.Errorf("Expected ItemSchema.Type = %s, got %s", tt.expectedType, mediaType.ItemSchema.Type)
+			}
+		})
+	}
+}
+
+// TestStreamResponseEdgeCases tests edge cases for stream response annotations.
+func TestStreamResponseEdgeCases(t *testing.T) {
+	t.Parallel()
+
+	t.Run("invalid_annotation_format", func(t *testing.T) {
+		t.Parallel()
+
+		p := New()
+		spec := p.openapi
+		oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+		op := &openapi.Operation{
+			Responses: make(openapi.Responses),
+		}
+
+		// Missing event type
+		oproc.processStreamResponse(`@Success 200 {stream}`, op)
+
+		if len(op.Responses) > 0 {
+			t.Error("Expected no response to be created for invalid annotation")
+		}
+	})
+
+	t.Run("multiple_stream_responses", func(t *testing.T) {
+		t.Parallel()
+
+		p := New()
+		spec := p.openapi
+		oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+		op := &openapi.Operation{
+			Responses: make(openapi.Responses),
+		}
+
+		annotations := []string{
+			`@Success 200 {stream} EventType1 "First stream"`,
+			`@Success 201 {stream} EventType2 "Second stream"`,
+			`@Success 206 {stream} EventType3 "Partial stream"`,
+		}
+
+		for _, annotation := range annotations {
+			oproc.processStreamResponse(annotation, op)
+		}
+
+		if len(op.Responses) != 3 {
+			t.Errorf("Expected 3 responses, got %d", len(op.Responses))
+		}
+
+		for code, response := range op.Responses {
+			if response.Content["text/event-stream"] == nil {
+				t.Errorf("Response %s missing text/event-stream content type", code)
+			}
+
+			if response.Content["text/event-stream"].ItemSchema == nil {
+				t.Errorf("Response %s missing ItemSchema", code)
+			}
+		}
+	})
+
+	t.Run("stream_response_with_special_characters", func(t *testing.T) {
+		t.Parallel()
+
+		p := New()
+		spec := p.openapi
+		oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+		op := &openapi.Operation{
+			Responses: make(openapi.Responses),
+		}
+
+		oproc.processStreamResponse(`@Success 200 {stream} EventType "Stream with special chars: <>&"`, op)
+
+		response := op.Responses["200"]
+		if response == nil {
+			t.Fatal("Expected response to exist")
+		}
+
+		expectedDesc := "Stream with special chars: <>&"
+		if response.Description != expectedDesc {
+			t.Errorf("Expected description = %q, got %q", expectedDesc, response.Description)
+		}
+	})
+}
+
+// TestStreamResponseIntegration tests stream response annotation integration with operation processor.
+func TestStreamResponseIntegration(t *testing.T) {
+	t.Parallel()
+
+	t.Run("stream_combined_with_regular_responses", func(t *testing.T) {
+		t.Parallel()
+
+		p := New()
+		spec := p.openapi
+		oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+		op := &openapi.Operation{
+			Responses: make(openapi.Responses),
+		}
+
+		// Add regular response
+		oproc.processResponse(`@Success 200 {object} User "User object"`, successRegex, op)
+
+		// Add stream response (different status code)
+		oproc.processStreamResponse(`@Success 206 {stream} EventType "Partial stream"`, op)
+
+		if len(op.Responses) != 2 {
+			t.Errorf("Expected 2 responses, got %d", len(op.Responses))
+		}
+
+		// Verify regular response
+		regularResp := op.Responses["200"]
+		if regularResp == nil {
+			t.Fatal("Expected regular response for 200")
+		}
+
+		if regularResp.Content["application/json"] == nil {
+			t.Error("Expected application/json content type for regular response")
+		}
+
+		// Verify stream response
+		streamResp := op.Responses["206"]
+		if streamResp == nil {
+			t.Fatal("Expected stream response for 206")
+		}
+
+		if streamResp.Content["text/event-stream"] == nil {
+			t.Error("Expected text/event-stream content type for stream response")
+		}
+
+		if streamResp.Content["text/event-stream"].ItemSchema == nil {
+			t.Error("Expected ItemSchema for stream response")
+		}
+	})
+
+	t.Run("overwrite_stream_response", func(t *testing.T) {
+		t.Parallel()
+
+		p := New()
+		spec := p.openapi
+		oproc := NewOperationProcessor(p, spec, p.typeCache)
+
+		op := &openapi.Operation{
+			Responses: make(openapi.Responses),
+		}
+
+		// Add first stream response
+		oproc.processStreamResponse(`@Success 200 {stream} EventType1 "First"`, op)
+
+		// Overwrite with second stream response
+		oproc.processStreamResponse(`@Success 200 {stream} EventType2 "Second"`, op)
+
+		if len(op.Responses) != 1 {
+			t.Errorf("Expected 1 response, got %d", len(op.Responses))
+		}
+
+		response := op.Responses["200"]
+		if response.Description != "Second" {
+			t.Errorf("Expected second response to overwrite first, got description = %q", response.Description)
+		}
+	})
+}
+
+// TestStreamResponseRegexValidation tests the stream response regex pattern.
+func TestStreamResponseRegexValidation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		text        string
+		shouldMatch bool
+	}{
+		{
+			name:        "valid_with_description",
+			text:        `@Success 200 {stream} EventType "SSE stream"`,
+			shouldMatch: true,
+		},
+		{
+			name:        "valid_without_description",
+			text:        `@Success 200 {stream} EventType`,
+			shouldMatch: true,
+		},
+		{
+			name:        "valid_with_namespace",
+			text:        `@Success 200 {stream} models.EventType "Stream"`,
+			shouldMatch: true,
+		},
+		{
+			name:        "invalid_missing_type",
+			text:        `@Success 200 {stream}`,
+			shouldMatch: false,
+		},
+		{
+			name:        "invalid_wrong_bracket",
+			text:        `@Success 200 {object} EventType "Stream"`,
+			shouldMatch: false,
+		},
+		{
+			name:        "invalid_missing_status",
+			text:        `@Success {stream} EventType`,
+			shouldMatch: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			matched := streamSuccessRegex.MatchString(tt.text)
+			if matched != tt.shouldMatch {
+				t.Errorf("Expected regex match = %v, got %v for text: %q", tt.shouldMatch, matched, tt.text)
+			}
+
+			if matched {
+				matches := streamSuccessRegex.FindStringSubmatch(tt.text)
+				if len(matches) < 3 {
+					t.Errorf("Expected at least 3 match groups, got %d", len(matches))
+				}
+			}
+		})
+	}
+}
+
+func TestProcessCallback(t *testing.T) {
+	t.Parallel()
+	p := New()
+	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
+
+	tests := []struct {
+		name           string
+		text           string
+		expectCallback bool
+		callbackName   string
+		expression     string
+		method         string
+	}{
+		{
+			name:           "callback with post method",
+			text:           "@Callback orderHook {$request.body#/callbackUrl}/orders [post]",
+			expectCallback: true,
+			callbackName:   "orderHook",
+			expression:     "{$request.body#/callbackUrl}/orders",
+			method:         "post",
+		},
+		{
+			name:           "callback with get method",
+			text:           "@Callback statusCheck {$request.body#/statusUrl}/status [get]",
+			expectCallback: true,
+			callbackName:   "statusCheck",
+			expression:     "{$request.body#/statusUrl}/status",
+			method:         "get",
+		},
+		{
+			name:           "callback with put method",
+			text:           "@Callback updateHook {$request.body#/updateUrl}/update [put]",
+			expectCallback: true,
+			callbackName:   "updateHook",
+			expression:     "{$request.body#/updateUrl}/update",
+			method:         "put",
+		},
+		{
+			name:           "callback with delete method",
+			text:           "@Callback deleteHook {$request.body#/deleteUrl}/delete [delete]",
+			expectCallback: true,
+			callbackName:   "deleteHook",
+			expression:     "{$request.body#/deleteUrl}/delete",
+			method:         "delete",
+		},
+		{
+			name:           "callback with patch method",
+			text:           "@Callback patchHook {$request.body#/patchUrl}/patch [patch]",
+			expectCallback: true,
+			callbackName:   "patchHook",
+			expression:     "{$request.body#/patchUrl}/patch",
+			method:         "patch",
+		},
+		{
+			name:           "callback with invalid method defaults to post",
+			text:           "@Callback defaultHook {$request.body#/url}/endpoint [options]",
+			expectCallback: true,
+			callbackName:   "defaultHook",
+			expression:     "{$request.body#/url}/endpoint",
+			method:         "post", // should default to post
+		},
+		{
+			name:           "invalid callback format - missing parts",
+			text:           "@Callback incomplete",
+			expectCallback: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			op := &openapi.Operation{}
+			proc.processCallback(tt.text, op)
+
+			if tt.expectCallback {
+				if op.Callbacks == nil {
+					t.Fatal("Expected Callbacks to be initialized")
+				}
+
+				callback, exists := op.Callbacks[tt.callbackName]
+				if !exists {
+					t.Fatalf("Expected callback '%s' to exist", tt.callbackName)
+				}
+
+				pathItem, exists := (*callback)[tt.expression]
+				if !exists {
+					t.Fatalf("Expected expression '%s' to exist in callback", tt.expression)
+				}
+
+				// Check if the correct method operation was created
+				var createdOp *openapi.Operation
+				switch tt.method {
+				case "get":
+					createdOp = pathItem.Get
+				case "post":
+					createdOp = pathItem.Post
+				case "put":
+					createdOp = pathItem.Put
+				case "delete":
+					createdOp = pathItem.Delete
+				case "patch":
+					createdOp = pathItem.Patch
+				}
+
+				if createdOp == nil {
+					t.Fatalf("Expected operation for method '%s' to be created", tt.method)
+				}
+
+				if createdOp.Description != "Callback operation" {
+					t.Errorf("Expected description 'Callback operation', got '%s'", createdOp.Description)
+				}
+
+				if _, exists := createdOp.Responses["200"]; !exists {
+					t.Error("Expected 200 response to exist")
+				}
+			} else {
+				if op.Callbacks != nil && len(op.Callbacks) > 0 {
+					t.Error("Expected no callbacks to be created for invalid format")
+				}
+			}
+		})
+	}
+}
+
+func TestProcessCallbackMultiple(t *testing.T) {
+	t.Parallel()
+	p := New()
+	proc := NewOperationProcessor(p, p.openapi, p.typeCache)
+
+	op := &openapi.Operation{}
+
+	// Process multiple callbacks
+	proc.processCallback("@Callback hook1 {$request.body#/url1}/path1 [post]", op)
+	proc.processCallback("@Callback hook2 {$request.body#/url2}/path2 [get]", op)
+	proc.processCallback("@Callback hook1 {$request.body#/url3}/path3 [put]", op) // Same callback name, different expression
+
+	if len(op.Callbacks) != 2 {
+		t.Errorf("Expected 2 callbacks, got %d", len(op.Callbacks))
+	}
+
+	// Check hook1 has 2 expressions
+	hook1 := op.Callbacks["hook1"]
+	if len(*hook1) != 2 {
+		t.Errorf("Expected hook1 to have 2 expressions, got %d", len(*hook1))
+	}
+
+	// Check hook2 has 1 expression
+	hook2 := op.Callbacks["hook2"]
+	if len(*hook2) != 1 {
+		t.Errorf("Expected hook2 to have 1 expression, got %d", len(*hook2))
+	}
+}

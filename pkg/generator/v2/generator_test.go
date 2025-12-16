@@ -454,3 +454,401 @@ func TestGenerateComplexSpec(t *testing.T) {
 		t.Error("JSON output missing paths information")
 	}
 }
+
+func TestGenerateUnsupportedFormat(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"xml"})
+	err := gen.Generate()
+	if err == nil {
+		t.Fatal("Generate() with unsupported format should return error")
+	}
+
+	expectedMsg := "unsupported output format: xml"
+	if !strings.Contains(err.Error(), expectedMsg) {
+		t.Errorf("Error message = %q, want to contain %q", err.Error(), expectedMsg)
+	}
+}
+
+func TestGenerateInvalidOutputDirectory(t *testing.T) {
+	t.Parallel()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	// Use a path that cannot be created (file exists with same name)
+	tmpDir := t.TempDir()
+	blockingFile := filepath.Join(tmpDir, "blocked")
+	if err := os.WriteFile(blockingFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create blocking file: %v", err)
+	}
+
+	gen := New(spec, blockingFile, []string{"json"})
+	err := gen.Generate()
+	if err == nil {
+		t.Fatal("Generate() with invalid output directory should return error")
+	}
+
+	if !strings.Contains(err.Error(), "failed to create output directory") {
+		t.Errorf("Error message = %q, want to contain 'failed to create output directory'", err.Error())
+	}
+}
+
+func TestGenerateJSONWriteError(t *testing.T) {
+	t.Parallel()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	// Create a directory with read-only permissions
+	tmpDir := t.TempDir()
+	readOnlyDir := filepath.Join(tmpDir, "readonly")
+	if err := os.Mkdir(readOnlyDir, 0444); err != nil {
+		t.Fatalf("Failed to create readonly directory: %v", err)
+	}
+	defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+
+	gen := New(spec, readOnlyDir, []string{"json"})
+	err := gen.Generate()
+	if err == nil {
+		t.Fatal("Generate() with readonly output directory should return error")
+	}
+
+	if !strings.Contains(err.Error(), "failed to write JSON file") {
+		t.Errorf("Error message = %q, want to contain 'failed to write JSON file'", err.Error())
+	}
+}
+
+func TestGenerateYAMLWriteError(t *testing.T) {
+	t.Parallel()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	// Create a directory with read-only permissions
+	tmpDir := t.TempDir()
+	readOnlyDir := filepath.Join(tmpDir, "readonly")
+	if err := os.Mkdir(readOnlyDir, 0444); err != nil {
+		t.Fatalf("Failed to create readonly directory: %v", err)
+	}
+	defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+
+	gen := New(spec, readOnlyDir, []string{"yaml"})
+	err := gen.Generate()
+	if err == nil {
+		t.Fatal("Generate() with readonly output directory should return error")
+	}
+
+	if !strings.Contains(err.Error(), "failed to write YAML file") {
+		t.Errorf("Error message = %q, want to contain 'failed to write YAML file'", err.Error())
+	}
+}
+
+func TestGenerateGoFileCreationError(t *testing.T) {
+	t.Parallel()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	// Create a directory with read-only permissions
+	tmpDir := t.TempDir()
+	readOnlyDir := filepath.Join(tmpDir, "readonly")
+	if err := os.Mkdir(readOnlyDir, 0444); err != nil {
+		t.Fatalf("Failed to create readonly directory: %v", err)
+	}
+	defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+
+	gen := New(spec, readOnlyDir, []string{"go"})
+	err := gen.Generate()
+	if err == nil {
+		t.Fatal("Generate() with readonly output directory should return error")
+	}
+
+	if !strings.Contains(err.Error(), "failed to create file") {
+		t.Errorf("Error message = %q, want to contain 'failed to create file'", err.Error())
+	}
+}
+
+func TestGenerateYMLExtension(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"yml"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() with 'yml' extension failed: %v", err)
+	}
+
+	// Verify YAML file was created
+	yamlPath := filepath.Join(tmpDir, "swagger.yaml")
+	if _, err := os.Stat(yamlPath); os.IsNotExist(err) {
+		t.Error("Expected swagger.yaml to be created with 'yml' output type")
+	}
+}
+
+func TestGenerateWithCustomInstanceName(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"go"})
+	gen.SetInstanceName("customdocs")
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() with custom instance name failed: %v", err)
+	}
+
+	// Read generated Go file
+	data, err := os.ReadFile(filepath.Join(tmpDir, "docs.go"))
+	if err != nil {
+		t.Fatalf("Failed to read generated file: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "package customdocs") {
+		t.Error("Generated Go file should contain 'package customdocs'")
+	}
+	if !strings.Contains(content, "Package customdocs") {
+		t.Error("Generated Go file should contain package comment with custom name")
+	}
+}
+
+func TestGenerateGoWithGeneratedTimeEnabled(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"go"})
+	gen.SetGeneratedTime(true)
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() with generatedTime enabled failed: %v", err)
+	}
+
+	// Read generated Go file
+	data, err := os.ReadFile(filepath.Join(tmpDir, "docs.go"))
+	if err != nil {
+		t.Fatalf("Failed to read generated file: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "Generated at:") {
+		t.Error("Generated Go file should contain 'Generated at:' timestamp when generatedTime is enabled")
+	}
+}
+
+func TestGenerateMultipleFormats(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"json", "yaml", "go"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() with multiple formats failed: %v", err)
+	}
+
+	// Verify all files created
+	expectedFiles := []string{"swagger.json", "swagger.yaml", "docs.go"}
+	for _, file := range expectedFiles {
+		filePath := filepath.Join(tmpDir, file)
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			t.Errorf("Expected file not created: %s", file)
+		}
+	}
+}
+
+func TestGenerateGoReadDocFunction(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"go"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	// Read generated Go file
+	data, err := os.ReadFile(filepath.Join(tmpDir, "docs.go"))
+	if err != nil {
+		t.Fatalf("Failed to read generated file: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "func ReadDoc() string {") {
+		t.Error("Generated Go file should contain ReadDoc function")
+	}
+	if !strings.Contains(content, "return SwaggerDoc") {
+		t.Error("ReadDoc function should return SwaggerDoc")
+	}
+}
+
+func TestGenerateFormatCaseInsensitive(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+	}
+
+	// Test with uppercase and mixed case formats
+	gen := New(spec, tmpDir, []string{"JSON", "YaML", "Go"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() with mixed case formats failed: %v", err)
+	}
+
+	// Verify all files created
+	expectedFiles := []string{"swagger.json", "swagger.yaml", "docs.go"}
+	for _, file := range expectedFiles {
+		filePath := filepath.Join(tmpDir, file)
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			t.Errorf("Expected file not created: %s", file)
+		}
+	}
+}
+
+func TestGenerateJSONIndentation(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Test API",
+			Version: "1.0.0",
+		},
+		Paths: map[string]*swagger.PathItem{
+			"/test": {
+				Get: &swagger.Operation{
+					Summary: "Test endpoint",
+				},
+			},
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"json"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	// Read generated JSON file
+	data, err := os.ReadFile(filepath.Join(tmpDir, "swagger.json"))
+	if err != nil {
+		t.Fatalf("Failed to read generated file: %v", err)
+	}
+
+	content := string(data)
+	// Check for proper indentation (2 spaces)
+	if !strings.Contains(content, "  \"swagger\"") {
+		t.Error("JSON should be indented with 2 spaces")
+	}
+}
+
+func TestGenerateYAMLStructure(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:       "Test API",
+			Version:     "1.0.0",
+			Description: "Test description",
+		},
+		Host:     "api.example.com",
+		BasePath: "/v1",
+		Schemes:  []string{"https"},
+	}
+
+	gen := New(spec, tmpDir, []string{"yaml"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	// Read and parse YAML
+	data, err := os.ReadFile(filepath.Join(tmpDir, "swagger.yaml"))
+	if err != nil {
+		t.Fatalf("Failed to read generated file: %v", err)
+	}
+
+	var result swagger.Swagger
+	if err := yaml.Unmarshal(data, &result); err != nil {
+		t.Fatalf("Failed to unmarshal YAML: %v", err)
+	}
+
+	// Verify structure
+	if result.Host != "api.example.com" {
+		t.Errorf("Host = %q, want 'api.example.com'", result.Host)
+	}
+	if result.BasePath != "/v1" {
+		t.Errorf("BasePath = %q, want '/v1'", result.BasePath)
+	}
+	if len(result.Schemes) != 1 || result.Schemes[0] != "https" {
+		t.Errorf("Schemes = %v, want [https]", result.Schemes)
+	}
+}

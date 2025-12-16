@@ -580,3 +580,108 @@ func TestParseDependenciesNoGoMod(t *testing.T) {
 		t.Errorf("parseDependencies() should not error when go.mod is missing, got: %v", err)
 	}
 }
+
+func TestFindModuleInCache(t *testing.T) {
+	t.Parallel()
+	p := New()
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name           string
+		modulePath     string
+		setupFunc      func(string) string
+		expectedExists bool
+	}{
+		{
+			name:       "Module with uppercase letters",
+			modulePath: "github.com/User/Repo",
+			setupFunc: func(cacheDir string) string {
+				// Create escaped path: github.com/!user/!repo/v1.0.0
+				modDir := filepath.Join(cacheDir, "github.com", "!user", "!repo", "v1.0.0")
+				os.MkdirAll(modDir, 0755)
+				// Create go.mod to make it valid
+				os.WriteFile(filepath.Join(modDir, "go.mod"), []byte("module github.com/User/Repo\n"), 0644)
+				return modDir
+			},
+			expectedExists: true,
+		},
+		{
+			name:       "Module with all lowercase",
+			modulePath: "github.com/user/repo",
+			setupFunc: func(cacheDir string) string {
+				modDir := filepath.Join(cacheDir, "github.com", "user", "repo", "v1.2.3")
+				os.MkdirAll(modDir, 0755)
+				os.WriteFile(filepath.Join(modDir, "go.mod"), []byte("module github.com/user/repo\n"), 0644)
+				return modDir
+			},
+			expectedExists: true,
+		},
+		{
+			name:       "Module not in cache",
+			modulePath: "github.com/nonexistent/module",
+			setupFunc: func(cacheDir string) string {
+				return ""
+			},
+			expectedExists: false,
+		},
+		{
+			name:       "Module without version subdirectory",
+			modulePath: "example.com/simple",
+			setupFunc: func(cacheDir string) string {
+				modDir := filepath.Join(cacheDir, "example.com", "simple")
+				os.MkdirAll(modDir, 0755)
+				os.WriteFile(filepath.Join(modDir, "go.mod"), []byte("module example.com/simple\n"), 0644)
+				return modDir
+			},
+			expectedExists: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cacheDir := filepath.Join(tmpDir, tt.name)
+			os.MkdirAll(cacheDir, 0755)
+
+			expectedPath := tt.setupFunc(cacheDir)
+			result := p.findModuleInCache(cacheDir, tt.modulePath)
+
+			if tt.expectedExists {
+				if result == "" {
+					t.Errorf("findModuleInCache() returned empty string, expected to find module at %s", expectedPath)
+				}
+			} else {
+				if result != "" {
+					t.Errorf("findModuleInCache() = %q, expected empty string", result)
+				}
+			}
+		})
+	}
+}
+
+func TestFindModuleInCacheEscaping(t *testing.T) {
+	t.Parallel()
+	p := New()
+	tmpDir := t.TempDir()
+
+	// Test uppercase letter escaping
+	modulePath := "github.com/MyOrg/MyRepo"
+
+	// Create directory with escaped uppercase
+	escapedPath := filepath.Join(tmpDir, "github.com", "!my!org", "!my!repo", "v1.0.0")
+	if err := os.MkdirAll(escapedPath, 0755); err != nil {
+		t.Fatalf("Failed to create test directory: %v", err)
+	}
+
+	// Create go.mod to make it valid
+	if err := os.WriteFile(filepath.Join(escapedPath, "go.mod"), []byte("module github.com/MyOrg/MyRepo\n"), 0644); err != nil {
+		t.Fatalf("Failed to create go.mod: %v", err)
+	}
+
+	result := p.findModuleInCache(tmpDir, modulePath)
+	if result == "" {
+		t.Error("findModuleInCache() should find module with escaped uppercase letters")
+	}
+	if result != escapedPath {
+		t.Errorf("findModuleInCache() = %q, want %q", result, escapedPath)
+	}
+}
