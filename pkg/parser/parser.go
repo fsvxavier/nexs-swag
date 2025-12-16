@@ -356,6 +356,9 @@ func (p *Parser) parseOperations(file *ast.File) error {
 			pathItem.Head = op
 		case "trace":
 			pathItem.Trace = op
+		case "query":
+			// QUERY method is new in OpenAPI 3.2.0
+			pathItem.Query = op
 		}
 
 		return true
@@ -432,6 +435,7 @@ func (p *Parser) Validate() error {
 		operations := []*openapi.Operation{
 			pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Delete,
 			pathItem.Patch, pathItem.Options, pathItem.Head, pathItem.Trace,
+			pathItem.Query, // QUERY method (OpenAPI 3.2.0)
 		}
 
 		for _, op := range operations {

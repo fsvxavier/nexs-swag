@@ -112,6 +112,165 @@ func TestInfoFields(t *testing.T) {
 	}
 }
 
+func TestSwaggerValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		swagger *Swagger
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "valid swagger",
+			swagger: &Swagger{
+				Swagger: "2.0",
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+				Paths: make(Paths),
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid swagger version",
+			swagger: &Swagger{
+				Swagger: "3.0",
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+				Paths: make(Paths),
+			},
+			wantErr: true,
+			errMsg:  "invalid swagger version",
+		},
+		{
+			name: "missing title",
+			swagger: &Swagger{
+				Swagger: "2.0",
+				Info: Info{
+					Version: "1.0.0",
+				},
+				Paths: make(Paths),
+			},
+			wantErr: true,
+			errMsg:  "info.title is required",
+		},
+		{
+			name: "missing version",
+			swagger: &Swagger{
+				Swagger: "2.0",
+				Info: Info{
+					Title: "Test API",
+				},
+				Paths: make(Paths),
+			},
+			wantErr: true,
+			errMsg:  "info.version is required",
+		},
+		{
+			name: "missing paths",
+			swagger: &Swagger{
+				Swagger: "2.0",
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+			},
+			wantErr: true,
+			errMsg:  "paths is required",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.swagger.Validate()
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Validate() error = nil, want error containing %q", tt.errMsg)
+					return
+				}
+				if tt.errMsg != "" && !contains(err.Error(), tt.errMsg) {
+					t.Errorf("Validate() error = %v, want error containing %q", err, tt.errMsg)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Validate() error = %v, want nil", err)
+				}
+			}
+		})
+	}
+}
+
+func TestSwaggerMarshalJSON(t *testing.T) {
+	tests := []struct {
+		name    string
+		swagger *Swagger
+		wantKey string
+	}{
+		{
+			name: "swagger without extensions",
+			swagger: &Swagger{
+				Swagger: "2.0",
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+			},
+			wantKey: "swagger",
+		},
+		{
+			name: "swagger with extensions",
+			swagger: &Swagger{
+				Swagger: "2.0",
+				Info: Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+				Extensions: map[string]interface{}{
+					"x-custom": "value",
+					"x-logo": map[string]string{
+						"url": "https://example.com/logo.png",
+					},
+				},
+			},
+			wantKey: "x-custom",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := tt.swagger.MarshalJSON()
+			if err != nil {
+				t.Fatalf("MarshalJSON() error = %v", err)
+			}
+
+			var result map[string]interface{}
+			if err := json.Unmarshal(data, &result); err != nil {
+				t.Fatalf("Unmarshal error = %v", err)
+			}
+
+			if _, ok := result[tt.wantKey]; !ok {
+				t.Errorf("MarshalJSON() missing key %q", tt.wantKey)
+			}
+		})
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && findSubstring(s, substr)))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 func TestPathItem(t *testing.T) {
 	pathItem := &PathItem{
 		Get: &Operation{

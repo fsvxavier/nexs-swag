@@ -66,6 +66,92 @@ func TestGetOpenAPIWithGeneratedTime(t *testing.T) {
 	}
 }
 
+func TestSetOpenAPIVersion(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		version string
+	}{
+		{
+			name:    "Set version 3.0.0",
+			version: "3.0.0",
+		},
+		{
+			name:    "Set version 3.0.3",
+			version: "3.0.3",
+		},
+		{
+			name:    "Set version 3.1.0",
+			version: "3.1.0",
+		},
+		{
+			name:    "Set version 3.2.0",
+			version: "3.2.0",
+		},
+		{
+			name:    "Set empty version",
+			version: "",
+		},
+		{
+			name:    "Set custom version",
+			version: "3.1.1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := New()
+			p.SetOpenAPIVersion(tt.version)
+			if p.openapiVersion != tt.version {
+				t.Errorf("SetOpenAPIVersion(%q) = %q, want %q", tt.version, p.openapiVersion, tt.version)
+			}
+		})
+	}
+}
+
+func TestGetOpenAPIVersion(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name            string
+		setVersion      string
+		expectedVersion string
+	}{
+		{
+			name:            "Get version 3.0.0",
+			setVersion:      "3.0.0",
+			expectedVersion: "3.0.0",
+		},
+		{
+			name:            "Get version 3.1.0",
+			setVersion:      "3.1.0",
+			expectedVersion: "3.1.0",
+		},
+		{
+			name:            "Get default version (empty)",
+			setVersion:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "Get version 3.2.0",
+			setVersion:      "3.2.0",
+			expectedVersion: "3.2.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := New()
+			p.SetOpenAPIVersion(tt.setVersion)
+			version := p.GetOpenAPIVersion()
+			if version != tt.expectedVersion {
+				t.Errorf("GetOpenAPIVersion() = %q, want %q", version, tt.expectedVersion)
+			}
+		})
+	}
+}
+
 func TestParseFile(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
@@ -2365,5 +2451,460 @@ type Model3 struct {
 				}
 			}
 		}
+	}
+}
+
+// TestQueryMethod tests support for QUERY HTTP method (OpenAPI 3.2.0)
+func TestQueryMethod(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package main
+
+// @title Test API
+// @version 1.0
+
+// QueryUser searches users
+// @Summary Query user
+// @Description Query user by criteria
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param filter query string false "Filter criteria"
+// @Success 200 {array} string
+// @Router /users [query]
+func QueryUser() {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	p := New()
+	p.SetGeneralInfoFile(testFile)
+
+	if err := p.ParseFile(testFile); err != nil {
+		t.Fatalf("ParseFile() error: %v", err)
+	}
+
+	if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+		t.Fatalf("parseGeneralInfo() error: %v", err)
+	}
+
+	if err := p.parseOperations(p.files[testFile]); err != nil {
+		t.Fatalf("parseOperations() error: %v", err)
+	}
+
+	// Verify QUERY operation was parsed
+	pathItem := p.openapi.Paths["/users"]
+	if pathItem == nil {
+		t.Fatal("Path /users not found")
+	}
+
+	if pathItem.Query == nil {
+		t.Fatal("QUERY operation not found in path /users")
+	}
+
+	if pathItem.Query.Summary != "Query user" {
+		t.Errorf("Query.Summary = %q, want %q", pathItem.Query.Summary, "Query user")
+	}
+
+	if pathItem.Query.Description != "Query user by criteria" {
+		t.Errorf("Query.Description = %q, want %q", pathItem.Query.Description, "Query user by criteria")
+	}
+
+	if len(pathItem.Query.Parameters) == 0 {
+		t.Error("Query operation should have parameters")
+	}
+}
+
+// TestQueryMethodWithOtherMethods tests QUERY alongside other HTTP methods
+func TestQueryMethodWithOtherMethods(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package main
+
+// @title Test API
+// @version 1.0
+
+// GetUser retrieves a user
+// @Summary Get user
+// @Router /users/{id} [get]
+func GetUser() {}
+
+// QueryUsers searches users
+// @Summary Query users
+// @Router /users [query]
+func QueryUsers() {}
+
+// CreateUser creates a user
+// @Summary Create user
+// @Router /users [post]
+func CreateUser() {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	p := New()
+	p.SetGeneralInfoFile(testFile)
+
+	if err := p.ParseFile(testFile); err != nil {
+		t.Fatalf("ParseFile() error: %v", err)
+	}
+
+	if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+		t.Fatalf("parseGeneralInfo() error: %v", err)
+	}
+
+	if err := p.parseOperations(p.files[testFile]); err != nil {
+		t.Fatalf("parseOperations() error: %v", err)
+	}
+
+	// Verify GET on /users/{id}
+	getUserPath := p.openapi.Paths["/users/{id}"]
+	if getUserPath == nil || getUserPath.Get == nil {
+		t.Error("GET /users/{id} not found")
+	}
+
+	// Verify QUERY on /users
+	usersPath := p.openapi.Paths["/users"]
+	if usersPath == nil {
+		t.Fatal("Path /users not found")
+	}
+
+	if usersPath.Query == nil {
+		t.Error("QUERY operation not found on /users")
+	}
+
+	if usersPath.Post == nil {
+		t.Error("POST operation not found on /users")
+	}
+
+	// Ensure QUERY and POST don't interfere with each other
+	if usersPath.Query.Summary != "Query users" {
+		t.Errorf("Query.Summary = %q, want %q", usersPath.Query.Summary, "Query users")
+	}
+
+	if usersPath.Post.Summary != "Create user" {
+		t.Errorf("Post.Summary = %q, want %q", usersPath.Post.Summary, "Create user")
+	}
+}
+
+// TestValidateWithQueryMethod tests validation includes QUERY operations
+func TestValidateWithQueryMethod(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	testFile := filepath.Join(tmpDir, "test.go")
+	content := `package main
+
+// @title Test API
+// @version 1.0
+
+// QueryUser searches users
+// @Summary Query user
+// @Param filter query string false "Filter"
+// @Success 200 {array} string
+// @Router /users [query]
+func QueryUser() {}
+`
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	p := New()
+	p.SetGeneralInfoFile(testFile)
+
+	if err := p.ParseFile(testFile); err != nil {
+		t.Fatalf("ParseFile() error: %v", err)
+	}
+
+	if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+		t.Fatalf("parseGeneralInfo() error: %v", err)
+	}
+
+	if err := p.parseOperations(p.files[testFile]); err != nil {
+		t.Fatalf("parseOperations() error: %v", err)
+	}
+
+	// Validate should not error on QUERY operations
+	if err := p.Validate(); err != nil {
+		t.Errorf("Validate() error with QUERY operation: %v", err)
+	}
+}
+
+// TestQueryMethodCaseSensitivity tests that 'query', 'QUERY', 'Query' all work
+func TestQueryMethodCaseSensitivity(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name   string
+		method string
+	}{
+		{"lowercase query", "query"},
+		{"uppercase QUERY", "QUERY"},
+		{"mixed case Query", "Query"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			testFile := filepath.Join(tmpDir, "test.go")
+			content := `package main
+
+// @title Test API
+// @version 1.0
+
+// QueryUser searches users
+// @Summary Query user
+// @Router /users [` + tc.method + `]
+func QueryUser() {}
+`
+			if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+				t.Fatalf("Failed to write test file: %v", err)
+			}
+
+			p := New()
+			p.SetGeneralInfoFile(testFile)
+
+			if err := p.ParseFile(testFile); err != nil {
+				t.Fatalf("ParseFile() error: %v", err)
+			}
+
+			if err := p.parseGeneralInfo(p.files[testFile]); err != nil {
+				t.Fatalf("parseGeneralInfo() error: %v", err)
+			}
+
+			if err := p.parseOperations(p.files[testFile]); err != nil {
+				t.Fatalf("parseOperations() error: %v", err)
+			}
+
+			pathItem := p.openapi.Paths["/users"]
+			if pathItem == nil || pathItem.Query == nil {
+				t.Errorf("QUERY operation not found for method case: %s", tc.method)
+			}
+		})
+	}
+}
+
+func TestValidateOperationSchemaRefs(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		op          *openapi.Operation
+		path        string
+		setupSchema func(*Parser)
+		expectError bool
+	}{
+		{
+			name: "Valid operation with no references",
+			op: &openapi.Operation{
+				Summary: "Test operation",
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+					},
+				},
+			},
+			path:        "/test",
+			setupSchema: nil,
+			expectError: false,
+		},
+		{
+			name: "Valid operation with valid parameter schema ref",
+			op: &openapi.Operation{
+				Parameters: []openapi.Parameter{
+					{
+						Name: "id",
+						In:   "query",
+						Schema: &openapi.Schema{
+							Ref: "#/components/schemas/User",
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
+				},
+			},
+			path: "/users",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["User"] = &openapi.Schema{
+					Type: "object",
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid parameter schema reference",
+			op: &openapi.Operation{
+				Parameters: []openapi.Parameter{
+					{
+						Name: "id",
+						Schema: &openapi.Schema{
+							Ref: "#/components/schemas/NonExistent",
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{Description: "OK"},
+				},
+			},
+			path:        "/test",
+			setupSchema: nil,
+			expectError: true,
+		},
+		{
+			name: "Valid request body with schema ref",
+			op: &openapi.Operation{
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{
+								Ref: "#/components/schemas/CreateUser",
+							},
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"201": &openapi.Response{Description: "Created"},
+				},
+			},
+			path: "/users",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["CreateUser"] = &openapi.Schema{
+					Type: "object",
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid request body schema reference",
+			op: &openapi.Operation{
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{
+								Ref: "#/components/schemas/MissingSchema",
+							},
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"201": &openapi.Response{Description: "Created"},
+				},
+			},
+			path:        "/users",
+			setupSchema: nil,
+			expectError: true,
+		},
+		{
+			name: "Valid response with schema ref",
+			op: &openapi.Operation{
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{
+									Ref: "#/components/schemas/UserResponse",
+								},
+							},
+						},
+					},
+				},
+			},
+			path: "/users",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["UserResponse"] = &openapi.Schema{
+					Type: "object",
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "Invalid response schema reference",
+			op: &openapi.Operation{
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{
+									Ref: "#/components/schemas/InvalidResponse",
+								},
+							},
+						},
+					},
+				},
+			},
+			path:        "/users",
+			setupSchema: nil,
+			expectError: true,
+		},
+		{
+			name: "Multiple valid references",
+			op: &openapi.Operation{
+				Parameters: []openapi.Parameter{
+					{
+						Name: "filter",
+						Schema: &openapi.Schema{
+							Ref: "#/components/schemas/Filter",
+						},
+					},
+				},
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{
+								Ref: "#/components/schemas/Input",
+							},
+						},
+					},
+				},
+				Responses: openapi.Responses{
+					"200": &openapi.Response{
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{
+									Ref: "#/components/schemas/Output",
+								},
+							},
+						},
+					},
+				},
+			},
+			path: "/process",
+			setupSchema: func(p *Parser) {
+				p.openapi.Components.Schemas["Filter"] = &openapi.Schema{Type: "object"}
+				p.openapi.Components.Schemas["Input"] = &openapi.Schema{Type: "object"}
+				p.openapi.Components.Schemas["Output"] = &openapi.Schema{Type: "object"}
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			p := New()
+
+			if tt.setupSchema != nil {
+				tt.setupSchema(p)
+			}
+
+			err := p.validateOperation(tt.op, tt.path)
+
+			if tt.expectError && err == nil {
+				t.Error("validateOperation() expected error but got nil")
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("validateOperation() unexpected error: %v", err)
+			}
+		})
 	}
 }

@@ -17,13 +17,13 @@ import (
 )
 
 const (
-	version = "1.0.5"
+	version = "1.0.7"
 )
 
 func main() {
 	app := &cli.App{
 		Name:    "nexs-swag",
-		Usage:   "Generate OpenAPI 3.1.x specification from Go code comments",
+		Usage:   "Generate OpenAPI specification from Go code comments (supports v2.0, v3.0.x, v3.1.x, v3.2.x)",
 		Version: version,
 		Authors: []*cli.Author{
 			{
@@ -189,7 +189,7 @@ func main() {
 						Name:    "openapi-version",
 						Aliases: []string{"ov"},
 						Value:   "3.1.0",
-						Usage:   "OpenAPI version to generate: 2.0, 3.0, 3.1 (default: 3.1)",
+						Usage:   "OpenAPI version: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0 (default: 3.1.0)",
 					},
 				},
 				Action: initAction,
@@ -348,6 +348,12 @@ func main() {
 						Value: "",
 						Usage: "State file for @HostState annotation",
 					},
+					&cli.StringFlag{
+						Name:    "openapi-version",
+						Aliases: []string{"ov"},
+						Value:   "3.1.0",
+						Usage:   "OpenAPI version: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0 (default: 3.1.0)",
+					},
 				},
 				Action: initAction,
 			},
@@ -409,15 +415,9 @@ func initAction(c *cli.Context) error {
 	openapiVersion := c.String("openapi-version")
 
 	// Validate and normalize openapi-version
-	switch openapiVersion {
-	case "2.0", "2", "2.0.0":
-		openapiVersion = "2.0"
-	case "3.0", "3", "3.0.0":
-		openapiVersion = "3.0"
-	case "3.1", "3.1.0":
-		openapiVersion = "3.1"
-	default:
-		return fmt.Errorf("invalid openapi-version: %s (must be 2.0, 3.0, or 3.1)", openapiVersion)
+	openapiVersion = normalizeOpenAPIVersion(openapiVersion)
+	if openapiVersion == "" {
+		return fmt.Errorf("invalid openapi-version. Supported versions: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0")
 	}
 
 	// Use outputTypes if format is not explicitly set
@@ -517,9 +517,9 @@ func initAction(c *cli.Context) error {
 	spec := p.GetOpenAPI()
 
 	// Convert to target version if needed
-	if openapiVersion == "2.0" {
+	if openapiVersion == "2.0.0" {
 		if !quiet {
-			fmt.Printf("Converting OpenAPI 3.1.0 to Swagger 2.0...\n")
+			fmt.Printf("Converting OpenAPI 3.1.0 to Swagger %s...\n", openapiVersion)
 		}
 		conv := converter.New()
 		swagger2, err := conv.ConvertToV2(spec)
@@ -552,6 +552,7 @@ func initAction(c *cli.Context) error {
 		gen.SetInstanceName(instanceName)
 		gen.SetGeneratedTime(generatedTime)
 		gen.SetTemplateDelims(templateDelims)
+		gen.SetOpenAPIVersion(openapiVersion)
 		if err := gen.Generate(); err != nil {
 			return fmt.Errorf("failed to generate documentation: %w", err)
 		}
@@ -561,6 +562,39 @@ func initAction(c *cli.Context) error {
 		fmt.Println("\n✓ Documentation generated successfully!")
 	}
 	return nil
+}
+
+// normalizeOpenAPIVersion validates and normalizes the OpenAPI version string.
+// Returns the normalized version or empty string if invalid.
+func normalizeOpenAPIVersion(version string) string {
+	// Supported versions map
+	supportedVersions := map[string]string{
+		// v2.0.0
+		"2":     "2.0.0",
+		"2.0":   "2.0.0",
+		"2.0.0": "2.0.0",
+		// v3.0.x
+		"3":     "3.0.0",
+		"3.0":   "3.0.0",
+		"3.0.0": "3.0.0",
+		"3.0.1": "3.0.1",
+		"3.0.2": "3.0.2",
+		"3.0.3": "3.0.3",
+		"3.0.4": "3.0.4",
+		// OpenAPI 3.1.x (JSON Schema 2020-12 compatible, added webhooks)
+		"3.1":   "3.1.0",
+		"3.1.0": "3.1.0",
+		"3.1.1": "3.1.1",
+		"3.1.2": "3.1.2",
+		// OpenAPI 3.2.x (Latest - adds QUERY method, streaming, etc)
+		"3.2":   "3.2.0",
+		"3.2.0": "3.2.0",
+	}
+
+	if normalized, ok := supportedVersions[version]; ok {
+		return normalized
+	}
+	return ""
 }
 
 func fmtAction(c *cli.Context) error {

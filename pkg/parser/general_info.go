@@ -57,6 +57,11 @@ var (
 	securityAPIKeyRegex = regexp.MustCompile(`^@securityDefinitions\.apikey\s+(\S+)\s+(\w+)\s+(\w+)\s*(.*)$`)
 	securityOAuth2Regex = regexp.MustCompile(`^@securityDefinitions\.oauth2\.(\w+)\s+(\S+)\s*(.*)$`)
 
+	// OpenAPI 3.2.0: SecurityScheme extensions.
+	securityDeprecatedRegex        = regexp.MustCompile(`^@securityDefinitions\.(\w+)\.deprecated\s+(true|false)$`)
+	securityOAuth2MetadataURLRegex = regexp.MustCompile(`^@securityDefinitions\.(\w+)\.oauth2metadataurl\s+(\S+)$`)
+	securityDeviceAuthRegex        = regexp.MustCompile(`^@securityDefinitions\.oauth2\.deviceAuthorization\s+(\S+)\s+(\S+)\s*(.*)$`)
+
 	// External docs regex patterns.
 	externalDocsURLRegex  = regexp.MustCompile(`^@externalDocs\.url\s+(.+)$`)
 	externalDocsDescRegex = regexp.MustCompile(`^@externalDocs\.description\s+(.+)$`)
@@ -183,6 +188,13 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 		}
 		g.openapi.Servers = append(g.openapi.Servers, server)
 
+	case serverDescRegex.MatchString(text):
+		matches := serverDescRegex.FindStringSubmatch(text)
+		// Update the last server's description
+		if len(g.openapi.Servers) > 0 {
+			g.openapi.Servers[len(g.openapi.Servers)-1].Description = matches[1]
+		}
+
 	// Tag object
 	case tagNameRegex.MatchString(text):
 		matches := tagNameRegex.FindStringSubmatch(text)
@@ -231,6 +243,20 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 		}
 		g.openapi.ExternalDocs.Description = matches[1]
 
+	// Webhooks (OpenAPI 3.1+)
+	case webhookRegex.MatchString(text):
+		matches := webhookRegex.FindStringSubmatch(text)
+		webhookName := matches[1]
+		description := matches[2]
+
+		if g.openapi.Webhooks == nil {
+			g.openapi.Webhooks = make(map[string]*openapi.PathItem)
+		}
+
+		g.openapi.Webhooks[webhookName] = &openapi.PathItem{
+			Description: description,
+		}
+
 	// Security definitions
 	case securityBasicRegex.MatchString(text):
 		matches := securityBasicRegex.FindStringSubmatch(text)
@@ -247,6 +273,58 @@ func (g *GeneralInfoProcessor) Process(text string) error {
 			Name:        matches[2],
 			In:          matches[3],
 			Description: strings.TrimSpace(matches[4]),
+		}
+
+	// OpenAPI 3.2.0: SecurityScheme.Deprecated
+	case securityDeprecatedRegex.MatchString(text):
+		matches := securityDeprecatedRegex.FindStringSubmatch(text)
+		schemeName := matches[1]
+		isDeprecated := matches[2] == "true"
+
+		if scheme, exists := g.openapi.Components.SecuritySchemes[schemeName]; exists {
+			scheme.Deprecated = isDeprecated
+		}
+
+	// OpenAPI 3.2.0: SecurityScheme.OAuth2MetadataURL
+	case securityOAuth2MetadataURLRegex.MatchString(text):
+		matches := securityOAuth2MetadataURLRegex.FindStringSubmatch(text)
+		schemeName := matches[1]
+		metadataURL := matches[2]
+
+		if scheme, exists := g.openapi.Components.SecuritySchemes[schemeName]; exists {
+			scheme.OAuth2MetadataURL = metadataURL
+		}
+
+	// OpenAPI 3.2.0: OAuthFlows.DeviceAuthorization
+	case securityDeviceAuthRegex.MatchString(text):
+		matches := securityDeviceAuthRegex.FindStringSubmatch(text)
+		schemeName := "oauth2_" + matches[1] // Construct scheme name
+		deviceAuthURL := matches[2]
+		tokenURL := ""
+		if len(matches) > 3 && matches[3] != "" {
+			fields := strings.Fields(matches[3])
+			if len(fields) > 0 {
+				tokenURL = fields[0]
+			}
+		}
+
+		scheme, exists := g.openapi.Components.SecuritySchemes[schemeName]
+		if !exists {
+			scheme = &openapi.SecurityScheme{
+				Type:  "oauth2",
+				Flows: &openapi.OAuthFlows{},
+			}
+			g.openapi.Components.SecuritySchemes[schemeName] = scheme
+		}
+
+		if scheme.Flows == nil {
+			scheme.Flows = &openapi.OAuthFlows{}
+		}
+
+		scheme.Flows.DeviceAuthorization = &openapi.OAuthFlow{
+			AuthorizationURL: deviceAuthURL,
+			TokenURL:         tokenURL,
+			Scopes:           make(map[string]string),
 		}
 	}
 

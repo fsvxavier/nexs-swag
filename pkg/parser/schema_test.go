@@ -372,7 +372,17 @@ type User struct {
 
 func TestProcessEmbeddedField(t *testing.T) {
 	t.Parallel()
-	content := `package main
+
+	tests := []struct {
+		name          string
+		content       string
+		expectedAllOf int
+		checkRef      bool
+		expectedRef   string
+	}{
+		{
+			name: "Simple embedded struct",
+			content: `package main
 
 type Base struct {
 	ID int
@@ -382,30 +392,80 @@ type User struct {
 	Base
 	Name string
 }
-`
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "test.go", content, parser.ParseComments)
-	if err != nil {
-		t.Fatalf("Failed to parse file: %v", err)
+`,
+			expectedAllOf: 1,
+			checkRef:      true,
+			expectedRef:   "#/components/schemas/Base",
+		},
+		{
+			name: "Pointer embedded struct",
+			content: `package main
+
+type Base struct {
+	ID int
+}
+
+type User struct {
+	*Base
+	Name string
+}
+`,
+			expectedAllOf: 1,
+			checkRef:      true,
+			expectedRef:   "#/components/schemas/Base",
+		},
+		{
+			name: "Qualified embedded struct",
+			content: `package main
+
+import "models"
+
+type User struct {
+	models.Base
+	Name string
+}
+`,
+			expectedAllOf: 1,
+			checkRef:      true,
+			expectedRef:   "#/components/schemas/models.Base",
+		},
 	}
 
-	p := New()
-	sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
-
-	var structType *ast.StructType
-	ast.Inspect(file, func(n ast.Node) bool {
-		if ts, ok := n.(*ast.TypeSpec); ok && ts.Name.Name == "User" {
-			if st, ok := ts.Type.(*ast.StructType); ok {
-				structType = st
-				return false
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			fset := token.NewFileSet()
+			file, err := parser.ParseFile(fset, "test.go", tt.content, parser.ParseComments)
+			if err != nil {
+				t.Fatalf("Failed to parse file: %v", err)
 			}
-		}
-		return true
-	})
 
-	schema := sp.ProcessStruct(structType, nil, "User")
-	if len(schema.AllOf) == 0 {
-		t.Error("Expected AllOf for embedded field")
+			p := New()
+			sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
+
+			var structType *ast.StructType
+			ast.Inspect(file, func(n ast.Node) bool {
+				if ts, ok := n.(*ast.TypeSpec); ok && ts.Name.Name == "User" {
+					if st, ok := ts.Type.(*ast.StructType); ok {
+						structType = st
+						return false
+					}
+				}
+				return true
+			})
+
+			if structType == nil {
+				t.Fatal("Failed to find User struct")
+			}
+
+			schema := sp.ProcessStruct(structType, nil, "User")
+			if len(schema.AllOf) != tt.expectedAllOf {
+				t.Errorf("AllOf length = %d, want %d", len(schema.AllOf), tt.expectedAllOf)
+			}
+			if tt.checkRef && len(schema.AllOf) > 0 && schema.AllOf[0].Ref != tt.expectedRef {
+				t.Errorf("AllOf[0].Ref = %q, want %q", schema.AllOf[0].Ref, tt.expectedRef)
+			}
+		})
 	}
 }
 
@@ -414,22 +474,63 @@ func TestParseFieldDoc(t *testing.T) {
 	p := New()
 	sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
-	// Create a mock comment group
-	mockDoc := &ast.CommentGroup{
-		List: []*ast.Comment{
-			{Text: "// User's email address"},
-			{Text: "// @Example user@example.com"},
+	tests := []struct {
+		name                string
+		comments            []string
+		expectedDescription string
+		expectExample       bool
+	}{
+		{
+			name:                "Simple description",
+			comments:            []string{"// User's email address"},
+			expectedDescription: "User's email address",
+			expectExample:       false,
+		},
+		{
+			name:                "Description annotation",
+			comments:            []string{"// @Description The user's email"},
+			expectedDescription: "The user's email",
+			expectExample:       false,
+		},
+		{
+			name:                "Example annotation",
+			comments:            []string{"// @Example user@example.com"},
+			expectedDescription: "",
+			expectExample:       true,
+		},
+		{
+			name:                "Both description and example",
+			comments:            []string{"// User's email address", "// @Example user@example.com"},
+			expectedDescription: "User's email address",
+			expectExample:       true,
+		},
+		{
+			name:                "Multiple description lines",
+			comments:            []string{"// First line", "// Second line"},
+			expectedDescription: "First line Second line",
+			expectExample:       false,
 		},
 	}
 
-	schema := &openapi.Schema{}
-	sp.parseFieldDoc(mockDoc, schema)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDoc := &ast.CommentGroup{
+				List: make([]*ast.Comment, 0, len(tt.comments)),
+			}
+			for _, c := range tt.comments {
+				mockDoc.List = append(mockDoc.List, &ast.Comment{Text: c})
+			}
 
-	if schema.Description == "" {
-		t.Error("Expected description to be set")
-	}
-	if schema.Example == nil {
-		t.Error("Expected example to be set")
+			schema := &openapi.Schema{}
+			sp.parseFieldDoc(mockDoc, schema)
+
+			if tt.expectedDescription != "" && schema.Description != tt.expectedDescription {
+				t.Errorf("Description = %q, want %q", schema.Description, tt.expectedDescription)
+			}
+			if tt.expectExample && schema.Example == nil {
+				t.Error("Expected example to be set")
+			}
+		})
 	}
 }
 
@@ -517,9 +618,11 @@ func TestApplyValidateRules(t *testing.T) {
 	sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
 	tests := []struct {
-		name  string
-		rule  string
-		sType string
+		name            string
+		rule            string
+		sType           string
+		expectedFormat  string
+		expectedPattern string
 	}{
 		{
 			name:  "email validation",
@@ -536,6 +639,48 @@ func TestApplyValidateRules(t *testing.T) {
 			rule:  "max=100",
 			sType: "integer",
 		},
+		{
+			name:           "uuid validation",
+			rule:           "uuid",
+			sType:          "string",
+			expectedFormat: "uuid",
+		},
+		{
+			name:           "uuid4 validation",
+			rule:           "uuid4",
+			sType:          "string",
+			expectedFormat: "uuid",
+		},
+		{
+			name:           "datetime validation",
+			rule:           "datetime",
+			sType:          "string",
+			expectedFormat: "date-time",
+		},
+		{
+			name:           "date validation",
+			rule:           "date",
+			sType:          "string",
+			expectedFormat: "date",
+		},
+		{
+			name:            "numeric validation",
+			rule:            "numeric",
+			sType:           "string",
+			expectedPattern: "^[0-9]+$",
+		},
+		{
+			name:            "alpha validation",
+			rule:            "alpha",
+			sType:           "string",
+			expectedPattern: "^[a-zA-Z]+$",
+		},
+		{
+			name:            "alphanum validation",
+			rule:            "alphanum",
+			sType:           "string",
+			expectedPattern: "^[a-zA-Z0-9]+$",
+		},
 	}
 
 	for _, tt := range tests {
@@ -543,7 +688,12 @@ func TestApplyValidateRules(t *testing.T) {
 			schema := &openapi.Schema{Type: tt.sType}
 			sp.applyValidateRules(tt.rule, schema)
 
-			// Verify it doesn't panic - function executed successfully
+			if tt.expectedFormat != "" && schema.Format != tt.expectedFormat {
+				t.Errorf("Format = %q, want %q", schema.Format, tt.expectedFormat)
+			}
+			if tt.expectedPattern != "" && schema.Pattern != tt.expectedPattern {
+				t.Errorf("Pattern = %q, want %q", schema.Pattern, tt.expectedPattern)
+			}
 		})
 	}
 }
@@ -566,20 +716,65 @@ func TestParseOverrideType(t *testing.T) {
 	sp := NewSchemaProcessor(p, p.openapi, p.typeCache)
 
 	tests := []struct {
-		name    string
-		typeStr string
+		name           string
+		typeStr        string
+		expectedType   string
+		expectedFormat string
+		expectedRef    string
 	}{
-		{name: "primitive type", typeStr: "string"},
-		{name: "object type", typeStr: "object"},
-		{name: "array type", typeStr: "array"},
+		{
+			name:         "string type",
+			typeStr:      "string",
+			expectedType: "string",
+		},
+		{
+			name:         "number type",
+			typeStr:      "number",
+			expectedType: "number",
+		},
+		{
+			name:         "integer type",
+			typeStr:      "integer",
+			expectedType: "integer",
+		},
+		{
+			name:         "boolean type",
+			typeStr:      "boolean",
+			expectedType: "boolean",
+		},
+		{
+			name:           "time.Time special case",
+			typeStr:        "time.Time",
+			expectedType:   "string",
+			expectedFormat: "date-time",
+		},
+		{
+			name:        "custom type reference",
+			typeStr:     "User",
+			expectedRef: "#/components/schemas/User",
+		},
+		{
+			name:        "package qualified type",
+			typeStr:     "models.Product",
+			expectedRef: "#/components/schemas/models.Product",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Just verify parseOverrideType doesn't panic
 			schema := sp.parseOverrideType(tt.typeStr)
 			if schema == nil {
-				t.Error("parseOverrideType should return a schema")
+				t.Fatal("parseOverrideType should return a schema")
+			}
+
+			if tt.expectedType != "" && schema.Type != tt.expectedType {
+				t.Errorf("Type = %q, want %q", schema.Type, tt.expectedType)
+			}
+			if tt.expectedFormat != "" && schema.Format != tt.expectedFormat {
+				t.Errorf("Format = %q, want %q", schema.Format, tt.expectedFormat)
+			}
+			if tt.expectedRef != "" && schema.Ref != tt.expectedRef {
+				t.Errorf("Ref = %q, want %q", schema.Ref, tt.expectedRef)
 			}
 		})
 	}

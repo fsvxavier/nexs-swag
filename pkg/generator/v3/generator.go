@@ -22,6 +22,7 @@ type Generator struct {
 	instanceName   string
 	generatedTime  bool
 	templateDelims []string // [leftDelim, rightDelim]
+	openapiVersion string   // OpenAPI version to use
 }
 
 // New creates a new OpenAPI 3.x Generator instance.
@@ -60,8 +61,19 @@ func (g *Generator) SetTemplateDelims(delims string) {
 	}
 }
 
+// SetOpenAPIVersion sets the OpenAPI version for the specification.
+// Supported versions: 3.0.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4, 3.1.0, 3.1.1, 3.1.2, 3.2.0
+func (g *Generator) SetOpenAPIVersion(version string) {
+	g.openapiVersion = version
+}
+
 // Generate generates the OpenAPI specification files.
 func (g *Generator) Generate() error {
+	// Update spec OpenAPI version if set
+	if g.openapiVersion != "" {
+		g.spec.OpenAPI = g.openapiVersion
+	}
+
 	// Create output directory if it doesn't exist
 	if err := os.MkdirAll(g.outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
