@@ -6,8 +6,8 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/Coverage-86.1%25-brightgreen.svg)](/)
-[![Examples](https://img.shields.io/badge/Examples-22-blue.svg)](examples/)
+[![Coverage](https://img.shields.io/badge/Coverage-80.1%25-brightgreen.svg)](/)
+[![Examples](https://img.shields.io/badge/Examples-23-blue.svg)](examples/)
 
 **Automatically generate OpenAPI 3.1.0 or Swagger 2.0 documentation from Go source code annotations.**
 
@@ -53,8 +53,8 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 - ✅ **Response headers** - Complete header documentation
 - ✅ **Multiple content types** - JSON, XML, YAML, CSV, PDF, and custom MIME types
 - ✅ **Custom extensions** - Full x-* extension support
-- ✅ **86.1% test coverage** - Production-ready with comprehensive test suite
-- ✅ **22 working examples** - Learn from complete, runnable examples
+- ✅ **80.1% test coverage** - Production-ready with comprehensive test suite including roundtrip tests
+- ✅ **23 working examples** - Learn from complete, runnable examples
 
 ### Why nexs-swag?
 
@@ -69,8 +69,8 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 | Webhooks | ❌ | ✅ (OpenAPI 3.1+) |
 | Response Headers | Limited | Full Support |
 | Nullable Support | `x-nullable` | Native + `x-nullable` |
-| Test Coverage | ~70% | 86.1% |
-| Examples | ~10 | 22 |
+| Test Coverage | ~70% | 80.1% |
+| Examples | ~10 | 23 |
 | Go Version | 1.19+ | 1.23+ |
 
 ## Getting Started
@@ -1022,16 +1022,14 @@ $ go test ./pkg/... -cover
 
 | Package | Coverage | Tests |
 |---------|----------|-------|
-| pkg/converter | 92.3% | 13 tests |
+| pkg/converter | 85.1% | 16 tests (with roundtrip) |
 | pkg/format | 95.1% | 15 tests |
-| pkg/generator | 71.6% | 16 tests |
-| pkg/generator/v2 | 88.4% | 12 tests |
-| pkg/generator/v3 | 85.2% | 8 tests |
-| pkg/openapi | 83.3% | 22 tests |
-| pkg/openapi/v2 | 89.7% | 12 tests |
-| pkg/openapi/v3 | 91.5% | 10 tests |
-| pkg/parser | 82.1% | 192 tests |
-| **Overall** | **87.9%** | **300+ tests** |
+| pkg/generator/v2 | 80.3% | 12 tests |
+| pkg/generator/v3 | 83.3% | 8 tests |
+| pkg/openapi/v2 | 92.0% | 12 tests |
+| pkg/openapi/v3 | 88.9% | 10 tests |
+| pkg/parser | 84.6% | 195 tests |
+| **Overall** | **80.1%** | **320+ tests** |
 
 ### Quality Metrics
 
@@ -1096,7 +1094,7 @@ nexs-swag fmt
 | Webhooks | ❌ | ✅ | OpenAPI 3.1 feature |
 | JSON Schema 2020-12 | ❌ | ✅ | Modern schema |
 | Response headers | Limited | ✅ | Full support |
-| Test coverage | ~70% | 86.1% | Higher quality |
+| Test coverage | ~70% | 80.1% | Higher quality |
 | Go version | 1.19+ | 1.23+ | Modern Go features |
 
 ### What's Different?
@@ -1120,13 +1118,13 @@ nexs-swag fmt
 ### Project Statistics
 
 - **Lines of Code:** ~5,200 (pkg/ excluding tests)
-- **Test Code:** ~8,500 lines
+- **Test Code:** ~9,200 lines
 - **Go Files:** 42 implementation files
 - **Test Files:** 29 test files
 - **Packages:** 9 (converter, format, generator, generator/v2, generator/v3, openapi, openapi/v2, openapi/v3, parser)
-- **Examples:** 22 complete examples
-- **Test Coverage:** 87.9%
-- **OpenAPI Versions:** 2 (Swagger 2.0 + OpenAPI 3.1.0)
+- **Examples:** 23 complete examples
+- **Test Coverage:** 80.1%
+- **OpenAPI Versions:** 4 (Swagger 2.0, OpenAPI 3.0.x, 3.1.x, 3.2.0)
 - **Dependencies:** 3 direct dependencies
   - urfave/cli/v2 (CLI framework)
   - golang.org/x/tools (Go AST parsing)
@@ -1360,13 +1358,18 @@ nexs-swag fmt -d ./cmd/api
 
 ## 📈 Qualidade e Testes
 
-- **Cobertura de Testes:** 86.1% (META: 80% ✅)
+- **Cobertura de Testes:** 80.1% (META: 80% ✅)
+  - pkg/converter: 85.1%
   - pkg/format: 95.1%
-  - pkg/generator: 84.6%
-  - pkg/openapi: 83.3%
-  - pkg/parser: 81.5%
-- **Arquivos de Teste:** 21 arquivos, ~5.000 linhas
-- **Testes Integração:** 21 exemplos funcionais
+  - pkg/generator/v2: 80.3%
+  - pkg/generator/v3: 83.3%
+  - pkg/openapi/v2: 92.0%
+  - pkg/openapi/v3: 88.9%
+  - pkg/parser: 84.6%
+- **Total de Testes:** 320+ testes, ~9.200 linhas
+- **Testes de Roundtrip:** V2⇄V3 com integridade garantida
+- **Benchmarks:** 6 benchmarks de performance
+- **Testes Integração:** 23 exemplos funcionais
 - **Race Conditions:** Zero (testado com -race)
 - **CI/CD:** Pronto para integração contínua
 

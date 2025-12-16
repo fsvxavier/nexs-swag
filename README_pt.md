@@ -6,8 +6,8 @@
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![Licença](https://img.shields.io/badge/Licença-MIT-blue.svg)](LICENSE)
-[![Cobertura](https://img.shields.io/badge/Cobertura-86.1%25-brightgreen.svg)](/)
-[![Exemplos](https://img.shields.io/badge/Exemplos-22-blue.svg)](examples/)
+[![Cobertura](https://img.shields.io/badge/Cobertura-80.1%25-brightgreen.svg)](/)
+[![Exemplos](https://img.shields.io/badge/Exemplos-23-blue.svg)](examples/)
 
 **Gere automaticamente documentação OpenAPI 3.1.0 ou Swagger 2.0 a partir de anotações no código Go.**
 
@@ -53,8 +53,8 @@ nexs-swag converte anotações Go para especificação OpenAPI 3.1.0 ou Swagger 
 - ✅ **Headers de resposta** - Documentação completa de headers
 - ✅ **Múltiplos tipos de conteúdo** - JSON, XML, YAML, CSV, PDF e tipos MIME customizados
 - ✅ **Extensões customizadas** - Suporte completo para x-*
-- ✅ **86.1% de cobertura de testes** - Pronto para produção com suite de testes abrangente
-- ✅ **22 exemplos funcionais** - Aprenda com exemplos completos e executáveis
+- ✅ **80.1% de cobertura de testes** - Pronto para produção com suite de testes abrangente incluindo testes roundtrip
+- ✅ **23 exemplos funcionais** - Aprenda com exemplos completos e executáveis
 
 ### Por que nexs-swag?
 
@@ -69,8 +69,8 @@ nexs-swag converte anotações Go para especificação OpenAPI 3.1.0 ou Swagger 
 | Webhooks | ❌ | ✅ (OpenAPI 3.1+) |
 | Headers de Resposta | Limitado | Suporte Completo |
 | Suporte a Nullable | `x-nullable` | Nativo + `x-nullable` |
-| Cobertura de Testes | ~70% | 86.1% |
-| Exemplos | ~10 | 22 |
+| Cobertura de Testes | ~70% | 80.1% |
+| Exemplos | ~10 | 23 |
 | Versão Go | 1.19+ | 1.23+ |
 
 ## Primeiros Passos
@@ -1043,16 +1043,14 @@ $ go test ./pkg/... -cover
 
 | Pacote | Cobertura | Testes |
 |---------|----------|--------|
-| pkg/converter | 92.3% | 13 testes |
+| pkg/converter | 85.1% | 16 testes (com roundtrip) |
 | pkg/format | 95.1% | 15 testes |
-| pkg/generator | 71.6% | 16 testes |
-| pkg/generator/v2 | 88.4% | 12 testes |
-| pkg/generator/v3 | 85.2% | 8 testes |
-| pkg/openapi | 83.3% | 22 testes |
-| pkg/openapi/v2 | 89.7% | 12 testes |
-| pkg/openapi/v3 | 91.5% | 10 testes |
-| pkg/parser | 82.1% | 192 testes |
-| **Geral** | **87.9%** | **300+ testes** |
+| pkg/generator/v2 | 80.3% | 12 testes |
+| pkg/generator/v3 | 83.3% | 8 testes |
+| pkg/openapi/v2 | 92.0% | 12 testes |
+| pkg/openapi/v3 | 88.9% | 10 testes |
+| pkg/parser | 84.6% | 195 testes |
+| **Geral** | **80.1%** | **320+ testes** |
 
 ### Métricas de Qualidade
 
@@ -1117,7 +1115,7 @@ nexs-swag fmt
 | Webhooks | ❌ | ✅ | Recurso OpenAPI 3.1 |
 | JSON Schema 2020-12 | ❌ | ✅ | Schema moderno |
 | Headers de resposta | Limitado | ✅ | Suporte completo |
-| Cobertura de testes | ~70% | 86.1% | Maior qualidade |
+| Cobertura de testes | ~70% | 80.1% | Maior qualidade |
 | Versão Go | 1.19+ | 1.23+ | Recursos Go modernos |
 
 ### O que é Diferente?
@@ -1145,9 +1143,9 @@ nexs-swag fmt
 - **Arquivos Go:** 42 arquivos de implementação
 - **Arquivos de Teste:** 29 arquivos de teste
 - **Pacotes:** 9 (converter, format, generator, generator/v2, generator/v3, openapi, openapi/v2, openapi/v3, parser)
-- **Exemplos:** 22 exemplos completos
-- **Cobertura de Testes:** 87.9%
-- **Versões OpenAPI:** 2 (Swagger 2.0 + OpenAPI 3.1.0)
+- **Exemplos:** 23 exemplos completos
+- **Cobertura de Testes:** 80.1%
+- **Versões OpenAPI:** 4 (Swagger 2.0, OpenAPI 3.0.x, 3.1.x, 3.2.0)
 - **Dependências:** 3 dependências diretas
   - urfave/cli/v2 (framework CLI)
   - golang.org/x/tools (análise AST Go)
