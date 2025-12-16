@@ -55,11 +55,14 @@ Each subdirectory contains a specific example with:
 - [17-template-delims](./17-template-delims) - `--templateDelims`
 - [18-collection-format](./18-collection-format) - `--collectionFormat`
 
-### Advanced (19-22)
+### Advanced (19-25)
 - [19-parse-func-body](./19-parse-func-body) - `--parseFuncBody`
 - [20-fmt-command](./20-fmt-command) - `fmt` command
 - [21-struct-tags](./21-struct-tags) - swaggertype, swaggerignore, extensions
 - [22-openapi-v2](./22-openapi-v2) - `--openapi-version` (Swagger 2.0 / OpenAPI 3.1.0)
+- [23-recursive-parsing](./23-recursive-parsing) - Selective parsing (only referenced types)
+- [24-include-types-simple](./24-include-types-simple) - `--includeTypes` basic usage
+- [25-include-types-complex](./25-include-types-complex) - `--includeTypes` advanced scenarios
 
 ## How to Use
 
