@@ -3413,3 +3413,777 @@ func TestConvertOperationToV3(t *testing.T) {
 		t.Fatal("Responses should not be nil")
 	}
 }
+
+// TestRoundtripV2ToV3ToV2 tests complete roundtrip conversion V2->V3->V2
+func TestRoundtripV2ToV3ToV2(t *testing.T) {
+	tests := []struct {
+		name     string
+		original *swagger.Swagger
+		verify   func(t *testing.T, original, final *swagger.Swagger)
+	}{
+		{
+			name: "basic API with paths",
+			original: &swagger.Swagger{
+				Swagger: "2.0",
+				Info: swagger.Info{
+					Title:          "Roundtrip Test API",
+					Description:    "Testing roundtrip conversion",
+					Version:        "2.0.0",
+					TermsOfService: "https://example.com/terms",
+					Contact: &swagger.Contact{
+						Name:  "API Support",
+						Email: "support@example.com",
+						URL:   "https://example.com/support",
+					},
+					License: &swagger.License{
+						Name: "MIT",
+						URL:  "https://opensource.org/licenses/MIT",
+					},
+				},
+				Host:     "api.example.com",
+				BasePath: "/v2",
+				Schemes:  []string{"https", "http"},
+				Paths: map[string]*swagger.PathItem{
+					"/users": {
+						Get: &swagger.Operation{
+							Summary:     "List users",
+							Description: "Get all users",
+							OperationID: "listUsers",
+							Tags:        []string{"users"},
+							Produces:    []string{"application/json"},
+							Responses: swagger.Responses{
+								"200": {
+									Description: "Success",
+									Schema: &swagger.Schema{
+										Type: "array",
+										Items: &swagger.Schema{
+											Ref: "#/definitions/User",
+										},
+									},
+								},
+							},
+						},
+						Post: &swagger.Operation{
+							Summary:     "Create user",
+							Description: "Create a new user",
+							OperationID: "createUser",
+							Tags:        []string{"users"},
+							Consumes:    []string{"application/json"},
+							Produces:    []string{"application/json"},
+							Parameters: []*swagger.Parameter{
+								{
+									Name:     "body",
+									In:       "body",
+									Required: true,
+									Schema: &swagger.Schema{
+										Ref: "#/definitions/User",
+									},
+								},
+							},
+							Responses: swagger.Responses{
+								"201": {
+									Description: "Created",
+									Schema: &swagger.Schema{
+										Ref: "#/definitions/User",
+									},
+								},
+							},
+						},
+					},
+				},
+				Definitions: map[string]*swagger.Schema{
+					"User": {
+						Type: "object",
+						Properties: map[string]*swagger.Schema{
+							"id": {
+								Type:   "integer",
+								Format: "int64",
+							},
+							"name": {
+								Type: "string",
+							},
+							"email": {
+								Type:   "string",
+								Format: "email",
+							},
+						},
+						Required: []string{"name", "email"},
+					},
+				},
+			},
+			verify: func(t *testing.T, original, final *swagger.Swagger) {
+				if final.Info.Title != original.Info.Title {
+					t.Errorf("Info.Title = %v, want %v", final.Info.Title, original.Info.Title)
+				}
+				if final.Info.Version != original.Info.Version {
+					t.Errorf("Info.Version = %v, want %v", final.Info.Version, original.Info.Version)
+				}
+				if final.Host != original.Host {
+					t.Errorf("Host = %v, want %v", final.Host, original.Host)
+				}
+				if final.BasePath != original.BasePath {
+					t.Errorf("BasePath = %v, want %v", final.BasePath, original.BasePath)
+				}
+				if len(final.Paths) != len(original.Paths) {
+					t.Errorf("Paths count = %d, want %d", len(final.Paths), len(original.Paths))
+				}
+				if len(final.Definitions) != len(original.Definitions) {
+					t.Errorf("Definitions count = %d, want %d", len(final.Definitions), len(original.Definitions))
+				}
+			},
+		},
+		{
+			name: "API with security schemes",
+			original: &swagger.Swagger{
+				Swagger: "2.0",
+				Info: swagger.Info{
+					Title:   "Secure API",
+					Version: "1.0.0",
+				},
+				Host:     "secure.example.com",
+				BasePath: "/api",
+				Schemes:  []string{"https"},
+				Paths: map[string]*swagger.PathItem{
+					"/protected": {
+						Get: &swagger.Operation{
+							Summary:  "Protected endpoint",
+							Security: []swagger.SecurityRequirement{{"apiKey": {}}},
+							Responses: swagger.Responses{
+								"200": {Description: "OK"},
+							},
+						},
+					},
+				},
+				SecurityDefinitions: map[string]*swagger.SecurityScheme{
+					"apiKey": {
+						Type: "apiKey",
+						Name: "X-API-Key",
+						In:   "header",
+					},
+					"oauth2": {
+						Type:             "oauth2",
+						Flow:             "accessCode",
+						AuthorizationURL: "https://auth.example.com/authorize",
+						TokenURL:         "https://auth.example.com/token",
+						Scopes: map[string]string{
+							"read":  "Read access",
+							"write": "Write access",
+						},
+					},
+				},
+			},
+			verify: func(t *testing.T, original, final *swagger.Swagger) {
+				if len(final.SecurityDefinitions) != len(original.SecurityDefinitions) {
+					t.Errorf("SecurityDefinitions count = %d, want %d",
+						len(final.SecurityDefinitions), len(original.SecurityDefinitions))
+				}
+				if final.SecurityDefinitions["apiKey"].Type != "apiKey" {
+					t.Error("apiKey security scheme not preserved")
+				}
+			},
+		},
+		{
+			name: "API with parameters and responses",
+			original: &swagger.Swagger{
+				Swagger: "2.0",
+				Info: swagger.Info{
+					Title:   "Parameters API",
+					Version: "1.0.0",
+				},
+				Host:     "params.example.com",
+				BasePath: "/",
+				Schemes:  []string{"https"},
+				Paths: map[string]*swagger.PathItem{
+					"/items/{id}": {
+						Parameters: []*swagger.Parameter{
+							{
+								Name:     "id",
+								In:       "path",
+								Required: true,
+								Type:     "string",
+							},
+						},
+						Get: &swagger.Operation{
+							Summary: "Get item",
+							Parameters: []*swagger.Parameter{
+								{
+									Name: "include",
+									In:   "query",
+									Type: "array",
+									Items: &swagger.Items{
+										Type: "string",
+									},
+									CollectionFormat: "csv",
+								},
+							},
+							Responses: swagger.Responses{
+								"200": {
+									Description: "Success",
+									Schema: &swagger.Schema{
+										Ref: "#/definitions/Item",
+									},
+								},
+								"404": {
+									Description: "Not found",
+								},
+							},
+						},
+					},
+				},
+				Definitions: map[string]*swagger.Schema{
+					"Item": {
+						Type: "object",
+						Properties: map[string]*swagger.Schema{
+							"id":   {Type: "string"},
+							"name": {Type: "string"},
+						},
+					},
+				},
+			},
+			verify: func(t *testing.T, original, final *swagger.Swagger) {
+				origPath := original.Paths["/items/{id}"]
+				finalPath := final.Paths["/items/{id}"]
+				if finalPath == nil {
+					t.Fatal("Path /items/{id} not preserved")
+				}
+				if len(finalPath.Parameters) != len(origPath.Parameters) {
+					t.Errorf("Path parameters count = %d, want %d",
+						len(finalPath.Parameters), len(origPath.Parameters))
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Step 1: V2 -> V3
+			conv1 := New()
+			v3Spec, err := conv1.ConvertToV3(tt.original)
+			if err != nil {
+				t.Fatalf("V2->V3 conversion failed: %v", err)
+			}
+			if v3Spec == nil {
+				t.Fatal("V3 spec is nil")
+			}
+
+			// Step 2: V3 -> V2
+			conv2 := New()
+			v2Spec, err := conv2.ConvertToV2(v3Spec)
+			if err != nil {
+				t.Fatalf("V3->V2 conversion failed: %v", err)
+			}
+			if v2Spec == nil {
+				t.Fatal("Final V2 spec is nil")
+			}
+
+			// Step 3: Verify
+			tt.verify(t, tt.original, v2Spec)
+		})
+	}
+}
+
+// TestRoundtripV3ToV2ToV3 tests complete roundtrip conversion V3->V2->V3
+func TestRoundtripV3ToV2ToV3(t *testing.T) {
+	tests := []struct {
+		name     string
+		original *openapi.OpenAPI
+		verify   func(t *testing.T, original, final *openapi.OpenAPI)
+	}{
+		{
+			name: "OpenAPI 3.0 with components",
+			original: &openapi.OpenAPI{
+				OpenAPI: "3.0.0",
+				Info: openapi.Info{
+					Title:       "Component API",
+					Version:     "1.0.0",
+					Description: "API with reusable components",
+				},
+				Servers: []openapi.Server{
+					{
+						URL:         "https://api.example.com/v3",
+						Description: "Production server",
+					},
+				},
+				Paths: map[string]*openapi.PathItem{
+					"/products": {
+						Get: &openapi.Operation{
+							Summary:     "List products",
+							OperationID: "listProducts",
+							Responses: map[string]*openapi.Response{
+								"200": {
+									Description: "Success",
+									Content: map[string]*openapi.MediaType{
+										"application/json": {
+											Schema: &openapi.Schema{
+												Type: "array",
+												Items: &openapi.Schema{
+													Ref: "#/components/schemas/Product",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				Components: &openapi.Components{
+					Schemas: map[string]*openapi.Schema{
+						"Product": {
+							Type: "object",
+							Properties: map[string]*openapi.Schema{
+								"id":    {Type: "integer"},
+								"name":  {Type: "string"},
+								"price": {Type: "number", Format: "float"},
+							},
+							Required: []string{"name", "price"},
+						},
+					},
+				},
+			},
+			verify: func(t *testing.T, original, final *openapi.OpenAPI) {
+				if final.Info.Title != original.Info.Title {
+					t.Errorf("Info.Title = %v, want %v", final.Info.Title, original.Info.Title)
+				}
+				if len(final.Paths) != len(original.Paths) {
+					t.Errorf("Paths count = %d, want %d", len(final.Paths), len(original.Paths))
+				}
+				if final.Components == nil {
+					t.Fatal("Components should not be nil")
+				}
+				if len(final.Components.Schemas) != len(original.Components.Schemas) {
+					t.Errorf("Schemas count = %d, want %d",
+						len(final.Components.Schemas), len(original.Components.Schemas))
+				}
+			},
+		},
+		{
+			name: "OpenAPI 3.1 with webhooks",
+			original: &openapi.OpenAPI{
+				OpenAPI: "3.1.0",
+				Info: openapi.Info{
+					Title:   "Webhook API",
+					Version: "1.0.0",
+				},
+				Servers: []openapi.Server{
+					{URL: "https://webhook.example.com"},
+				},
+				Paths: map[string]*openapi.PathItem{
+					"/subscribe": {
+						Post: &openapi.Operation{
+							Summary: "Subscribe to events",
+							Responses: map[string]*openapi.Response{
+								"200": {Description: "Subscribed"},
+							},
+						},
+					},
+				},
+				Webhooks: map[string]*openapi.PathItem{
+					"newOrder": {
+						Post: &openapi.Operation{
+							Summary:     "New order notification",
+							Description: "Called when a new order is created",
+							RequestBody: &openapi.RequestBody{
+								Content: map[string]*openapi.MediaType{
+									"application/json": {
+										Schema: &openapi.Schema{
+											Type: "object",
+											Properties: map[string]*openapi.Schema{
+												"orderId": {Type: "string"},
+												"amount":  {Type: "number"},
+											},
+										},
+									},
+								},
+							},
+							Responses: map[string]*openapi.Response{
+								"200": {Description: "Acknowledged"},
+							},
+						},
+					},
+				},
+			},
+			verify: func(t *testing.T, original, final *openapi.OpenAPI) {
+				if final.Info.Title != original.Info.Title {
+					t.Errorf("Info.Title = %v, want %v", final.Info.Title, original.Info.Title)
+				}
+				// Webhooks may be lost in V2 conversion, but should be preserved if possible
+				if len(final.Paths) == 0 {
+					t.Error("All paths were lost in roundtrip")
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Step 1: V3 -> V2
+			conv1 := New()
+			v2Spec, err := conv1.ConvertToV2(tt.original)
+			if err != nil {
+				t.Fatalf("V3->V2 conversion failed: %v", err)
+			}
+			if v2Spec == nil {
+				t.Fatal("V2 spec is nil")
+			}
+
+			// Step 2: V2 -> V3
+			conv2 := New()
+			v3Spec, err := conv2.ConvertToV3(v2Spec)
+			if err != nil {
+				t.Fatalf("V2->V3 conversion failed: %v", err)
+			}
+			if v3Spec == nil {
+				t.Fatal("Final V3 spec is nil")
+			}
+
+			// Step 3: Verify
+			tt.verify(t, tt.original, v3Spec)
+		})
+	}
+}
+
+// TestRoundtripDataIntegrity verifies data integrity across multiple roundtrips
+func TestRoundtripDataIntegrity(t *testing.T) {
+	original := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:       "Data Integrity Test",
+			Description: "Testing data preservation",
+			Version:     "1.0.0",
+		},
+		Host:     "integrity.example.com",
+		BasePath: "/api",
+		Schemes:  []string{"https"},
+		Tags: []swagger.Tag{
+			{Name: "users", Description: "User operations"},
+			{Name: "admin", Description: "Admin operations"},
+		},
+		Paths: map[string]*swagger.PathItem{
+			"/health": {
+				Get: &swagger.Operation{
+					Summary:  "Health check",
+					Tags:     []string{"admin"},
+					Produces: []string{"application/json"},
+					Responses: swagger.Responses{
+						"200": {Description: "Healthy"},
+					},
+				},
+			},
+		},
+	}
+
+	// Perform 3 complete roundtrips
+	current := original
+	for i := 0; i < 3; i++ {
+		t.Run(strings.Join([]string{"roundtrip", string(rune('1' + i))}, "_"), func(t *testing.T) {
+			// V2 -> V3
+			conv1 := New()
+			v3, err := conv1.ConvertToV3(current)
+			if err != nil {
+				t.Fatalf("Roundtrip %d: V2->V3 failed: %v", i+1, err)
+			}
+
+			// V3 -> V2
+			conv2 := New()
+			v2, err := conv2.ConvertToV2(v3)
+			if err != nil {
+				t.Fatalf("Roundtrip %d: V3->V2 failed: %v", i+1, err)
+			}
+
+			// Verify core data preserved
+			if v2.Info.Title != original.Info.Title {
+				t.Errorf("Roundtrip %d: Title changed to %v", i+1, v2.Info.Title)
+			}
+			if v2.Host != original.Host {
+				t.Errorf("Roundtrip %d: Host changed to %v", i+1, v2.Host)
+			}
+			if len(v2.Paths) != len(original.Paths) {
+				t.Errorf("Roundtrip %d: Paths count changed to %d", i+1, len(v2.Paths))
+			}
+
+			current = v2
+		})
+	}
+}
+
+// Benchmark tests
+func BenchmarkConvertToV2Simple(b *testing.B) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.0.0",
+		Info: openapi.Info{
+			Title:   "Benchmark API",
+			Version: "1.0.0",
+		},
+		Servers: []openapi.Server{{URL: "https://api.example.com"}},
+		Paths: map[string]*openapi.PathItem{
+			"/test": {
+				Get: &openapi.Operation{
+					Summary: "Test endpoint",
+					Responses: map[string]*openapi.Response{
+						"200": {Description: "OK"},
+					},
+				},
+			},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		conv := New()
+		_, err := conv.ConvertToV2(spec)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkConvertToV3Simple(b *testing.B) {
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Benchmark API",
+			Version: "1.0.0",
+		},
+		Host:     "api.example.com",
+		BasePath: "/v1",
+		Schemes:  []string{"https"},
+		Paths: map[string]*swagger.PathItem{
+			"/test": {
+				Get: &swagger.Operation{
+					Summary: "Test endpoint",
+					Responses: swagger.Responses{
+						"200": {Description: "OK"},
+					},
+				},
+			},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		conv := New()
+		_, err := conv.ConvertToV3(spec)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkConvertToV2Complex(b *testing.B) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.0.0",
+		Info: openapi.Info{
+			Title:       "Complex API",
+			Description: "API with many endpoints and schemas",
+			Version:     "2.0.0",
+		},
+		Servers: []openapi.Server{{URL: "https://api.example.com/v2"}},
+		Paths:   make(map[string]*openapi.PathItem),
+		Components: &openapi.Components{
+			Schemas: make(map[string]*openapi.Schema),
+		},
+	}
+
+	// Create 50 paths with operations
+	for i := 0; i < 50; i++ {
+		path := strings.Join([]string{"/endpoint", string(rune('0' + i))}, "")
+		spec.Paths[path] = &openapi.PathItem{
+			Get: &openapi.Operation{
+				Summary:     strings.Join([]string{"Get endpoint", string(rune('0' + i))}, " "),
+				OperationID: strings.Join([]string{"get", string(rune('0' + i))}, ""),
+				Responses: map[string]*openapi.Response{
+					"200": {
+						Description: "Success",
+						Content: map[string]*openapi.MediaType{
+							"application/json": {
+								Schema: &openapi.Schema{Type: "object"},
+							},
+						},
+					},
+				},
+			},
+			Post: &openapi.Operation{
+				Summary:     strings.Join([]string{"Post endpoint", string(rune('0' + i))}, " "),
+				OperationID: strings.Join([]string{"post", string(rune('0' + i))}, ""),
+				RequestBody: &openapi.RequestBody{
+					Content: map[string]*openapi.MediaType{
+						"application/json": {
+							Schema: &openapi.Schema{Type: "object"},
+						},
+					},
+				},
+				Responses: map[string]*openapi.Response{
+					"201": {Description: "Created"},
+				},
+			},
+		}
+	}
+
+	// Create 20 schemas
+	for i := 0; i < 20; i++ {
+		schemaName := strings.Join([]string{"Schema", string(rune('0' + i))}, "")
+		spec.Components.Schemas[schemaName] = &openapi.Schema{
+			Type: "object",
+			Properties: map[string]*openapi.Schema{
+				"id":   {Type: "integer"},
+				"name": {Type: "string"},
+			},
+		}
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		conv := New()
+		_, err := conv.ConvertToV2(spec)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkConvertToV3Complex(b *testing.B) {
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:       "Complex API",
+			Description: "API with many endpoints and definitions",
+			Version:     "2.0.0",
+		},
+		Host:        "api.example.com",
+		BasePath:    "/v2",
+		Schemes:     []string{"https"},
+		Paths:       make(map[string]*swagger.PathItem),
+		Definitions: make(map[string]*swagger.Schema),
+	}
+
+	// Create 50 paths with operations
+	for i := 0; i < 50; i++ {
+		path := strings.Join([]string{"/endpoint", string(rune('0' + i))}, "")
+		spec.Paths[path] = &swagger.PathItem{
+			Get: &swagger.Operation{
+				Summary:     strings.Join([]string{"Get endpoint", string(rune('0' + i))}, " "),
+				OperationID: strings.Join([]string{"get", string(rune('0' + i))}, ""),
+				Produces:    []string{"application/json"},
+				Responses: swagger.Responses{
+					"200": {
+						Description: "Success",
+						Schema:      &swagger.Schema{Type: "object"},
+					},
+				},
+			},
+			Post: &swagger.Operation{
+				Summary:     strings.Join([]string{"Post endpoint", string(rune('0' + i))}, " "),
+				OperationID: strings.Join([]string{"post", string(rune('0' + i))}, ""),
+				Consumes:    []string{"application/json"},
+				Produces:    []string{"application/json"},
+				Parameters: []*swagger.Parameter{
+					{
+						Name:     "body",
+						In:       "body",
+						Required: true,
+						Schema:   &swagger.Schema{Type: "object"},
+					},
+				},
+				Responses: swagger.Responses{
+					"201": {Description: "Created"},
+				},
+			},
+		}
+	}
+
+	// Create 20 definitions
+	for i := 0; i < 20; i++ {
+		defName := strings.Join([]string{"Definition", string(rune('0' + i))}, "")
+		spec.Definitions[defName] = &swagger.Schema{
+			Type: "object",
+			Properties: map[string]*swagger.Schema{
+				"id":   {Type: "integer"},
+				"name": {Type: "string"},
+			},
+		}
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		conv := New()
+		_, err := conv.ConvertToV3(spec)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkRoundtripV2ToV3ToV2(b *testing.B) {
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Roundtrip Benchmark",
+			Version: "1.0.0",
+		},
+		Host:     "api.example.com",
+		BasePath: "/v1",
+		Schemes:  []string{"https"},
+		Paths: map[string]*swagger.PathItem{
+			"/users": {
+				Get: &swagger.Operation{
+					Summary: "List users",
+					Responses: swagger.Responses{
+						"200": {Description: "OK"},
+					},
+				},
+			},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		conv1 := New()
+		v3, err := conv1.ConvertToV3(spec)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		conv2 := New()
+		_, err = conv2.ConvertToV2(v3)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkRoundtripV3ToV2ToV3(b *testing.B) {
+	spec := &openapi.OpenAPI{
+		OpenAPI: "3.0.0",
+		Info: openapi.Info{
+			Title:   "Roundtrip Benchmark",
+			Version: "1.0.0",
+		},
+		Servers: []openapi.Server{{URL: "https://api.example.com/v1"}},
+		Paths: map[string]*openapi.PathItem{
+			"/users": {
+				Get: &openapi.Operation{
+					Summary: "List users",
+					Responses: map[string]*openapi.Response{
+						"200": {Description: "OK"},
+					},
+				},
+			},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		conv1 := New()
+		v2, err := conv1.ConvertToV2(spec)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		conv2 := New()
+		_, err = conv2.ConvertToV3(v2)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
