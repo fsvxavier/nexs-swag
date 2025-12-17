@@ -22,8 +22,10 @@ type Parser struct {
 	fset            *token.FileSet
 	generalInfoFile string
 	typeCache       map[string]*TypeInfo
-	parsedModules   map[string]bool // Track parsed modules to avoid infinite recursion
-	referencedTypes map[string]bool // Track types referenced in operations (selective parsing)
+	parsedModules   map[string]bool              // Track parsed modules to avoid infinite recursion
+	referencedTypes map[string]bool              // Track types referenced in operations (selective parsing)
+	importMap       map[string]map[string]string // Map of file path -> (package alias -> import path)
+	parsingExternal bool                         // Flag to indicate we're parsing external packages
 
 	// Configuration options
 	excludePatterns      []string
@@ -86,6 +88,7 @@ func New() *Parser {
 		typeCache:            make(map[string]*TypeInfo),
 		parsedModules:        make(map[string]bool),
 		referencedTypes:      make(map[string]bool),
+		importMap:            make(map[string]map[string]string),
 		includeTypes:         []string{"all"}, // Default: include all referenced types
 		propertyStrategy:     "camelcase",
 		parseDepth:           100,
@@ -228,6 +231,11 @@ func (p *Parser) ParseFile(path string) error {
 	}
 
 	p.files[path] = file
+
+	// Collect imports from this file (only for main project files, not external dependencies)
+	if !p.parsingExternal {
+		p.collectImports(path, file)
+	}
 
 	// Check if this file should be used for general API info
 	shouldParseGeneralInfo := false
@@ -607,7 +615,13 @@ func (p *Parser) GetReferencedTypes() map[string]bool {
 // including nested structs, to ensure all related types are included in the schema.
 func (p *Parser) ResolveTypeDependencies() {
 	// Keep processing until no new types are discovered
+	maxIterations := 10
+	iterations := 0
 	for {
+		iterations++
+		if iterations > maxIterations {
+			break
+		}
 		newTypesFound := false
 		currentTypes := make([]string, 0, len(p.referencedTypes))
 
@@ -618,6 +632,7 @@ func (p *Parser) ResolveTypeDependencies() {
 
 		// Process each referenced type
 		for _, typeName := range currentTypes {
+			found := false
 			// Find the type in parsed files
 			for _, file := range p.files {
 				ast.Inspect(file, func(n ast.Node) bool {
@@ -674,6 +689,13 @@ func (p *Parser) ResolveTypeDependencies() {
 
 					return true
 				})
+			}
+
+			// If type not found in parsed files, try to parse it from external dependencies
+			if !found {
+				if err := p.parseExternalType(typeName); err == nil {
+					newTypesFound = true
+				}
 			}
 		}
 
@@ -746,6 +768,226 @@ func (p *Parser) extractFieldTypeName(expr ast.Expr) string {
 	case *ast.InterfaceType:
 		// Interface - no concrete type dependency
 		return ""
+	}
+
+	return ""
+}
+
+// collectImports collects import statements from a file and stores them in importMap.
+// This allows resolving qualified type names (e.g., errors.BadRequest) to their full import paths.
+func (p *Parser) collectImports(filePath string, file *ast.File) {
+	if p.importMap[filePath] == nil {
+		p.importMap[filePath] = make(map[string]string)
+	}
+
+	for _, imp := range file.Imports {
+		if imp.Path == nil {
+			continue
+		}
+
+		// Remove quotes from import path
+		importPath := strings.Trim(imp.Path.Value, "`\"")
+
+		// Determine package alias
+		var packageAlias string
+		if imp.Name != nil {
+			// Explicit alias (e.g., import foo "github.com/x/y")
+			packageAlias = imp.Name.Name
+			if packageAlias == "_" || packageAlias == "." {
+				// Skip blank imports and dot imports
+				continue
+			}
+		} else {
+			// No alias, use last component of import path
+			// e.g., "github.com/user/repo/errors" -> "errors"
+			parts := strings.Split(importPath, "/")
+			packageAlias = parts[len(parts)-1]
+		}
+
+		p.importMap[filePath][packageAlias] = importPath
+	}
+}
+
+// resolveQualifiedType resolves a qualified type name (e.g., "errors.BadRequest") to its full path.
+// Returns the full type path (e.g., "github.com/user/repo/errors.BadRequest") or empty string if not found.
+func (p *Parser) resolveQualifiedType(filePath, typeName string) string {
+	// Check if type is qualified (contains ".")
+	if !strings.Contains(typeName, ".") {
+		return typeName
+	}
+
+	// Split into package alias and type name
+	parts := strings.SplitN(typeName, ".", 2)
+	if len(parts) != 2 {
+		return typeName
+	}
+
+	packageAlias := parts[0]
+	typeNameOnly := parts[1]
+
+	// Look up import path for this package alias
+	fileImports, ok := p.importMap[filePath]
+	if !ok {
+		return packageAlias + "." + typeNameOnly
+	}
+
+	importPath, ok := fileImports[packageAlias]
+	if !ok {
+		return packageAlias + "." + typeNameOnly
+	}
+
+	// Extract package name from import path (last component)
+	// e.g., "github.com/dock-tech/isis-golang-lib/domainerrors" -> "domainerrors"
+	importParts := strings.Split(importPath, "/")
+	packageName := importParts[len(importParts)-1]
+
+	return packageName + "." + typeNameOnly
+}
+
+// parseExternalType attempts to parse an external type from a dependency.
+// Given a qualified type name (e.g., "domainerrors.BadRequest"), it tries to:
+// 1. Find which file has the import for this package
+// 2. Resolve the full import path
+// 3. Parse the external package to get the type definition
+func (p *Parser) parseExternalType(qualifiedType string) error {
+	// Check if type is qualified
+	if !strings.Contains(qualifiedType, ".") {
+		return nil
+	}
+
+	parts := strings.SplitN(qualifiedType, ".", 2)
+	if len(parts) != 2 {
+		return nil
+	}
+
+	packageAlias := parts[0]
+
+	// Search all files for an import matching this package alias
+	var importPath string
+	for _, imports := range p.importMap {
+		if path, ok := imports[packageAlias]; ok {
+			importPath = path
+			break
+		}
+	}
+
+	if importPath == "" {
+		// No import found, type might be in same package
+		return nil
+	}
+
+	// Try to find and parse this package
+	return p.parseExternalPackage(importPath)
+}
+
+// parseExternalPackage parses an external package from dependencies.
+func (p *Parser) parseExternalPackage(importPath string) error {
+	if !p.parseDependency {
+		return nil
+	}
+
+	// Check if we've already tried to parse this module
+	if p.parsedModules[importPath] {
+		return nil
+	}
+
+	// Mark as parsed to avoid repeated attempts
+	p.parsedModules[importPath] = true
+
+	// Find the package directory
+	var pkgDir string
+
+	// Check vendor first
+	vendorDir := filepath.Join("vendor", importPath)
+	if stat, err := os.Stat(vendorDir); err == nil && stat.IsDir() {
+		pkgDir = vendorDir
+	} else {
+		// Try GOMODCACHE
+		goModCache := os.Getenv("GOMODCACHE")
+		if goModCache == "" {
+			goPath := os.Getenv("GOPATH")
+			if goPath == "" {
+				homeDir, err := os.UserHomeDir()
+				if err != nil {
+					return nil
+				}
+				goPath = filepath.Join(homeDir, "go")
+			}
+			goModCache = filepath.Join(goPath, "pkg", "mod")
+		}
+
+		// Try to find the package in GOMODCACHE
+		// The import path might be a subpackage, so we need to search for it
+		pkgDir = p.findPackageInCache(goModCache, importPath)
+		if pkgDir == "" {
+			return nil
+		}
+	}
+
+	// Set flag to indicate we're parsing external packages
+	// This prevents collecting imports from these files which could cause infinite recursion
+	wasParsingExternal := p.parsingExternal
+	p.parsingExternal = true
+	defer func() {
+		p.parsingExternal = wasParsingExternal
+	}()
+
+	// Parse all .go files in the package directory (non-recursively)
+	return filepath.Walk(pkgDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip subdirectories
+		if info.IsDir() && path != pkgDir {
+			return filepath.SkipDir
+		}
+
+		// Parse only Go files (excluding test files)
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+
+		return p.ParseFile(path)
+	})
+}
+
+// findPackageInCache searches for a package in the GOMODCACHE.
+// It handles both full module paths and subpackages within modules.
+func (p *Parser) findPackageInCache(cacheDir, importPath string) string {
+	// First, try to find the package directly
+	parts := strings.Split(importPath, "/")
+
+	// Try increasingly shorter paths to find the module root
+	for i := len(parts); i >= 3; i-- { // Minimum 3 parts for domain/org/repo
+		modulePath := strings.Join(parts[:i], "/")
+		subPath := ""
+		if i < len(parts) {
+			subPath = strings.Join(parts[i:], "/")
+		}
+
+		// Build cache path with proper escaping for uppercase letters
+		var cachePath strings.Builder
+		for _, c := range modulePath {
+			if c >= 'A' && c <= 'Z' {
+				cachePath.WriteByte('!')
+				cachePath.WriteRune(c + 32) // convert to lowercase
+			} else {
+				cachePath.WriteRune(c)
+			}
+		}
+
+		// Try to find any version of this module
+		pattern := filepath.Join(cacheDir, cachePath.String()) + "@*"
+		matches, err := filepath.Glob(pattern)
+		if err == nil && len(matches) > 0 {
+			// Use the first (alphabetically last) version found
+			moduleDir := matches[len(matches)-1]
+			if subPath != "" {
+				return filepath.Join(moduleDir, subPath)
+			}
+			return moduleDir
+		}
 	}
 
 	return ""
