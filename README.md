@@ -7,7 +7,7 @@
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/Coverage-80.1%25-brightgreen.svg)](/)
-[![Examples](https://img.shields.io/badge/Examples-25-blue.svg)](examples/)
+[![Examples](https://img.shields.io/badge/Examples-27-blue.svg)](examples/)
 
 **Automatically generate OpenAPI 3.1.0 or Swagger 2.0 documentation from Go source code annotations.**
 
@@ -53,8 +53,9 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 - ✅ **Response headers** - Complete header documentation
 - ✅ **Multiple content types** - JSON, XML, YAML, CSV, PDF, and custom MIME types
 - ✅ **Custom extensions** - Full x-* extension support
+- ✅ **@x-visibility** - Generate separate public/private documentation from single codebase
 - ✅ **80.1% test coverage** - Production-ready with comprehensive test suite including roundtrip tests
-- ✅ **25 working examples** - Learn from complete, runnable examples
+- ✅ **27 working examples** - Learn from complete, runnable examples
 
 ### Why nexs-swag?
 
@@ -608,6 +609,7 @@ Add to handler functions:
 | `@Router` | `@Router /users/{id} [get]` | Route path and method |
 | `@Security` | `@Security ApiKeyAuth` | Security requirement |
 | `@Deprecated` | `@Deprecated` | Mark as deprecated |
+| `@x-visibility` | `@x-visibility public` | Separate public/private docs |
 | `@x-<name>` | `@x-code-samples file.json` | Custom extension |
 
 **Parameter Syntax:**
@@ -921,6 +923,87 @@ func ProcessPayment(c *gin.Context) {
     // Implementation
 }
 ```
+
+### Visibility Separation (@x-visibility)
+
+Generate separate documentation for public and private APIs from a single codebase.
+
+```go
+// GetPublicUser returns public user information
+// @Summary      Get user (public)
+// @Description  Returns user information for public consumption
+// @Tags         users
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  UserPublic
+// @Failure      404  {object}  ErrorResponse
+// @Router       /users/{id} [get]
+// @x-visibility public
+func GetPublicUser(c *gin.Context) {
+    c.JSON(200, UserPublic{ID: 1, Name: "John"})
+}
+
+// GetAdminUser returns full user details including sensitive data
+// @Summary      Get user (admin)
+// @Description  Returns complete user information for admin use
+// @Tags         admin
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  UserPrivate
+// @Failure      404  {object}  ErrorResponse
+// @Router       /admin/users/{id} [get]
+// @x-visibility private
+func GetAdminUser(c *gin.Context) {
+    c.JSON(200, UserPrivate{
+        ID:       1,
+        Name:     "John",
+        Email:    "john@example.com",
+        Password: "hashed",
+        Role:     "admin",
+    })
+}
+```
+
+**Visibility Options:**
+- `@x-visibility public` - Endpoint appears only in `openapi_public.json` or `swagger_public.json`
+- `@x-visibility private` - Endpoint appears only in `openapi_private.json` or `swagger_private.json`
+- No annotation - Endpoint appears in **both** specifications (shared endpoint)
+
+**Generated Files:**
+```
+docs/
+├── openapi_public.json    # Public API specification (OpenAPI 3.x)
+├── openapi_private.json   # Private/Admin API specification (OpenAPI 3.x)
+├── swagger_public.json    # Public API specification (Swagger 2.0)
+├── swagger_private.json   # Private API specification (Swagger 2.0)
+├── openapi_public.yaml
+├── openapi_private.yaml
+├── docs_public.go
+└── docs_private.go
+```
+
+**Schema Filtering:**
+
+Schemas are automatically filtered based on usage:
+- Public spec includes only schemas referenced by public endpoints
+- Private spec includes only schemas referenced by private endpoints
+- Shared schemas (like `ErrorResponse`) appear where needed
+- Recursive schema dependencies are collected automatically
+
+**Use Cases:**
+- Separate public API docs from internal/admin endpoints
+- Generate different client SDKs for different audiences
+- Hide sensitive operations from public documentation
+- Create distinct documentation sites for different user roles
+- Maintain single codebase with multiple documentation outputs
+
+**Compatibility:**
+- ✅ Swagger 2.0
+- ✅ OpenAPI 3.0.x
+- ✅ OpenAPI 3.1.x
+- ✅ OpenAPI 3.2.0
+
+For a complete example, see [examples/26-x-visibility/](examples/26-x-visibility/) (OpenAPI 3.x) and [examples/27-x-visibility-v2/](examples/27-x-visibility-v2/) (Swagger 2.0).
 
 ### Migration from 3.1.x
 
