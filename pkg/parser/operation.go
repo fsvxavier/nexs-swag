@@ -67,6 +67,7 @@ var (
 
 	// Extension annotations.
 	xCodeSamplesRegex = regexp.MustCompile(`^@x-codeSamples\s+(.+)$`)
+	xVisibilityRegex  = regexp.MustCompile(`^@x-visibility\s+(public|private)$`)
 )
 
 // Process processes function documentation and returns an Operation.
@@ -136,6 +137,9 @@ func (o *OperationProcessor) Process(doc *ast.CommentGroup) *openapi.Operation {
 
 		case xCodeSamplesRegex.MatchString(text):
 			o.processCodeSamples(text, op)
+
+		case xVisibilityRegex.MatchString(text):
+			o.processVisibility(text, op)
 		}
 	}
 
@@ -810,6 +814,24 @@ func (o *OperationProcessor) processState(text string, op *openapi.Operation) {
 		op.Extensions = make(map[string]interface{})
 	}
 	op.Extensions["x-state"] = state
+}
+
+// processVisibility processes @x-visibility annotation.
+// Format: @x-visibility public|private
+// Example: @x-visibility public
+func (o *OperationProcessor) processVisibility(text string, op *openapi.Operation) {
+	matches := xVisibilityRegex.FindStringSubmatch(text)
+	if len(matches) < 2 {
+		return
+	}
+
+	visibility := matches[1]
+
+	if op.Extensions == nil {
+		op.Extensions = make(map[string]interface{})
+	}
+
+	op.Extensions["x-visibility"] = visibility
 }
 
 // processCodeSamples processes @x-codeSamples annotation.

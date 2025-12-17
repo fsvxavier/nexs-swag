@@ -231,6 +231,14 @@ func (c *Converter) convertOperation(op *openapi.Operation) *swagger.Operation {
 	v2Op.Consumes = c.extractConsumes(op.RequestBody)
 	v2Op.Produces = c.extractProduces(op.Responses)
 
+	// Copy extensions (including x-visibility)
+	if len(op.Extensions) > 0 {
+		v2Op.Extensions = make(map[string]interface{})
+		for k, v := range op.Extensions {
+			v2Op.Extensions[k] = v
+		}
+	}
+
 	// Warn about unsupported features
 	if len(op.Callbacks) > 0 {
 		c.warnings = append(c.warnings, fmt.Sprintf("operation %q: callbacks are not supported in Swagger 2.0 and were ignored", op.OperationID))

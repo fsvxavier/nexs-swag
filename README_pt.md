@@ -7,7 +7,7 @@
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![Licença](https://img.shields.io/badge/Licença-MIT-blue.svg)](LICENSE)
 [![Cobertura](https://img.shields.io/badge/Cobertura-80.1%25-brightgreen.svg)](/)
-[![Exemplos](https://img.shields.io/badge/Exemplos-25-blue.svg)](examples/)
+[![Exemplos](https://img.shields.io/badge/Exemplos-27-blue.svg)](examples/)
 
 **Gere automaticamente documentação OpenAPI 3.1.0 ou Swagger 2.0 a partir de anotações no código Go.**
 
@@ -53,8 +53,9 @@ nexs-swag converte anotações Go para especificação OpenAPI 3.1.0 ou Swagger 
 - ✅ **Headers de resposta** - Documentação completa de headers
 - ✅ **Múltiplos tipos de conteúdo** - JSON, XML, YAML, CSV, PDF e tipos MIME customizados
 - ✅ **Extensões customizadas** - Suporte completo para x-*
+- ✅ **@x-visibility** - Gere documentação pública/privada separada a partir de uma única base de código
 - ✅ **80.1% de cobertura de testes** - Pronto para produção com suite de testes abrangente incluindo testes roundtrip
-- ✅ **25 exemplos funcionais** - Aprenda com exemplos completos e executáveis
+- ✅ **27 exemplos funcionais** - Aprenda com exemplos completos e executáveis
 
 ### Por que nexs-swag?
 
@@ -608,6 +609,7 @@ Adicione às funções handler:
 | `@Router` | `@Router /users/{id} [get]` | Caminho e método da rota |
 | `@Security` | `@Security ApiKeyAuth` | Requisito de segurança |
 | `@Deprecated` | `@Deprecated` | Marcar como deprecated |
+| `@x-visibility` | `@x-visibility public` | Separar docs públicas/privadas |
 | `@x-<nome>` | `@x-code-samples file.json` | Extensão customizada |
 
 **Sintaxe de Parâmetro:**
@@ -948,6 +950,87 @@ Para operações assíncronas com callbacks, use `@Callback`:
 // @Router       /payments/async [post]
 func ProcessAsyncPayment(c *gin.Context) {}
 ```
+
+### Separação por Visibilidade (@x-visibility)
+
+Gere documentação separada para APIs públicas e privadas a partir de uma única base de código.
+
+```go
+// GetPublicUser retorna informações públicas do usuário
+// @Summary      Buscar usuário (público)
+// @Description  Retorna informações do usuário para consumo público
+// @Tags         users
+// @Produce      json
+// @Param        id   path      int  true  "ID do Usuário"
+// @Success      200  {object}  UserPublic
+// @Failure      404  {object}  ErrorResponse
+// @Router       /users/{id} [get]
+// @x-visibility public
+func GetPublicUser(c *gin.Context) {
+    c.JSON(200, UserPublic{ID: 1, Name: "João"})
+}
+
+// GetAdminUser retorna detalhes completos incluindo dados sensíveis
+// @Summary      Buscar usuário (admin)
+// @Description  Retorna informações completas do usuário para uso administrativo
+// @Tags         admin
+// @Produce      json
+// @Param        id   path      int  true  "ID do Usuário"
+// @Success      200  {object}  UserPrivate
+// @Failure      404  {object}  ErrorResponse
+// @Router       /admin/users/{id} [get]
+// @x-visibility private
+func GetAdminUser(c *gin.Context) {
+    c.JSON(200, UserPrivate{
+        ID:       1,
+        Name:     "João",
+        Email:    "joao@example.com",
+        Password: "hashed",
+        Role:     "admin",
+    })
+}
+```
+
+**Opções de Visibilidade:**
+- `@x-visibility public` - Endpoint aparece apenas em `openapi_public.json` ou `swagger_public.json`
+- `@x-visibility private` - Endpoint aparece apenas em `openapi_private.json` ou `swagger_private.json`
+- Sem anotação - Endpoint aparece em **ambas** as especificações (endpoint compartilhado)
+
+**Arquivos Gerados:**
+```
+docs/
+├── openapi_public.json    # Especificação API pública (OpenAPI 3.x)
+├── openapi_private.json   # Especificação API privada/admin (OpenAPI 3.x)
+├── swagger_public.json    # Especificação API pública (Swagger 2.0)
+├── swagger_private.json   # Especificação API privada (Swagger 2.0)
+├── openapi_public.yaml
+├── openapi_private.yaml
+├── docs_public.go
+└── docs_private.go
+```
+
+**Filtragem de Schemas:**
+
+Os schemas são automaticamente filtrados baseado no uso:
+- Spec pública inclui apenas schemas referenciados por endpoints públicos
+- Spec privada inclui apenas schemas referenciados por endpoints privados
+- Schemas compartilhados (como `ErrorResponse`) aparecem onde necessário
+- Dependências recursivas de schemas são coletadas automaticamente
+
+**Casos de Uso:**
+- Separar documentação de API estável pública de APIs experimentais privadas
+- Ocultar endpoints administrativos internos da documentação pública
+- Gerar diferentes SDKs de cliente para APIs públicas vs privadas
+- Hospedar documentação separada para diferentes públicos
+- Distinguir entre APIs externas e APIs inter-serviços
+
+**Compatibilidade:**
+- ✅ Swagger 2.0
+- ✅ OpenAPI 3.0.x
+- ✅ OpenAPI 3.1.x
+- ✅ OpenAPI 3.2.0
+
+Para um exemplo completo, veja [examples/26-x-visibility/](examples/26-x-visibility/) (OpenAPI 3.x) e [examples/27-x-visibility-v2/](examples/27-x-visibility-v2/) (Swagger 2.0).
 
 ### Migração 3.1.x → 3.2.0
 

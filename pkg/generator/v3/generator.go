@@ -79,23 +79,33 @@ func (g *Generator) Generate() error {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// Generate each requested output type
-	for _, outputType := range g.outputType {
-		switch outputType {
-		case "json":
-			if err := g.generateJSON(); err != nil {
-				return fmt.Errorf("failed to generate JSON: %w", err)
+	// Check if we need to generate separate public/private specs
+	hasVisibility := g.hasVisibilityAnnotations()
+
+	if hasVisibility {
+		// Generate separate specs for public and private
+		if err := g.generateSeparateSpecs(); err != nil {
+			return err
+		}
+	} else {
+		// Generate single spec as before
+		for _, outputType := range g.outputType {
+			switch outputType {
+			case "json":
+				if err := g.generateJSON(); err != nil {
+					return fmt.Errorf("failed to generate JSON: %w", err)
+				}
+			case "yaml", "yml":
+				if err := g.generateYAML(); err != nil {
+					return fmt.Errorf("failed to generate YAML: %w", err)
+				}
+			case "go":
+				if err := g.generateGo(); err != nil {
+					return fmt.Errorf("failed to generate Go file: %w", err)
+				}
+			default:
+				return fmt.Errorf("unsupported output type: %s", outputType)
 			}
-		case "yaml", "yml":
-			if err := g.generateYAML(); err != nil {
-				return fmt.Errorf("failed to generate YAML: %w", err)
-			}
-		case "go":
-			if err := g.generateGo(); err != nil {
-				return fmt.Errorf("failed to generate Go file: %w", err)
-			}
-		default:
-			return fmt.Errorf("unsupported output type: %s", outputType)
 		}
 	}
 
@@ -145,6 +155,328 @@ func (g *Generator) generateYAML() error {
 	encoder.SetIndent(2)
 
 	if err := encoder.Encode(g.spec); err != nil {
+		return err
+	}
+
+	fmt.Printf("Generated: %s\n", filePath)
+	return nil
+}
+
+// hasVisibilityAnnotations checks if any operation has x-visibility extension.
+func (g *Generator) hasVisibilityAnnotations() bool {
+	for _, pathItem := range g.spec.Paths {
+		for _, op := range []*openapi.Operation{
+			pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Delete,
+			pathItem.Patch, pathItem.Options, pathItem.Head, pathItem.Trace,
+		} {
+			if op != nil && op.Extensions != nil {
+				if _, ok := op.Extensions["x-visibility"]; ok {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// generateSeparateSpecs generates separate public and private OpenAPI specs.
+func (g *Generator) generateSeparateSpecs() error {
+	// Create public spec
+	publicSpec := g.filterSpecByVisibility("public")
+	// Create private spec
+	privateSpec := g.filterSpecByVisibility("private")
+
+	// Generate files for each visibility level
+	for _, outputType := range g.outputType {
+		switch outputType {
+		case "json":
+			if err := g.generateJSONWithSuffix(publicSpec, "_public"); err != nil {
+				return fmt.Errorf("failed to generate public JSON: %w", err)
+			}
+			if err := g.generateJSONWithSuffix(privateSpec, "_private"); err != nil {
+				return fmt.Errorf("failed to generate private JSON: %w", err)
+			}
+		case "yaml", "yml":
+			if err := g.generateYAMLWithSuffix(publicSpec, "_public"); err != nil {
+				return fmt.Errorf("failed to generate public YAML: %w", err)
+			}
+			if err := g.generateYAMLWithSuffix(privateSpec, "_private"); err != nil {
+				return fmt.Errorf("failed to generate private YAML: %w", err)
+			}
+		case "go":
+			if err := g.generateGoWithSuffix(publicSpec, "_public"); err != nil {
+				return fmt.Errorf("failed to generate public Go file: %w", err)
+			}
+			if err := g.generateGoWithSuffix(privateSpec, "_private"); err != nil {
+				return fmt.Errorf("failed to generate private Go file: %w", err)
+			}
+		default:
+			return fmt.Errorf("unsupported output type: %s", outputType)
+		}
+	}
+
+	return nil
+}
+
+// filterSpecByVisibility creates a new spec containing only operations with the specified visibility.
+func (g *Generator) filterSpecByVisibility(visibility string) *openapi.OpenAPI {
+	filteredSpec := &openapi.OpenAPI{
+		OpenAPI:           g.spec.OpenAPI,
+		JSONSchemaDialect: g.spec.JSONSchemaDialect,
+		Info:              g.spec.Info,
+		Servers:           g.spec.Servers,
+		Paths:             make(map[string]*openapi.PathItem),
+		Components:        &openapi.Components{Schemas: make(map[string]*openapi.Schema)},
+		Security:          g.spec.Security,
+		Tags:              g.spec.Tags,
+		ExternalDocs:      g.spec.ExternalDocs,
+	}
+
+	usedSchemas := make(map[string]bool)
+
+	// Filter paths based on visibility
+	for path, pathItem := range g.spec.Paths {
+		filteredPathItem := &openapi.PathItem{}
+		hasOperations := false
+
+		for method, op := range map[string]*openapi.Operation{
+			"get":     pathItem.Get,
+			"post":    pathItem.Post,
+			"put":     pathItem.Put,
+			"delete":  pathItem.Delete,
+			"patch":   pathItem.Patch,
+			"options": pathItem.Options,
+			"head":    pathItem.Head,
+			"trace":   pathItem.Trace,
+		} {
+			if op == nil {
+				continue
+			}
+
+			// Check visibility - if not set or empty, include in both
+			opVisibility := ""
+			if op.Extensions != nil {
+				if vis, ok := op.Extensions["x-visibility"].(string); ok {
+					opVisibility = vis
+				}
+			}
+
+			// Include operation if:
+			// 1. No x-visibility set (empty) - include in both specs
+			// 2. x-visibility matches the current visibility filter
+			if opVisibility == "" || opVisibility == visibility {
+				hasOperations = true
+				switch method {
+				case "get":
+					filteredPathItem.Get = op
+				case "post":
+					filteredPathItem.Post = op
+				case "put":
+					filteredPathItem.Put = op
+				case "delete":
+					filteredPathItem.Delete = op
+				case "patch":
+					filteredPathItem.Patch = op
+				case "options":
+					filteredPathItem.Options = op
+				case "head":
+					filteredPathItem.Head = op
+				case "trace":
+					filteredPathItem.Trace = op
+				}
+
+				// Collect schemas used in this operation
+				g.collectSchemasFromOperation(op, usedSchemas)
+			}
+		}
+
+		if hasOperations {
+			filteredSpec.Paths[path] = filteredPathItem
+		}
+	}
+
+	// Copy only used schemas
+	for schemaName := range usedSchemas {
+		if schema, ok := g.spec.Components.Schemas[schemaName]; ok {
+			filteredSpec.Components.Schemas[schemaName] = schema
+		}
+	}
+
+	return filteredSpec
+}
+
+// collectSchemasFromOperation collects all schema names referenced in an operation.
+func (g *Generator) collectSchemasFromOperation(op *openapi.Operation, usedSchemas map[string]bool) {
+	// Collect from request body
+	if op.RequestBody != nil && op.RequestBody.Content != nil {
+		for _, mediaType := range op.RequestBody.Content {
+			if mediaType.Schema != nil {
+				g.collectSchemaRefs(mediaType.Schema, usedSchemas)
+			}
+		}
+	}
+
+	// Collect from responses
+	for _, response := range op.Responses {
+		if response.Content != nil {
+			for _, mediaType := range response.Content {
+				if mediaType.Schema != nil {
+					g.collectSchemaRefs(mediaType.Schema, usedSchemas)
+				}
+			}
+		}
+	}
+
+	// Collect from parameters
+	for _, param := range op.Parameters {
+		if param.Schema != nil {
+			g.collectSchemaRefs(param.Schema, usedSchemas)
+		}
+	}
+}
+
+// collectSchemaRefs recursively collects schema references.
+func (g *Generator) collectSchemaRefs(schema *openapi.Schema, usedSchemas map[string]bool) {
+	if schema == nil {
+		return
+	}
+
+	// Check for $ref
+	if schema.Ref != "" {
+		// Extract schema name from #/components/schemas/SchemaName
+		parts := strings.Split(schema.Ref, "/")
+		if len(parts) > 0 {
+			schemaName := parts[len(parts)-1]
+			if !usedSchemas[schemaName] {
+				usedSchemas[schemaName] = true
+				// Recursively collect schemas from referenced schema
+				if refSchema, ok := g.spec.Components.Schemas[schemaName]; ok {
+					g.collectSchemaRefs(refSchema, usedSchemas)
+				}
+			}
+		}
+	}
+
+	// Check properties
+	for _, propSchema := range schema.Properties {
+		g.collectSchemaRefs(propSchema, usedSchemas)
+	}
+
+	// Check items (for arrays)
+	if schema.Items != nil {
+		g.collectSchemaRefs(schema.Items, usedSchemas)
+	}
+
+	// Check allOf, anyOf, oneOf
+	for _, s := range schema.AllOf {
+		g.collectSchemaRefs(&s, usedSchemas)
+	}
+	for _, s := range schema.AnyOf {
+		g.collectSchemaRefs(&s, usedSchemas)
+	}
+	for _, s := range schema.OneOf {
+		g.collectSchemaRefs(&s, usedSchemas)
+	}
+}
+
+// generateJSONWithSuffix generates JSON with a filename suffix.
+func (g *Generator) generateJSONWithSuffix(spec *openapi.OpenAPI, suffix string) error {
+	filePath := filepath.Join(g.outputDir, fmt.Sprintf("openapi%s.json", suffix))
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+	if err := encoder.Encode(spec); err != nil {
+		return err
+	}
+
+	fmt.Printf("Generated: %s\n", filePath)
+	return nil
+}
+
+// generateYAMLWithSuffix generates YAML with a filename suffix.
+func (g *Generator) generateYAMLWithSuffix(spec *openapi.OpenAPI, suffix string) error {
+	filePath := filepath.Join(g.outputDir, fmt.Sprintf("openapi%s.yaml", suffix))
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := yaml.NewEncoder(file)
+	encoder.SetIndent(2)
+
+	if err := encoder.Encode(spec); err != nil {
+		return err
+	}
+
+	fmt.Printf("Generated: %s\n", filePath)
+	return nil
+}
+
+// generateGoWithSuffix generates Go file with a suffix.
+func (g *Generator) generateGoWithSuffix(spec *openapi.OpenAPI, suffix string) error {
+	filePath := filepath.Join(g.outputDir, fmt.Sprintf("docs%s.go", suffix))
+
+	// Marshal to JSON for embedding
+	jsonData, err := json.MarshalIndent(spec, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Write package declaration
+	varName := "SwaggerDoc"
+	if suffix == "_public" {
+		varName = "SwaggerDocPublic"
+	} else if suffix == "_private" {
+		varName = "SwaggerDocPrivate"
+	}
+
+	if _, err := fmt.Fprintf(file, "// Package %s Code generated by nexs-swag. DO NOT EDIT\n", g.instanceName); err != nil {
+		return err
+	}
+
+	if g.generatedTime {
+		if _, err := fmt.Fprintf(file, "// Generated at: %s\n", time.Now().Format("2006-01-02 15:04:05")); err != nil {
+			return err
+		}
+	}
+
+	if _, err := fmt.Fprintf(file, "package %s\n\n", g.instanceName); err != nil {
+		return err
+	}
+
+	// Write SwaggerDoc variable
+	if _, err := fmt.Fprintf(file, "// %s is the OpenAPI v3 specification in JSON format\n", varName); err != nil {
+		return err
+	}
+
+	// Apply template delimiters if configured
+	leftDelim := "{{"
+	rightDelim := "}}"
+	if len(g.templateDelims) == 2 {
+		leftDelim = g.templateDelims[0]
+		rightDelim = g.templateDelims[1]
+	}
+
+	docStr := string(jsonData)
+	docStr = strings.ReplaceAll(docStr, "{{", leftDelim)
+	docStr = strings.ReplaceAll(docStr, "}}", rightDelim)
+
+	if _, err := fmt.Fprintf(file, "var %s = `%s`\n", varName, docStr); err != nil {
 		return err
 	}
 
