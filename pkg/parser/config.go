@@ -216,7 +216,7 @@ func (p *Parser) SetParseDependencyLevel(level int) {
 
 // SetIncludeTypes sets the categories of Go types to include in parsing.
 // Valid categories: struct, model (alias for struct), interface, func, const, type, all
-// Default: all
+// Default: all.
 func (p *Parser) SetIncludeTypes(types string) {
 	if types == "" {
 		p.includeTypes = []string{"all"}

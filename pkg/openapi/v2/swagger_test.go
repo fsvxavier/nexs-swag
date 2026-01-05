@@ -185,7 +185,8 @@ func TestSwaggerValidate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.swagger.Validate()
-			if tt.wantErr {
+			switch {
+			case tt.wantErr:
 				if err == nil {
 					t.Errorf("Validate() error = nil, want error containing %q", tt.errMsg)
 					return
@@ -193,7 +194,7 @@ func TestSwaggerValidate(t *testing.T) {
 				if tt.errMsg != "" && !contains(err.Error(), tt.errMsg) {
 					t.Errorf("Validate() error = %v, want error containing %q", err, tt.errMsg)
 				}
-			} else {
+			default:
 				if err != nil {
 					t.Errorf("Validate() error = %v, want nil", err)
 				}

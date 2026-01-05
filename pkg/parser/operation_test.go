@@ -718,7 +718,6 @@ func TestStreamResponseAnnotation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -796,7 +795,6 @@ func TestStreamResponseWithComplexTypes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1035,7 +1033,6 @@ func TestStreamResponseRegexValidation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -1169,7 +1166,7 @@ func TestProcessCallback(t *testing.T) {
 				if _, exists := createdOp.Responses["200"]; !exists {
 					t.Error("Expected 200 response to exist")
 				}
-			} else {
+			} else { //nolint:gocritic
 				if op.Callbacks != nil && len(op.Callbacks) > 0 {
 					t.Error("Expected no callbacks to be created for invalid format")
 				}

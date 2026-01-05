@@ -2,6 +2,7 @@
 package converter
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -35,7 +36,7 @@ func (c *Converter) ClearWarnings() {
 // ConvertToV2 converts an OpenAPI 3.1.0 specification to Swagger 2.0.
 func (c *Converter) ConvertToV2(spec *openapi.OpenAPI) (*swagger.Swagger, error) {
 	if spec == nil {
-		return nil, fmt.Errorf("input specification is nil")
+		return nil, errors.New("input specification is nil")
 	}
 
 	swagger := &swagger.Swagger{
@@ -602,7 +603,7 @@ func (c *Converter) convertExamples(content map[string]*openapi.MediaType) map[s
 // convertRefToV2 converts OpenAPI 3.x $ref to Swagger 2.0 $ref format.
 // Converts #/components/schemas/Foo to #/definitions/Foo
 // Converts #/components/parameters/Foo to #/parameters/Foo
-// Converts #/components/responses/Foo to #/responses/Foo
+// Converts #/components/responses/Foo to #/responses/Foo.
 func (c *Converter) convertRefToV2(ref string) string {
 	if ref == "" {
 		return ""
@@ -618,7 +619,7 @@ func (c *Converter) convertRefToV2(ref string) string {
 // convertRefToV3 converts Swagger 2.0 $ref to OpenAPI 3.x $ref format.
 // Converts #/definitions/Foo to #/components/schemas/Foo
 // Converts #/parameters/Foo to #/components/parameters/Foo
-// Converts #/responses/Foo to #/components/responses/Foo
+// Converts #/responses/Foo to #/components/responses/Foo.
 func (c *Converter) convertRefToV3(ref string) string {
 	if ref == "" {
 		return ""
@@ -868,9 +869,10 @@ func (c *Converter) convertSecurityScheme(scheme *openapi.SecurityScheme) *swagg
 	// Map OpenAPI 3.x types to Swagger 2.0 types
 	switch scheme.Type {
 	case "http":
-		if scheme.Scheme == "basic" {
+		switch scheme.Scheme {
+		case "basic":
 			v2Scheme.Type = "basic"
-		} else if scheme.Scheme == "bearer" {
+		case "bearer":
 			v2Scheme.Type = "apiKey"
 			v2Scheme.In = "header"
 			v2Scheme.Name = "Authorization"
@@ -878,7 +880,7 @@ func (c *Converter) convertSecurityScheme(scheme *openapi.SecurityScheme) *swagg
 				v2Scheme.Extensions = make(map[string]interface{})
 			}
 			v2Scheme.Extensions["x-bearer-format"] = scheme.BearerFormat
-		} else {
+		default:
 			c.warnings = append(c.warnings, fmt.Sprintf("http scheme %q is not directly supported in Swagger 2.0", scheme.Scheme))
 		}
 	case "apiKey":
@@ -920,19 +922,20 @@ func (c *Converter) convertOAuth2Flows(scheme *openapi.SecurityScheme, v2Scheme 
 
 	// Swagger 2.0 supports only one flow at a time
 	// Priority: implicit > password > application > authorizationCode
-	if scheme.Flows.Implicit != nil {
+	switch {
+	case scheme.Flows.Implicit != nil:
 		v2Scheme.Flow = "implicit"
 		v2Scheme.AuthorizationURL = scheme.Flows.Implicit.AuthorizationURL
 		v2Scheme.Scopes = scheme.Flows.Implicit.Scopes
-	} else if scheme.Flows.Password != nil {
+	case scheme.Flows.Password != nil:
 		v2Scheme.Flow = "password"
 		v2Scheme.TokenURL = scheme.Flows.Password.TokenURL
 		v2Scheme.Scopes = scheme.Flows.Password.Scopes
-	} else if scheme.Flows.ClientCredentials != nil {
+	case scheme.Flows.ClientCredentials != nil:
 		v2Scheme.Flow = "application"
 		v2Scheme.TokenURL = scheme.Flows.ClientCredentials.TokenURL
 		v2Scheme.Scopes = scheme.Flows.ClientCredentials.Scopes
-	} else if scheme.Flows.AuthorizationCode != nil {
+	case scheme.Flows.AuthorizationCode != nil:
 		v2Scheme.Flow = "accessCode"
 		v2Scheme.AuthorizationURL = scheme.Flows.AuthorizationCode.AuthorizationURL
 		v2Scheme.TokenURL = scheme.Flows.AuthorizationCode.TokenURL
@@ -1013,7 +1016,7 @@ func (c *Converter) convertExternalDocs(docs *openapi.ExternalDocs) *swagger.Ext
 // ConvertToV3 converts a Swagger 2.0 specification to OpenAPI 3.1.0.
 func (c *Converter) ConvertToV3(swagger *swagger.Swagger) (*openapi.OpenAPI, error) {
 	if swagger == nil {
-		return nil, fmt.Errorf("input specification is nil")
+		return nil, errors.New("input specification is nil")
 	}
 
 	spec := &openapi.OpenAPI{

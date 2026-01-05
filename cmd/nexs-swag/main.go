@@ -2,6 +2,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -430,7 +431,7 @@ func initAction(c *cli.Context) error {
 	// Validate and normalize openapi-version
 	openapiVersion = normalizeOpenAPIVersion(openapiVersion)
 	if openapiVersion == "" {
-		return fmt.Errorf("invalid openapi-version. Supported versions: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0")
+		return errors.New("invalid openapi-version. Supported versions: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0")
 	}
 
 	// Use outputTypes if format is not explicitly set

@@ -8,7 +8,7 @@ import (
 )
 
 // OrderProcessor defines the interface for order processing
-// This interface won't be included unless --includeTypes="interface" is used
+// This interface won't be included unless --includeTypes="interface" is used.
 type OrderProcessor interface {
 	Process(order *models.OrderRequest) (*models.OrderResponse, error)
 	Validate(order *models.OrderRequest) error
@@ -16,7 +16,7 @@ type OrderProcessor interface {
 }
 
 // ProcessOrder is a simple function to process orders
-// This demonstrates that the function itself isn't included in schemas
+// This demonstrates that the function itself isn't included in schemas.
 func ProcessOrder(req *models.OrderRequest) *models.OrderResponse {
 	total := models.Money{
 		Amount:   calculateTotalAmount(req.Items),
@@ -48,7 +48,7 @@ func calculateTotalAmount(items []models.OrderItem) int64 {
 	return total
 }
 
-// UnusedService demonstrates that unused types are excluded
+// UnusedService demonstrates that unused types are excluded.
 type UnusedService struct {
 	Name string
 	ID   int
