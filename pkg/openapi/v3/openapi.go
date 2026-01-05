@@ -3,7 +3,7 @@ package v3
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 )
 
 // OpenAPI represents the root document object of the OpenAPI 3.1.x document.
@@ -39,13 +39,13 @@ func (o *OpenAPI) GetInfo() interface{} {
 // Validate performs basic validation of the OpenAPI specification.
 func (o *OpenAPI) Validate() error {
 	if o.OpenAPI == "" {
-		return fmt.Errorf("openapi version is required")
+		return errors.New("openapi version is required")
 	}
 	if o.Info.Title == "" {
-		return fmt.Errorf("info.title is required")
+		return errors.New("info.title is required")
 	}
 	if o.Info.Version == "" {
-		return fmt.Errorf("info.version is required")
+		return errors.New("info.version is required")
 	}
 	return nil
 }
@@ -303,24 +303,24 @@ type Components struct {
 
 // SecurityScheme defines a security scheme.
 type SecurityScheme struct {
-	Type              string      `json:"type"                       yaml:"type"`                         // REQUIRED. Type: apiKey, http, oauth2, openIdConnect, mutualTLS
-	Description       string      `json:"description,omitempty"      yaml:"description,omitempty"`        // Description
-	Name              string      `json:"name,omitempty"             yaml:"name,omitempty"`               // Name (for apiKey)
-	In                string      `json:"in,omitempty"               yaml:"in,omitempty"`                 // Location (for apiKey): query, header, cookie
-	Scheme            string      `json:"scheme,omitempty"           yaml:"scheme,omitempty"`             // HTTP scheme (for http): basic, bearer, etc.
-	BearerFormat      string      `json:"bearerFormat,omitempty"     yaml:"bearerFormat,omitempty"`       // Bearer token format (for http bearer)
-	Flows             *OAuthFlows `json:"flows,omitempty"            yaml:"flows,omitempty"`              // OAuth flows (for oauth2)
-	OpenIDConnectURL  string      `json:"openIdConnectUrl,omitempty" yaml:"openIdConnectUrl,omitempty"`   // OpenID Connect URL (for openIdConnect)
-	Deprecated        bool        `json:"deprecated,omitempty"       yaml:"deprecated,omitempty"`         // Deprecated (new in 3.2.0)
+	Type              string      `json:"type"                        yaml:"type"`                        // REQUIRED. Type: apiKey, http, oauth2, openIdConnect, mutualTLS
+	Description       string      `json:"description,omitempty"       yaml:"description,omitempty"`       // Description
+	Name              string      `json:"name,omitempty"              yaml:"name,omitempty"`              // Name (for apiKey)
+	In                string      `json:"in,omitempty"                yaml:"in,omitempty"`                // Location (for apiKey): query, header, cookie
+	Scheme            string      `json:"scheme,omitempty"            yaml:"scheme,omitempty"`            // HTTP scheme (for http): basic, bearer, etc.
+	BearerFormat      string      `json:"bearerFormat,omitempty"      yaml:"bearerFormat,omitempty"`      // Bearer token format (for http bearer)
+	Flows             *OAuthFlows `json:"flows,omitempty"             yaml:"flows,omitempty"`             // OAuth flows (for oauth2)
+	OpenIDConnectURL  string      `json:"openIdConnectUrl,omitempty"  yaml:"openIdConnectUrl,omitempty"`  // OpenID Connect URL (for openIdConnect)
+	Deprecated        bool        `json:"deprecated,omitempty"        yaml:"deprecated,omitempty"`        // Deprecated (new in 3.2.0)
 	OAuth2MetadataURL string      `json:"oauth2MetadataUrl,omitempty" yaml:"oauth2MetadataUrl,omitempty"` // OAuth2 metadata URL (new in 3.2.0)
 }
 
 // OAuthFlows configuration for OAuth 2.0.
 type OAuthFlows struct {
-	Implicit            *OAuthFlow `json:"implicit,omitempty"          yaml:"implicit,omitempty"`              // Implicit flow
-	Password            *OAuthFlow `json:"password,omitempty"          yaml:"password,omitempty"`              // Password flow
-	ClientCredentials   *OAuthFlow `json:"clientCredentials,omitempty" yaml:"clientCredentials,omitempty"`     // Client credentials flow
-	AuthorizationCode   *OAuthFlow `json:"authorizationCode,omitempty" yaml:"authorizationCode,omitempty"`     // Authorization code flow
+	Implicit            *OAuthFlow `json:"implicit,omitempty"            yaml:"implicit,omitempty"`            // Implicit flow
+	Password            *OAuthFlow `json:"password,omitempty"            yaml:"password,omitempty"`            // Password flow
+	ClientCredentials   *OAuthFlow `json:"clientCredentials,omitempty"   yaml:"clientCredentials,omitempty"`   // Client credentials flow
+	AuthorizationCode   *OAuthFlow `json:"authorizationCode,omitempty"   yaml:"authorizationCode,omitempty"`   // Authorization code flow
 	DeviceAuthorization *OAuthFlow `json:"deviceAuthorization,omitempty" yaml:"deviceAuthorization,omitempty"` // Device authorization flow (new in 3.2.0)
 }
 

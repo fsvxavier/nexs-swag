@@ -25,7 +25,7 @@ import (
 // @Success 201 {object} models.OrderResponse "Order created successfully"
 // @Failure 400 {object} models.ErrorResponse "Invalid request"
 // @Failure 500 {object} models.ErrorResponse "Internal server error"
-// @Router /orders [post]
+// @Router /orders [post].
 func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var req models.OrderRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -44,7 +44,7 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Order ID" format:"uuid"
 // @Success 200 {object} models.OrderResponse "Order found"
 // @Failure 404 {object} models.ErrorResponse "Order not found"
-// @Router /orders/{id} [get]
+// @Router /orders/{id} [get].
 func GetOrder(w http.ResponseWriter, r *http.Request) {
 	response := models.OrderResponse{}
 	json.NewEncoder(w).Encode(response)
@@ -60,7 +60,7 @@ func GetOrder(w http.ResponseWriter, r *http.Request) {
 // @Param status body models.StatusUpdate true "New status"
 // @Success 200 {object} models.OrderResponse "Status updated"
 // @Failure 404 {object} models.ErrorResponse "Order not found"
-// @Router /orders/{id}/status [patch]
+// @Router /orders/{id}/status [patch].
 func UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	var req models.StatusUpdate
 	json.NewDecoder(r.Body).Decode(&req)
@@ -79,7 +79,7 @@ func UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 // @Param pageSize query int false "Page size" default:10
 // @Success 200 {object} models.OrderListResponse "Customer orders"
 // @Failure 404 {object} models.ErrorResponse "Customer not found"
-// @Router /customers/{customerId}/orders [get]
+// @Router /customers/{customerId}/orders [get].
 func GetCustomerOrders(w http.ResponseWriter, r *http.Request) {
 	response := models.OrderListResponse{}
 	json.NewEncoder(w).Encode(response)

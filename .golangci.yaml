@@ -3,7 +3,7 @@ version: "2"
 run:
   timeout: 5m
   tests: true
-  go: '1.22'
+  go: '1.25'
   allow-parallel-runners: true
   concurrency: 4
 
@@ -102,6 +102,7 @@ linters:
           - goconst
           - revive
           - unused
+          - staticcheck  # Testes têm verificações nil antes de usar
 
       - path: examples/
         linters:

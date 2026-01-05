@@ -33,17 +33,17 @@ import (
 
 // Product represents a product in the system.
 type Product struct {
-	ID          int     `json:"id" example:"1"`
-	Name        string  `json:"name" example:"Laptop"`
-	Description string  `json:"description" example:"High-performance laptop"`
-	Price       float64 `json:"price" example:"999.99"`
-	Stock       int     `json:"stock" example:"50"`
+	ID          int     `example:"1"                       json:"id"`
+	Name        string  `example:"Laptop"                  json:"name"`
+	Description string  `example:"High-performance laptop" json:"description"`
+	Price       float64 `example:"999.99"                  json:"price"`
+	Stock       int     `example:"50"                      json:"stock"`
 }
 
 // ErrorResponse represents an error response.
 type ErrorResponse struct {
-	Code    int    `json:"code" example:"400"`
-	Message string `json:"message" example:"Bad Request"`
+	Code    int    `example:"400"         json:"code"`
+	Message string `example:"Bad Request" json:"message"`
 }
 
 // products is an in-memory store.
@@ -75,13 +75,14 @@ func main() {
 // @Produce      json
 // @Success      200  {array}   Product
 // @Failure      500  {object}  ErrorResponse
-// @Router       /products [get]
+// @Router       /products [get].
 func handleProducts(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		listProducts(w, r)
-	} else if r.Method == http.MethodPost {
+	case http.MethodPost:
 		createProduct(w, r)
-	} else {
+	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
@@ -107,7 +108,7 @@ func listProducts(w http.ResponseWriter, r *http.Request) {
 // @Success      201      {object}  Product
 // @Failure      400      {object}  ErrorResponse
 // @Failure      500      {object}  ErrorResponse
-// @Router       /products [post]
+// @Router       /products [post].
 func createProduct(w http.ResponseWriter, r *http.Request) {
 	var product Product
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
@@ -160,7 +161,7 @@ func handleProduct(w http.ResponseWriter, r *http.Request) {
 // @Param        id   path      int  true  "Product ID"
 // @Success      200  {object}  Product
 // @Failure      404  {object}  ErrorResponse
-// @Router       /products/{id} [get]
+// @Router       /products/{id} [get].
 func getProduct(w http.ResponseWriter, r *http.Request, id int) {
 	product, exists := products[id]
 	if !exists {
@@ -189,7 +190,7 @@ func getProduct(w http.ResponseWriter, r *http.Request, id int) {
 // @Success      200      {object}  Product
 // @Failure      400      {object}  ErrorResponse
 // @Failure      404      {object}  ErrorResponse
-// @Router       /products/{id} [put]
+// @Router       /products/{id} [put].
 func updateProduct(w http.ResponseWriter, r *http.Request, id int) {
 	if _, exists := products[id]; !exists {
 		w.Header().Set("Content-Type", "application/json")
@@ -229,7 +230,7 @@ func updateProduct(w http.ResponseWriter, r *http.Request, id int) {
 // @Param        id   path      int  true  "Product ID"
 // @Success      204  "No Content"
 // @Failure      404  {object}  ErrorResponse
-// @Router       /products/{id} [delete]
+// @Router       /products/{id} [delete].
 func deleteProduct(w http.ResponseWriter, r *http.Request, id int) {
 	if _, exists := products[id]; !exists {
 		w.Header().Set("Content-Type", "application/json")

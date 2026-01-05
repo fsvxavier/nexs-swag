@@ -298,7 +298,6 @@ func TestGenerate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			tmpDir := filepath.Join(t.TempDir(), tt.name)
@@ -850,5 +849,320 @@ func TestGenerateYAMLStructure(t *testing.T) {
 	}
 	if len(result.Schemes) != 1 || result.Schemes[0] != "https" {
 		t.Errorf("Schemes = %v, want [https]", result.Schemes)
+	}
+}
+
+func TestFilterSpecByVisibilityV2(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		visibility             string
+		opPublicPath           string
+		opPrivatePath          string
+		opSharedPath           string
+		expectPublicInPublic   bool
+		expectPrivateInPublic  bool
+		expectSharedInPublic   bool
+		expectPublicInPrivate  bool
+		expectPrivateInPrivate bool
+		expectSharedInPrivate  bool
+	}{
+		{
+			name:                   "public filter includes only public and shared",
+			visibility:             "public",
+			opPublicPath:           "/public",
+			opPrivatePath:          "/private",
+			opSharedPath:           "/shared",
+			expectPublicInPublic:   true,
+			expectPrivateInPublic:  false,
+			expectSharedInPublic:   true,
+			expectPublicInPrivate:  true,
+			expectPrivateInPrivate: true,
+			expectSharedInPrivate:  true,
+		},
+		{
+			name:                   "private filter includes all operations",
+			visibility:             "private",
+			opPublicPath:           "/api/public",
+			opPrivatePath:          "/api/private",
+			opSharedPath:           "/api/shared",
+			expectPublicInPublic:   true,
+			expectPrivateInPublic:  false,
+			expectSharedInPublic:   true,
+			expectPublicInPrivate:  true,
+			expectPrivateInPrivate: true,
+			expectSharedInPrivate:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tmpDir := t.TempDir()
+
+			spec := &swagger.Swagger{
+				Swagger: "2.0",
+				Info: swagger.Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+				Paths: swagger.Paths{
+					tt.opPublicPath: &swagger.PathItem{
+						Get: &swagger.Operation{
+							Summary: "Public endpoint",
+							Responses: map[string]*swagger.Response{
+								"200": {Description: "Success"},
+							},
+							Extensions: map[string]interface{}{
+								"x-visibility": "public",
+							},
+						},
+					},
+					tt.opPrivatePath: &swagger.PathItem{
+						Get: &swagger.Operation{
+							Summary: "Private endpoint",
+							Responses: map[string]*swagger.Response{
+								"200": {Description: "Success"},
+							},
+							Extensions: map[string]interface{}{
+								"x-visibility": "private",
+							},
+						},
+					},
+					tt.opSharedPath: &swagger.PathItem{
+						Get: &swagger.Operation{
+							Summary: "Shared endpoint (no visibility annotation)",
+							Responses: map[string]*swagger.Response{
+								"200": {Description: "Success"},
+							},
+						},
+					},
+				},
+				Definitions: make(map[string]*swagger.Schema),
+			}
+
+			gen := New(spec, tmpDir, []string{"json"})
+
+			// Test public filter
+			publicSpec := gen.filterSpecByVisibility("public")
+			_, hasPublic := publicSpec.Paths[tt.opPublicPath]
+			_, hasPrivate := publicSpec.Paths[tt.opPrivatePath]
+			_, hasShared := publicSpec.Paths[tt.opSharedPath]
+
+			if hasPublic != tt.expectPublicInPublic {
+				t.Errorf("Public filter: public path presence = %v, want %v", hasPublic, tt.expectPublicInPublic)
+			}
+			if hasPrivate != tt.expectPrivateInPublic {
+				t.Errorf("Public filter: private path presence = %v, want %v", hasPrivate, tt.expectPrivateInPublic)
+			}
+			if hasShared != tt.expectSharedInPublic {
+				t.Errorf("Public filter: shared path presence = %v, want %v", hasShared, tt.expectSharedInPublic)
+			}
+
+			// Test private filter
+			privateSpec := gen.filterSpecByVisibility("private")
+			hasPublicPrivate, hasPrivatePrivate, hasSharedPrivate := privateSpec.Paths[tt.opPublicPath], privateSpec.Paths[tt.opPrivatePath], privateSpec.Paths[tt.opSharedPath]
+
+			if (hasPublicPrivate != nil) != tt.expectPublicInPrivate {
+				t.Errorf("Private filter: public path presence = %v, want %v", hasPublicPrivate != nil, tt.expectPublicInPrivate)
+			}
+			if (hasPrivatePrivate != nil) != tt.expectPrivateInPrivate {
+				t.Errorf("Private filter: private path presence = %v, want %v", hasPrivatePrivate != nil, tt.expectPrivateInPrivate)
+			}
+			if (hasSharedPrivate != nil) != tt.expectSharedInPrivate {
+				t.Errorf("Private filter: shared path presence = %v, want %v", hasSharedPrivate != nil, tt.expectSharedInPrivate)
+			}
+		})
+	}
+}
+
+func TestGenerateSeparateSpecsV2(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &swagger.Swagger{
+		Swagger: "2.0",
+		Info: swagger.Info{
+			Title:   "Visibility Test API",
+			Version: "1.0.0",
+		},
+		Paths: swagger.Paths{
+			"/users": &swagger.PathItem{
+				Get: &swagger.Operation{
+					Summary: "Public get users",
+					Responses: map[string]*swagger.Response{
+						"200": {
+							Description: "Success",
+							Schema: &swagger.Schema{
+								Ref: "#/definitions/UserPublic",
+							},
+						},
+					},
+					Extensions: map[string]interface{}{
+						"x-visibility": "public",
+					},
+				},
+			},
+			"/admin/users": &swagger.PathItem{
+				Get: &swagger.Operation{
+					Summary: "Private admin users",
+					Responses: map[string]*swagger.Response{
+						"200": {
+							Description: "Success",
+							Schema: &swagger.Schema{
+								Ref: "#/definitions/UserPrivate",
+							},
+						},
+					},
+					Extensions: map[string]interface{}{
+						"x-visibility": "private",
+					},
+				},
+			},
+			"/shared/endpoint": &swagger.PathItem{
+				Get: &swagger.Operation{
+					Summary: "Shared endpoint",
+					Responses: map[string]*swagger.Response{
+						"200": {Description: "Success"},
+					},
+				},
+			},
+		},
+		Definitions: map[string]*swagger.Schema{
+			"UserPublic": {
+				Type: "object",
+				Properties: map[string]*swagger.Schema{
+					"id":   {Type: "integer"},
+					"name": {Type: "string"},
+				},
+			},
+			"UserPrivate": {
+				Type: "object",
+				Properties: map[string]*swagger.Schema{
+					"id":       {Type: "integer"},
+					"name":     {Type: "string"},
+					"email":    {Type: "string"},
+					"password": {Type: "string"},
+				},
+			},
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"json"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	// Verify public spec
+	publicData, err := os.ReadFile(filepath.Join(tmpDir, "swagger_public.json"))
+	if err != nil {
+		t.Fatalf("Failed to read public spec: %v", err)
+	}
+
+	var publicSpec swagger.Swagger
+	if err := json.Unmarshal(publicData, &publicSpec); err != nil {
+		t.Fatalf("Failed to parse public spec: %v", err)
+	}
+
+	// Public spec should have /users and /shared/endpoint but NOT /admin/users
+	if _, ok := publicSpec.Paths["/users"]; !ok {
+		t.Error("Public spec missing /users path")
+	}
+	if _, ok := publicSpec.Paths["/shared/endpoint"]; !ok {
+		t.Error("Public spec missing /shared/endpoint path")
+	}
+	if _, ok := publicSpec.Paths["/admin/users"]; ok {
+		t.Error("Public spec should NOT contain /admin/users path")
+	}
+
+	// Verify private spec
+	privateData, err := os.ReadFile(filepath.Join(tmpDir, "swagger_private.json"))
+	if err != nil {
+		t.Fatalf("Failed to read private spec: %v", err)
+	}
+
+	var privateSpec swagger.Swagger
+	if err := json.Unmarshal(privateData, &privateSpec); err != nil {
+		t.Fatalf("Failed to parse private spec: %v", err)
+	}
+
+	// Private spec should have ALL paths: /users, /admin/users, and /shared/endpoint
+	if _, ok := privateSpec.Paths["/users"]; !ok {
+		t.Error("Private spec missing /users path (should include public endpoints)")
+	}
+	if _, ok := privateSpec.Paths["/admin/users"]; !ok {
+		t.Error("Private spec missing /admin/users path")
+	}
+	if _, ok := privateSpec.Paths["/shared/endpoint"]; !ok {
+		t.Error("Private spec missing /shared/endpoint path")
+	}
+
+	// Verify schema filtering
+	if _, ok := publicSpec.Definitions["UserPublic"]; !ok {
+		t.Error("Public spec missing UserPublic definition")
+	}
+	if _, ok := publicSpec.Definitions["UserPrivate"]; ok {
+		t.Error("Public spec should NOT contain UserPrivate definition")
+	}
+
+	if _, ok := privateSpec.Definitions["UserPrivate"]; !ok {
+		t.Error("Private spec missing UserPrivate definition")
+	}
+	if _, ok := privateSpec.Definitions["UserPublic"]; !ok {
+		t.Error("Private spec missing UserPublic definition (should include public schemas)")
+	}
+}
+
+func TestHasVisibilityAnnotationsV2(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		spec     *swagger.Swagger
+		expected bool
+	}{
+		{
+			name: "spec with x-visibility",
+			spec: &swagger.Swagger{
+				Paths: swagger.Paths{
+					"/test": &swagger.PathItem{
+						Get: &swagger.Operation{
+							Extensions: map[string]interface{}{
+								"x-visibility": "public",
+							},
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "spec without x-visibility",
+			spec: &swagger.Swagger{
+				Paths: swagger.Paths{
+					"/test": &swagger.PathItem{
+						Get: &swagger.Operation{},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "spec with empty paths",
+			spec: &swagger.Swagger{
+				Paths: swagger.Paths{},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			gen := &Generator{spec: tt.spec}
+			result := gen.hasVisibilityAnnotations()
+			if result != tt.expected {
+				t.Errorf("hasVisibilityAnnotations() = %v, want %v", result, tt.expected)
+			}
+		})
 	}
 }

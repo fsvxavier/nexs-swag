@@ -2454,7 +2454,7 @@ type Model3 struct {
 	}
 }
 
-// TestQueryMethod tests support for QUERY HTTP method (OpenAPI 3.2.0)
+// TestQueryMethod tests support for QUERY HTTP method (OpenAPI 3.2.0).
 func TestQueryMethod(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
@@ -2518,7 +2518,7 @@ func QueryUser() {}
 	}
 }
 
-// TestQueryMethodWithOtherMethods tests QUERY alongside other HTTP methods
+// TestQueryMethodWithOtherMethods tests QUERY alongside other HTTP methods.
 func TestQueryMethodWithOtherMethods(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
@@ -2593,7 +2593,7 @@ func CreateUser() {}
 	}
 }
 
-// TestValidateWithQueryMethod tests validation includes QUERY operations
+// TestValidateWithQueryMethod tests validation includes QUERY operations.
 func TestValidateWithQueryMethod(t *testing.T) {
 	t.Parallel()
 	tmpDir := t.TempDir()
@@ -2636,7 +2636,7 @@ func QueryUser() {}
 	}
 }
 
-// TestQueryMethodCaseSensitivity tests that 'query', 'QUERY', 'Query' all work
+// TestQueryMethodCaseSensitivity tests that 'query', 'QUERY', 'Query' all work.
 func TestQueryMethodCaseSensitivity(t *testing.T) {
 	t.Parallel()
 

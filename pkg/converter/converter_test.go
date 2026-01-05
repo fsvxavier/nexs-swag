@@ -504,7 +504,7 @@ func TestConvertNilInputs(t *testing.T) {
 	}
 }
 
-// TestConvertQueryMethodToV2 tests conversion of QUERY method to Swagger 2.0
+// TestConvertQueryMethodToV2 tests conversion of QUERY method to Swagger 2.0.
 func TestConvertQueryMethodToV2(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -558,7 +558,7 @@ func TestConvertQueryMethodToV2(t *testing.T) {
 	}
 }
 
-// TestConvertSecuritySchemeDeprecatedToV2 tests deprecated field conversion
+// TestConvertSecuritySchemeDeprecatedToV2 tests deprecated field conversion.
 func TestConvertSecuritySchemeDeprecatedToV2(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -615,7 +615,7 @@ func TestConvertSecuritySchemeDeprecatedToV2(t *testing.T) {
 	}
 }
 
-// TestConvertOAuth2MetadataURLToV2 tests OAuth2MetadataURL conversion
+// TestConvertOAuth2MetadataURLToV2 tests OAuth2MetadataURL conversion.
 func TestConvertOAuth2MetadataURLToV2(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -662,7 +662,7 @@ func TestConvertOAuth2MetadataURLToV2(t *testing.T) {
 	}
 }
 
-// TestConvertDeviceAuthorizationFlowToV2 tests device authorization flow conversion
+// TestConvertDeviceAuthorizationFlowToV2 tests device authorization flow conversion.
 func TestConvertDeviceAuthorizationFlowToV2(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -707,7 +707,7 @@ func TestConvertDeviceAuthorizationFlowToV2(t *testing.T) {
 	}
 }
 
-// TestConvertItemSchemaToV2 tests streaming ItemSchema conversion
+// TestConvertItemSchemaToV2 tests streaming ItemSchema conversion.
 func TestConvertItemSchemaToV2(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -765,7 +765,7 @@ func TestConvertItemSchemaToV2(t *testing.T) {
 	}
 }
 
-// TestConvertItemEncodingToV2 tests streaming ItemEncoding conversion
+// TestConvertItemEncodingToV2 tests streaming ItemEncoding conversion.
 func TestConvertItemEncodingToV2(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -821,7 +821,7 @@ func TestConvertItemEncodingToV2(t *testing.T) {
 	}
 }
 
-// TestMultipleOpenAPI32Features tests multiple 3.2.0 features together
+// TestMultipleOpenAPI32Features tests multiple 3.2.0 features together.
 func TestMultipleOpenAPI32Features(t *testing.T) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.1.0",
@@ -904,7 +904,7 @@ func TestMultipleOpenAPI32Features(t *testing.T) {
 	}
 }
 
-// TestConvertParameter tests the convertParameter function
+// TestConvertParameter tests the convertParameter function.
 func TestConvertParameter(t *testing.T) {
 	conv := New()
 
@@ -1020,7 +1020,7 @@ func TestConvertParameter(t *testing.T) {
 	}
 }
 
-// TestConvertSchemaToParameter tests schema to parameter conversion
+// TestConvertSchemaToParameter tests schema to parameter conversion.
 func TestConvertSchemaToParameter(t *testing.T) {
 	conv := New()
 
@@ -1164,7 +1164,7 @@ func TestConvertSchemaToParameter(t *testing.T) {
 	}
 }
 
-// TestConvertSchemaToItems tests schema to items conversion
+// TestConvertSchemaToItems tests schema to items conversion.
 func TestConvertSchemaToItems(t *testing.T) {
 	conv := New()
 
@@ -1245,7 +1245,7 @@ func TestConvertSchemaToItems(t *testing.T) {
 	}
 }
 
-// TestExtractType tests type extraction from various formats
+// TestExtractType tests type extraction from various formats.
 func TestExtractType(t *testing.T) {
 	conv := New()
 
@@ -1317,7 +1317,7 @@ func TestExtractType(t *testing.T) {
 	}
 }
 
-// TestConvertHeader tests header conversion
+// TestConvertHeader tests header conversion.
 func TestConvertHeader(t *testing.T) {
 	conv := New()
 
@@ -1423,7 +1423,7 @@ func TestConvertHeader(t *testing.T) {
 	}
 }
 
-// TestConvertHeaders tests headers conversion
+// TestConvertHeaders tests headers conversion.
 func TestConvertHeaders(t *testing.T) {
 	conv := New()
 
@@ -1495,7 +1495,7 @@ func TestConvertHeaders(t *testing.T) {
 	}
 }
 
-// TestConvertExamples tests examples conversion
+// TestConvertExamples tests examples conversion.
 func TestConvertExamples(t *testing.T) {
 	conv := New()
 
@@ -1572,7 +1572,7 @@ func TestConvertExamples(t *testing.T) {
 	}
 }
 
-// TestConvertRefFunctions tests ref conversion functions
+// TestConvertRefFunctions tests ref conversion functions.
 func TestConvertRefToV2(t *testing.T) {
 	conv := New()
 
@@ -1675,7 +1675,7 @@ func TestConvertRefToV3(t *testing.T) {
 	}
 }
 
-// TestConvertSchemaComplex tests complex schema conversion scenarios
+// TestConvertSchemaComplex tests complex schema conversion scenarios.
 func TestConvertSchemaComplex(t *testing.T) {
 	conv := New()
 
@@ -1873,7 +1873,7 @@ func TestConvertSchemaComplex(t *testing.T) {
 	}
 }
 
-// TestConvertSecuritySchemeComplex tests complex security scheme conversions
+// TestConvertSecuritySchemeComplex tests complex security scheme conversions.
 func TestConvertSecuritySchemeComplex(t *testing.T) {
 	conv := New()
 
@@ -1980,7 +1980,7 @@ func TestConvertSecuritySchemeComplex(t *testing.T) {
 	}
 }
 
-// TestConvertOAuth2FlowsComplex tests OAuth2 flows conversion
+// TestConvertOAuth2FlowsComplex tests OAuth2 flows conversion.
 func TestConvertOAuth2FlowsComplex(t *testing.T) {
 	conv := New()
 
@@ -2100,7 +2100,7 @@ func TestConvertOAuth2FlowsComplex(t *testing.T) {
 	}
 }
 
-// TestConvertParametersV2ToV3 tests parameter array conversion
+// TestConvertParametersV2ToV3 tests parameter array conversion.
 func TestConvertParametersV2ToV3(t *testing.T) {
 	conv := New()
 
@@ -2139,7 +2139,7 @@ func TestConvertParametersV2ToV3(t *testing.T) {
 	}
 }
 
-// TestConvertSecurity tests security requirements conversion
+// TestConvertSecurity tests security requirements conversion.
 func TestConvertSecurity(t *testing.T) {
 	conv := New()
 
@@ -2165,7 +2165,7 @@ func TestConvertSecurity(t *testing.T) {
 	}
 }
 
-// TestConvertTags tests tags conversion
+// TestConvertTags tests tags conversion.
 func TestConvertTags(t *testing.T) {
 	conv := New()
 
@@ -2199,7 +2199,7 @@ func TestConvertTags(t *testing.T) {
 	}
 }
 
-// TestConvertBodyParameterToRequestBody tests body parameter to request body conversion
+// TestConvertBodyParameterToRequestBody tests body parameter to request body conversion.
 func TestConvertBodyParameterToRequestBody(t *testing.T) {
 	conv := New()
 
@@ -2274,7 +2274,7 @@ func TestConvertBodyParameterToRequestBody(t *testing.T) {
 	}
 }
 
-// TestConvertParameterToV3 tests single parameter conversion to V3
+// TestConvertParameterToV3 tests single parameter conversion to V3.
 func TestConvertParameterToV3(t *testing.T) {
 	conv := New()
 
@@ -2388,7 +2388,7 @@ func TestConvertParameterToV3(t *testing.T) {
 	}
 }
 
-// TestIsNullable tests nullable type detection
+// TestIsNullable tests nullable type detection.
 func TestIsNullable(t *testing.T) {
 	conv := New()
 
@@ -2444,7 +2444,7 @@ func TestIsNullable(t *testing.T) {
 	}
 }
 
-// TestConvertParameterDefinitions tests parameter definitions conversion
+// TestConvertParameterDefinitions tests parameter definitions conversion.
 func TestConvertParameterDefinitions(t *testing.T) {
 	conv := New()
 
@@ -2482,7 +2482,7 @@ func TestConvertParameterDefinitions(t *testing.T) {
 	}
 }
 
-// TestConvertResponseDefinitions tests response definitions conversion
+// TestConvertResponseDefinitions tests response definitions conversion.
 func TestConvertResponseDefinitions(t *testing.T) {
 	conv := New()
 
@@ -2528,7 +2528,7 @@ func TestConvertResponseDefinitions(t *testing.T) {
 	}
 }
 
-// TestSeparateBodyParameter tests body parameter separation
+// TestSeparateBodyParameter tests body parameter separation.
 func TestSeparateBodyParameter(t *testing.T) {
 	conv := New()
 
@@ -2569,7 +2569,7 @@ func TestSeparateBodyParameter(t *testing.T) {
 	}
 }
 
-// TestConvertResponseToV3 tests response conversion to V3
+// TestConvertResponseToV3 tests response conversion to V3.
 func TestConvertResponseToV3(t *testing.T) {
 	conv := New()
 
@@ -2638,7 +2638,7 @@ func TestConvertResponseToV3(t *testing.T) {
 	}
 }
 
-// TestConvertHeadersToV3 tests headers conversion to V3
+// TestConvertHeadersToV3 tests headers conversion to V3.
 func TestConvertHeadersToV3(t *testing.T) {
 	conv := New()
 
@@ -2673,7 +2673,7 @@ func TestConvertHeadersToV3(t *testing.T) {
 	}
 }
 
-// TestConvertItemsToSchema tests items conversion to schema
+// TestConvertItemsToSchema tests items conversion to schema.
 func TestConvertItemsToSchema(t *testing.T) {
 	conv := New()
 
@@ -2740,7 +2740,7 @@ func TestConvertItemsToSchema(t *testing.T) {
 	}
 }
 
-// TestConvertParameterPropertiesToSchema tests parameter properties to schema conversion
+// TestConvertParameterPropertiesToSchema tests parameter properties to schema conversion.
 func TestConvertParameterPropertiesToSchema(t *testing.T) {
 	conv := New()
 
@@ -2810,7 +2810,7 @@ func TestConvertParameterPropertiesToSchema(t *testing.T) {
 	}
 }
 
-// TestConvertPathItem tests path item conversion
+// TestConvertPathItem tests path item conversion.
 func TestConvertPathItem(t *testing.T) {
 	conv := New()
 
@@ -2844,7 +2844,7 @@ func TestConvertPathItem(t *testing.T) {
 	}
 }
 
-// TestConvertOperation tests operation conversion
+// TestConvertOperation tests operation conversion.
 func TestConvertOperation(t *testing.T) {
 	conv := New()
 
@@ -2881,7 +2881,7 @@ func TestConvertOperation(t *testing.T) {
 	}
 }
 
-// TestConvertParameters tests parameters array conversion V3 to V2
+// TestConvertParameters tests parameters array conversion V3 to V2.
 func TestConvertParameters(t *testing.T) {
 	conv := New()
 
@@ -2917,7 +2917,7 @@ func TestConvertParameters(t *testing.T) {
 	}
 }
 
-// TestConvertRequestBodyToParameter tests request body to body parameter conversion
+// TestConvertRequestBodyToParameter tests request body to body parameter conversion.
 func TestConvertRequestBodyToParameter(t *testing.T) {
 	conv := New()
 
@@ -2976,7 +2976,7 @@ func TestConvertRequestBodyToParameter(t *testing.T) {
 	}
 }
 
-// TestConvertExamplesMediaType tests media type examples conversion
+// TestConvertExamplesMediaType tests media type examples conversion.
 func TestConvertExamplesMediaType(t *testing.T) {
 	conv := New()
 
@@ -3014,7 +3014,7 @@ func TestConvertExamplesMediaType(t *testing.T) {
 	}
 }
 
-// TestIsNullableEdgeCases tests edge cases for nullable detection
+// TestIsNullableEdgeCases tests edge cases for nullable detection.
 func TestIsNullableEdgeCases(t *testing.T) {
 	conv := New()
 
@@ -3050,7 +3050,7 @@ func TestIsNullableEdgeCases(t *testing.T) {
 	}
 }
 
-// TestConvertInfoToV3 tests info conversion to V3
+// TestConvertInfoToV3 tests info conversion to V3.
 func TestConvertInfoToV3(t *testing.T) {
 	conv := New()
 
@@ -3086,7 +3086,7 @@ func TestConvertInfoToV3(t *testing.T) {
 	}
 }
 
-// TestConvertPathItemToV3 tests path item conversion to V3
+// TestConvertPathItemToV3 tests path item conversion to V3.
 func TestConvertPathItemToV3(t *testing.T) {
 	conv := New()
 
@@ -3130,7 +3130,7 @@ func TestConvertPathItemToV3(t *testing.T) {
 	}
 }
 
-// TestConvertParameterDefinitionsToV3 tests parameter definitions conversion to V3
+// TestConvertParameterDefinitionsToV3 tests parameter definitions conversion to V3.
 func TestConvertParameterDefinitionsToV3(t *testing.T) {
 	conv := New()
 
@@ -3162,7 +3162,7 @@ func TestConvertParameterDefinitionsToV3(t *testing.T) {
 	}
 }
 
-// TestConvertResponseDefinitionsToV3 tests response definitions conversion to V3
+// TestConvertResponseDefinitionsToV3 tests response definitions conversion to V3.
 func TestConvertResponseDefinitionsToV3(t *testing.T) {
 	conv := New()
 
@@ -3191,7 +3191,7 @@ func TestConvertResponseDefinitionsToV3(t *testing.T) {
 	}
 }
 
-// TestConvertSecurityDefinitionsToV3 tests security definitions conversion to V3
+// TestConvertSecurityDefinitionsToV3 tests security definitions conversion to V3.
 func TestConvertSecurityDefinitionsToV3(t *testing.T) {
 	conv := New()
 
@@ -3249,7 +3249,7 @@ func TestConvertSecurityDefinitionsToV3(t *testing.T) {
 	}
 }
 
-// TestConvertSecuritySchemeToV3 tests individual security scheme conversion to V3
+// TestConvertSecuritySchemeToV3 tests individual security scheme conversion to V3.
 func TestConvertSecuritySchemeToV3(t *testing.T) {
 	conv := New()
 
@@ -3369,7 +3369,7 @@ func TestConvertSecuritySchemeToV3(t *testing.T) {
 	}
 }
 
-// TestConvertOperationToV3 tests operation conversion to V3
+// TestConvertOperationToV3 tests operation conversion to V3.
 func TestConvertOperationToV3(t *testing.T) {
 	conv := New()
 
@@ -3414,7 +3414,7 @@ func TestConvertOperationToV3(t *testing.T) {
 	}
 }
 
-// TestRoundtripV2ToV3ToV2 tests complete roundtrip conversion V2->V3->V2
+// TestRoundtripV2ToV3ToV2 tests complete roundtrip conversion V2->V3->V2.
 func TestRoundtripV2ToV3ToV2(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -3682,7 +3682,7 @@ func TestRoundtripV2ToV3ToV2(t *testing.T) {
 	}
 }
 
-// TestRoundtripV3ToV2ToV3 tests complete roundtrip conversion V3->V2->V3
+// TestRoundtripV3ToV2ToV3 tests complete roundtrip conversion V3->V2->V3.
 func TestRoundtripV3ToV2ToV3(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -3843,7 +3843,7 @@ func TestRoundtripV3ToV2ToV3(t *testing.T) {
 	}
 }
 
-// TestRoundtripDataIntegrity verifies data integrity across multiple roundtrips
+// TestRoundtripDataIntegrity verifies data integrity across multiple roundtrips.
 func TestRoundtripDataIntegrity(t *testing.T) {
 	original := &swagger.Swagger{
 		Swagger: "2.0",
@@ -3875,7 +3875,7 @@ func TestRoundtripDataIntegrity(t *testing.T) {
 
 	// Perform 3 complete roundtrips
 	current := original
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		t.Run(strings.Join([]string{"roundtrip", string(rune('1' + i))}, "_"), func(t *testing.T) {
 			// V2 -> V3
 			conv1 := New()
@@ -3907,7 +3907,7 @@ func TestRoundtripDataIntegrity(t *testing.T) {
 	}
 }
 
-// Benchmark tests
+// Benchmark tests.
 func BenchmarkConvertToV2Simple(b *testing.B) {
 	spec := &openapi.OpenAPI{
 		OpenAPI: "3.0.0",
@@ -3929,7 +3929,7 @@ func BenchmarkConvertToV2Simple(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		conv := New()
 		_, err := conv.ConvertToV2(spec)
 		if err != nil {
@@ -3961,7 +3961,7 @@ func BenchmarkConvertToV3Simple(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		conv := New()
 		_, err := conv.ConvertToV3(spec)
 		if err != nil {
@@ -3986,7 +3986,7 @@ func BenchmarkConvertToV2Complex(b *testing.B) {
 	}
 
 	// Create 50 paths with operations
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		path := strings.Join([]string{"/endpoint", string(rune('0' + i))}, "")
 		spec.Paths[path] = &openapi.PathItem{
 			Get: &openapi.Operation{
@@ -4021,7 +4021,7 @@ func BenchmarkConvertToV2Complex(b *testing.B) {
 	}
 
 	// Create 20 schemas
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		schemaName := strings.Join([]string{"Schema", string(rune('0' + i))}, "")
 		spec.Components.Schemas[schemaName] = &openapi.Schema{
 			Type: "object",
@@ -4033,7 +4033,7 @@ func BenchmarkConvertToV2Complex(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		conv := New()
 		_, err := conv.ConvertToV2(spec)
 		if err != nil {
@@ -4058,7 +4058,7 @@ func BenchmarkConvertToV3Complex(b *testing.B) {
 	}
 
 	// Create 50 paths with operations
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		path := strings.Join([]string{"/endpoint", string(rune('0' + i))}, "")
 		spec.Paths[path] = &swagger.PathItem{
 			Get: &swagger.Operation{
@@ -4093,7 +4093,7 @@ func BenchmarkConvertToV3Complex(b *testing.B) {
 	}
 
 	// Create 20 definitions
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		defName := strings.Join([]string{"Definition", string(rune('0' + i))}, "")
 		spec.Definitions[defName] = &swagger.Schema{
 			Type: "object",
@@ -4105,7 +4105,7 @@ func BenchmarkConvertToV3Complex(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		conv := New()
 		_, err := conv.ConvertToV3(spec)
 		if err != nil {
@@ -4137,7 +4137,7 @@ func BenchmarkRoundtripV2ToV3ToV2(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		conv1 := New()
 		v3, err := conv1.ConvertToV3(spec)
 		if err != nil {
@@ -4173,7 +4173,7 @@ func BenchmarkRoundtripV3ToV2ToV3(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		conv1 := New()
 		v2, err := conv1.ConvertToV2(spec)
 		if err != nil {

@@ -25,7 +25,7 @@ import (
 // @Param id path int true "Product ID"
 // @Success 200 {object} models.Product "Product found"
 // @Failure 404 {string} string "Product not found"
-// @Router /products/{id} [get]
+// @Router /products/{id} [get].
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	product := models.Product{
 		ID:          1,
@@ -45,7 +45,7 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {array} models.ProductSummary "List of products"
-// @Router /products [get]
+// @Router /products [get].
 func ListProducts(w http.ResponseWriter, r *http.Request) {
 	products := []models.ProductSummary{
 		{ID: 1, Name: "Laptop"},

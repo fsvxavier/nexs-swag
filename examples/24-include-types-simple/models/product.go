@@ -3,25 +3,25 @@ package models
 import "time"
 
 // Product represents a product in the catalog
-// This struct will be included when using --includeTypes="struct"
+// This struct will be included when using --includeTypes="struct".
 type Product struct {
-	ID          int       `json:"id" example:"1"`
-	Name        string    `json:"name" example:"Laptop"`
-	Price       float64   `json:"price" format:"decimal" example:"999.99"`
-	CreatedAt   time.Time `json:"created_at" swaggertype:"string" format:"date-time" example:"2025-12-16T10:00:00Z"`
-	Category    string    `json:"category" example:"Electronics"`
-	IsAvailable bool      `json:"is_available" example:"true"`
+	ID          int       `example:"1"                    json:"id"`
+	Name        string    `example:"Laptop"               json:"name"`
+	Price       float64   `example:"999.99"               format:"decimal"    json:"price"`
+	CreatedAt   time.Time `example:"2025-12-16T10:00:00Z" format:"date-time"  json:"created_at" swaggertype:"string"`
+	Category    string    `example:"Electronics"          json:"category"`
+	IsAvailable bool      `example:"true"                 json:"is_available"`
 }
 
 // ProductSummary is a simplified view of Product
-// Demonstrates that only referenced structs are included
+// Demonstrates that only referenced structs are included.
 type ProductSummary struct {
-	ID   int    `json:"id" example:"1"`
-	Name string `json:"name" example:"Laptop"`
+	ID   int    `example:"1"      json:"id"`
+	Name string `example:"Laptop" json:"name"`
 }
 
 // UnusedModel demonstrates selective parsing
-// This struct will NOT be included in the output because it's not referenced
+// This struct will NOT be included in the output because it's not referenced.
 type UnusedModel struct {
 	Data string `json:"data"`
 }

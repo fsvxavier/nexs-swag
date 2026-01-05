@@ -572,9 +572,7 @@ func (p *Parser) AddReferencedType(typeName string) {
 
 	// Remove #/components/schemas/ prefix if present
 	const prefix = "#/components/schemas/"
-	if strings.HasPrefix(typeName, prefix) {
-		typeName = strings.TrimPrefix(typeName, prefix)
-	}
+	typeName = strings.TrimPrefix(typeName, prefix)
 
 	// Remove []prefix for array types
 	typeName = strings.TrimPrefix(typeName, "[]")
@@ -724,7 +722,7 @@ func (p *Parser) isPrimitiveSwaggerType(swaggerType string) bool {
 }
 
 // extractTypeFromSwaggerType extracts the actual type name from swaggertype tag.
-// Example: "array,Product" -> "Product"
+// Example: "array,Product" -> "Product".
 func (p *Parser) extractTypeFromSwaggerType(swaggerType string) string {
 	parts := strings.Split(swaggerType, ",")
 	if len(parts) > 1 {
@@ -810,6 +808,8 @@ func (p *Parser) collectImports(filePath string, file *ast.File) {
 
 // resolveQualifiedType resolves a qualified type name (e.g., "errors.BadRequest") to its full path.
 // Returns the full type path (e.g., "github.com/user/repo/errors.BadRequest") or empty string if not found.
+//
+//nolint:unused // Reserved for future use
 func (p *Parser) resolveQualifiedType(filePath, typeName string) string {
 	// Check if type is qualified (contains ".")
 	if !strings.Contains(typeName, ".") {
@@ -848,7 +848,7 @@ func (p *Parser) resolveQualifiedType(filePath, typeName string) string {
 // Given a qualified type name (e.g., "domainerrors.BadRequest"), it tries to:
 // 1. Find which file has the import for this package
 // 2. Resolve the full import path
-// 3. Parse the external package to get the type definition
+// 3. Parse the external package to get the type definition.
 func (p *Parser) parseExternalType(qualifiedType string) error {
 	// Check if type is qualified
 	if !strings.Contains(qualifiedType, ".") {

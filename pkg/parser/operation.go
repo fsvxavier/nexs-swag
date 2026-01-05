@@ -440,7 +440,7 @@ func (o *OperationProcessor) processResponse(text string, regex *regexp.Regexp, 
 }
 
 // processStreamResponse processes @Success with {stream} type (OpenAPI 3.2.0).
-// Example: @Success 200 {stream} EventType "SSE stream"
+// Example: @Success 200 {stream} EventType "SSE stream".
 func (o *OperationProcessor) processStreamResponse(text string, op *openapi.Operation) {
 	matches := streamSuccessRegex.FindStringSubmatch(text)
 	if len(matches) < 3 {
@@ -818,7 +818,7 @@ func (o *OperationProcessor) processState(text string, op *openapi.Operation) {
 
 // processVisibility processes @x-visibility annotation.
 // Format: @x-visibility public|private
-// Example: @x-visibility public
+// Example: @x-visibility public.
 func (o *OperationProcessor) processVisibility(text string, op *openapi.Operation) {
 	matches := xVisibilityRegex.FindStringSubmatch(text)
 	if len(matches) < 2 {
@@ -883,7 +883,7 @@ func (o *OperationProcessor) processCodeSamples(text string, op *openapi.Operati
 
 // processCallback processes @Callback annotation.
 // Format: @Callback callbackName expression [method]
-// Example: @Callback orderHook {$request.body#/callbackUrl}/orders [post]
+// Example: @Callback orderHook {$request.body#/callbackUrl}/orders [post].
 func (o *OperationProcessor) processCallback(text string, op *openapi.Operation) {
 	matches := callbackRegex.FindStringSubmatch(text)
 	if len(matches) < 4 {

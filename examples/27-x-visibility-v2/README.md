@@ -35,6 +35,16 @@ func GetUser(c *gin.Context) {
 - `@x-visibility private` - Endpoint appears only in `swagger_private.json`
 - No annotation - Endpoint appears in **both** files (shared endpoint)
 
+**Important:** The private specification **includes all public endpoints** in addition to private ones. This ensures that internal/admin users have access to all API functionality.
+
+**Visibility Behavior:**
+
+| Endpoint Annotation | Appears in Public Spec | Appears in Private Spec |
+|---------------------|------------------------|-------------------------|
+| `@x-visibility public` | ✅ Yes | ✅ Yes (private includes public) |
+| `@x-visibility private` | ❌ No | ✅ Yes |
+| No annotation | ✅ Yes | ✅ Yes |
+
 ## Generated Files
 
 When using `@x-visibility` with Swagger 2.0, nexs-swag generates:
@@ -63,13 +73,15 @@ jq '.paths | keys' docs/swagger_public.json
 # Output: ["/users", "/users/{id}"]
 
 jq '.paths | keys' docs/swagger_private.json
-# Output: ["/admin/users/{id}", "/users"]
+# Output: ["/admin/users/{id}", "/users", "/users/{id}"]
+# Note: Private spec includes ALL paths (public + private + shared)
 
 jq '.definitions | keys' docs/swagger_public.json
 # Output: ["ErrorResponse", "UserPublic"]
 
 jq '.definitions | keys' docs/swagger_private.json
 # Output: ["ErrorResponse", "UserPrivate", "UserPublic"]
+# Note: Private spec includes schemas from both public and private endpoints
 ```
 
 ## Compatibility

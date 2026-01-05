@@ -34,6 +34,16 @@ func GetUser(c *gin.Context) {
 - `@x-visibility private` - Endpoint appears only in `openapi_private.json`
 - No annotation - Endpoint appears in **both** files (shared endpoint)
 
+**Important:** The private specification **includes all public endpoints** in addition to private ones. This ensures that internal/admin users have access to all API functionality.
+
+**Visibility Behavior:**
+
+| Endpoint Annotation | Appears in Public Spec | Appears in Private Spec |
+|---------------------|------------------------|-------------------------|
+| `@x-visibility public` | ✅ Yes | ✅ Yes (private includes public) |
+| `@x-visibility private` | ❌ No | ✅ Yes |
+| No annotation | ✅ Yes | ✅ Yes |
+
 ## Generated Files
 
 When using `@x-visibility`, nexs-swag generates:
@@ -80,8 +90,12 @@ func CreateUser(c *gin.Context) {
 Schemas are automatically filtered based on usage:
 
 - **Public spec**: Only includes schemas referenced by public operations (`UserPublic`, `ErrorResponse`)
-- **Private spec**: Only includes schemas referenced by private operations (`UserPrivate`, `ErrorResponse`)
+- **Private spec**: Includes schemas referenced by **both private AND public** operations (`UserPrivate`, `UserPublic`, `ErrorResponse`)
 - Shared schemas appear in both if used by operations without visibility annotations
+
+**Example:**
+- Public spec contains: `UserPublic` (used by public endpoint)
+- Private spec contains: `UserPrivate` (used by private endpoint) + `UserPublic` (used by public endpoint that also appears in private spec)
 
 ## Running This Example
 
@@ -94,7 +108,8 @@ jq '.paths | keys' docs/openapi_public.json
 # Output: ["/users", "/users/{id}"]
 
 jq '.paths | keys' docs/openapi_private.json
-# Output: ["/admin/users/{id}", "/users"]
+# Output: ["/admin/users/{id}", "/users", "/users/{id}"]
+# Note: Private spec includes ALL paths (public + private + shared)
 
 jq '.components.schemas | keys' docs/openapi_public.json
 # Output: ["ErrorResponse", "UserPublic"]

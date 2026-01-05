@@ -62,7 +62,7 @@ func (g *Generator) SetTemplateDelims(delims string) {
 }
 
 // SetOpenAPIVersion sets the OpenAPI version for the specification.
-// Supported versions: 3.0.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4, 3.1.0, 3.1.1, 3.1.2, 3.2.0
+// Supported versions: 3.0.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4, 3.1.0, 3.1.1, 3.1.2, 3.2.0.
 func (g *Generator) SetOpenAPIVersion(version string) {
 	g.openapiVersion = version
 }
@@ -263,8 +263,22 @@ func (g *Generator) filterSpecByVisibility(visibility string) *openapi.OpenAPI {
 
 			// Include operation if:
 			// 1. No x-visibility set (empty) - include in both specs
-			// 2. x-visibility matches the current visibility filter
-			if opVisibility == "" || opVisibility == visibility {
+			// 2. For public filter: only public or empty
+			// 3. For private filter: private, public, or empty (all operations)
+			includeOp := false
+			switch {
+			case opVisibility == "":
+				// No annotation - include in both
+				includeOp = true
+			case visibility == "public":
+				// Public filter: only public operations
+				includeOp = opVisibility == "public"
+			case visibility == "private":
+				// Private filter: both private and public operations
+				includeOp = opVisibility == "private" || opVisibility == "public"
+			}
+
+			if includeOp {
 				hasOperations = true
 				switch method {
 				case "get":
@@ -387,7 +401,11 @@ func (g *Generator) generateJSONWithSuffix(spec *openapi.OpenAPI, suffix string)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
@@ -408,7 +426,11 @@ func (g *Generator) generateYAMLWithSuffix(spec *openapi.OpenAPI, suffix string)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	encoder := yaml.NewEncoder(file)
 	encoder.SetIndent(2)
@@ -435,13 +457,18 @@ func (g *Generator) generateGoWithSuffix(spec *openapi.OpenAPI, suffix string) e
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 
 	// Write package declaration
 	varName := "SwaggerDoc"
-	if suffix == "_public" {
+	switch suffix {
+	case "_public":
 		varName = "SwaggerDocPublic"
-	} else if suffix == "_private" {
+	case "_private":
 		varName = "SwaggerDocPrivate"
 	}
 

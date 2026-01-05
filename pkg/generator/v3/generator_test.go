@@ -843,3 +843,330 @@ func TestGenerateGoReadDocFunction(t *testing.T) {
 		t.Error("ReadDoc function should return SwaggerDoc")
 	}
 }
+
+func TestFilterSpecByVisibility(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name                   string
+		visibility             string
+		opPublicPath           string
+		opPrivatePath          string
+		opSharedPath           string
+		expectPublicInPublic   bool
+		expectPrivateInPublic  bool
+		expectSharedInPublic   bool
+		expectPublicInPrivate  bool
+		expectPrivateInPrivate bool
+		expectSharedInPrivate  bool
+	}{
+		{
+			name:                   "public filter includes only public and shared",
+			visibility:             "public",
+			opPublicPath:           "/public",
+			opPrivatePath:          "/private",
+			opSharedPath:           "/shared",
+			expectPublicInPublic:   true,
+			expectPrivateInPublic:  false,
+			expectSharedInPublic:   true,
+			expectPublicInPrivate:  true,
+			expectPrivateInPrivate: true,
+			expectSharedInPrivate:  true,
+		},
+		{
+			name:                   "private filter includes all operations",
+			visibility:             "private",
+			opPublicPath:           "/api/public",
+			opPrivatePath:          "/api/private",
+			opSharedPath:           "/api/shared",
+			expectPublicInPublic:   true,
+			expectPrivateInPublic:  false,
+			expectSharedInPublic:   true,
+			expectPublicInPrivate:  true,
+			expectPrivateInPrivate: true,
+			expectSharedInPrivate:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			tmpDir := t.TempDir()
+
+			spec := &v3.OpenAPI{
+				OpenAPI: "3.1.0",
+				Info: v3.Info{
+					Title:   "Test API",
+					Version: "1.0.0",
+				},
+				Paths: v3.Paths{
+					tt.opPublicPath: &v3.PathItem{
+						Get: &v3.Operation{
+							Summary: "Public endpoint",
+							Responses: v3.Responses{
+								"200": &v3.Response{Description: "Success"},
+							},
+							Extensions: map[string]interface{}{
+								"x-visibility": "public",
+							},
+						},
+					},
+					tt.opPrivatePath: &v3.PathItem{
+						Get: &v3.Operation{
+							Summary: "Private endpoint",
+							Responses: v3.Responses{
+								"200": &v3.Response{Description: "Success"},
+							},
+							Extensions: map[string]interface{}{
+								"x-visibility": "private",
+							},
+						},
+					},
+					tt.opSharedPath: &v3.PathItem{
+						Get: &v3.Operation{
+							Summary: "Shared endpoint (no visibility annotation)",
+							Responses: v3.Responses{
+								"200": &v3.Response{Description: "Success"},
+							},
+						},
+					},
+				},
+				Components: &v3.Components{
+					Schemas: make(map[string]*v3.Schema),
+				},
+			}
+
+			gen := New(spec, tmpDir, []string{"json"})
+
+			// Test public filter
+			publicSpec := gen.filterSpecByVisibility("public")
+			_, hasPublic := publicSpec.Paths[tt.opPublicPath]
+			_, hasPrivate := publicSpec.Paths[tt.opPrivatePath]
+			_, hasShared := publicSpec.Paths[tt.opSharedPath]
+
+			if hasPublic != tt.expectPublicInPublic {
+				t.Errorf("Public filter: public path presence = %v, want %v", hasPublic, tt.expectPublicInPublic)
+			}
+			if hasPrivate != tt.expectPrivateInPublic {
+				t.Errorf("Public filter: private path presence = %v, want %v", hasPrivate, tt.expectPrivateInPublic)
+			}
+			if hasShared != tt.expectSharedInPublic {
+				t.Errorf("Public filter: shared path presence = %v, want %v", hasShared, tt.expectSharedInPublic)
+			}
+
+			// Test private filter
+			privateSpec := gen.filterSpecByVisibility("private")
+			hasPublicPrivate, hasPrivatePrivate, hasSharedPrivate := privateSpec.Paths[tt.opPublicPath], privateSpec.Paths[tt.opPrivatePath], privateSpec.Paths[tt.opSharedPath]
+
+			if (hasPublicPrivate != nil) != tt.expectPublicInPrivate {
+				t.Errorf("Private filter: public path presence = %v, want %v", hasPublicPrivate != nil, tt.expectPublicInPrivate)
+			}
+			if (hasPrivatePrivate != nil) != tt.expectPrivateInPrivate {
+				t.Errorf("Private filter: private path presence = %v, want %v", hasPrivatePrivate != nil, tt.expectPrivateInPrivate)
+			}
+			if (hasSharedPrivate != nil) != tt.expectSharedInPrivate {
+				t.Errorf("Private filter: shared path presence = %v, want %v", hasSharedPrivate != nil, tt.expectSharedInPrivate)
+			}
+		})
+	}
+}
+
+func TestGenerateSeparateSpecs(t *testing.T) {
+	t.Parallel()
+	tmpDir := t.TempDir()
+
+	spec := &v3.OpenAPI{
+		OpenAPI: "3.1.0",
+		Info: v3.Info{
+			Title:   "Visibility Test API",
+			Version: "1.0.0",
+		},
+		Paths: v3.Paths{
+			"/users": &v3.PathItem{
+				Get: &v3.Operation{
+					Summary: "Public get users",
+					Responses: v3.Responses{
+						"200": &v3.Response{
+							Description: "Success",
+							Content: map[string]*v3.MediaType{
+								"application/json": {
+									Schema: &v3.Schema{
+										Ref: "#/components/schemas/UserPublic",
+									},
+								},
+							},
+						},
+					},
+					Extensions: map[string]interface{}{
+						"x-visibility": "public",
+					},
+				},
+			},
+			"/admin/users": &v3.PathItem{
+				Get: &v3.Operation{
+					Summary: "Private admin users",
+					Responses: v3.Responses{
+						"200": &v3.Response{
+							Description: "Success",
+							Content: map[string]*v3.MediaType{
+								"application/json": {
+									Schema: &v3.Schema{
+										Ref: "#/components/schemas/UserPrivate",
+									},
+								},
+							},
+						},
+					},
+					Extensions: map[string]interface{}{
+						"x-visibility": "private",
+					},
+				},
+			},
+			"/shared/endpoint": &v3.PathItem{
+				Get: &v3.Operation{
+					Summary: "Shared endpoint",
+					Responses: v3.Responses{
+						"200": &v3.Response{Description: "Success"},
+					},
+				},
+			},
+		},
+		Components: &v3.Components{
+			Schemas: map[string]*v3.Schema{
+				"UserPublic": {
+					Type: "object",
+					Properties: map[string]*v3.Schema{
+						"id":   {Type: "integer"},
+						"name": {Type: "string"},
+					},
+				},
+				"UserPrivate": {
+					Type: "object",
+					Properties: map[string]*v3.Schema{
+						"id":       {Type: "integer"},
+						"name":     {Type: "string"},
+						"email":    {Type: "string"},
+						"password": {Type: "string"},
+					},
+				},
+			},
+		},
+	}
+
+	gen := New(spec, tmpDir, []string{"json"})
+	if err := gen.Generate(); err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	// Verify public spec
+	publicData, err := os.ReadFile(filepath.Join(tmpDir, "openapi_public.json"))
+	if err != nil {
+		t.Fatalf("Failed to read public spec: %v", err)
+	}
+
+	var publicSpec v3.OpenAPI
+	if err := json.Unmarshal(publicData, &publicSpec); err != nil {
+		t.Fatalf("Failed to parse public spec: %v", err)
+	}
+
+	// Public spec should have /users and /shared/endpoint but NOT /admin/users
+	if _, ok := publicSpec.Paths["/users"]; !ok {
+		t.Error("Public spec missing /users path")
+	}
+	if _, ok := publicSpec.Paths["/shared/endpoint"]; !ok {
+		t.Error("Public spec missing /shared/endpoint path")
+	}
+	if _, ok := publicSpec.Paths["/admin/users"]; ok {
+		t.Error("Public spec should NOT contain /admin/users path")
+	}
+
+	// Verify private spec
+	privateData, err := os.ReadFile(filepath.Join(tmpDir, "openapi_private.json"))
+	if err != nil {
+		t.Fatalf("Failed to read private spec: %v", err)
+	}
+
+	var privateSpec v3.OpenAPI
+	if err := json.Unmarshal(privateData, &privateSpec); err != nil {
+		t.Fatalf("Failed to parse private spec: %v", err)
+	}
+
+	// Private spec should have ALL paths: /users, /admin/users, and /shared/endpoint
+	if _, ok := privateSpec.Paths["/users"]; !ok {
+		t.Error("Private spec missing /users path (should include public endpoints)")
+	}
+	if _, ok := privateSpec.Paths["/admin/users"]; !ok {
+		t.Error("Private spec missing /admin/users path")
+	}
+	if _, ok := privateSpec.Paths["/shared/endpoint"]; !ok {
+		t.Error("Private spec missing /shared/endpoint path")
+	}
+
+	// Verify schema filtering
+	if _, ok := publicSpec.Components.Schemas["UserPublic"]; !ok {
+		t.Error("Public spec missing UserPublic schema")
+	}
+	if _, ok := publicSpec.Components.Schemas["UserPrivate"]; ok {
+		t.Error("Public spec should NOT contain UserPrivate schema")
+	}
+
+	if _, ok := privateSpec.Components.Schemas["UserPrivate"]; !ok {
+		t.Error("Private spec missing UserPrivate schema")
+	}
+	if _, ok := privateSpec.Components.Schemas["UserPublic"]; !ok {
+		t.Error("Private spec missing UserPublic schema (should include public schemas)")
+	}
+}
+
+func TestHasVisibilityAnnotations(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name     string
+		spec     *v3.OpenAPI
+		expected bool
+	}{
+		{
+			name: "spec with x-visibility",
+			spec: &v3.OpenAPI{
+				Paths: v3.Paths{
+					"/test": &v3.PathItem{
+						Get: &v3.Operation{
+							Extensions: map[string]interface{}{
+								"x-visibility": "public",
+							},
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "spec without x-visibility",
+			spec: &v3.OpenAPI{
+				Paths: v3.Paths{
+					"/test": &v3.PathItem{
+						Get: &v3.Operation{},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "spec with empty paths",
+			spec: &v3.OpenAPI{
+				Paths: v3.Paths{},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			gen := &Generator{spec: tt.spec}
+			result := gen.hasVisibilityAnnotations()
+			if result != tt.expected {
+				t.Errorf("hasVisibilityAnnotations() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}

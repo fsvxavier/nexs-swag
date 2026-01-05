@@ -4,6 +4,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -48,13 +49,13 @@ func (s *Swagger) Validate() error {
 		return fmt.Errorf("invalid swagger version: %s (must be 2.0)", s.Swagger)
 	}
 	if s.Info.Title == "" {
-		return fmt.Errorf("info.title is required")
+		return errors.New("info.title is required")
 	}
 	if s.Info.Version == "" {
-		return fmt.Errorf("info.version is required")
+		return errors.New("info.version is required")
 	}
 	if s.Paths == nil {
-		return fmt.Errorf("paths is required")
+		return errors.New("paths is required")
 	}
 	return nil
 }
@@ -107,8 +108,8 @@ type Contact struct {
 
 // License information for the API.
 type License struct {
-	Name string `json:"name"           yaml:"name"`          // REQUIRED. License name
-	URL  string `json:"url,omitempty"  yaml:"url,omitempty"` // URL to license
+	Name string `json:"name"          yaml:"name"`          // REQUIRED. License name
+	URL  string `json:"url,omitempty" yaml:"url,omitempty"` // URL to license
 }
 
 // Paths holds the relative paths to the individual endpoints.
@@ -116,16 +117,16 @@ type Paths map[string]*PathItem
 
 // PathItem describes operations available on a single path.
 type PathItem struct {
-	Ref        string                 `json:"$ref,omitempty"        yaml:"$ref,omitempty"`       // Reference to another PathItem
-	Get        *Operation             `json:"get,omitempty"         yaml:"get,omitempty"`        // GET operation
-	Put        *Operation             `json:"put,omitempty"         yaml:"put,omitempty"`        // PUT operation
-	Post       *Operation             `json:"post,omitempty"        yaml:"post,omitempty"`       // POST operation
-	Delete     *Operation             `json:"delete,omitempty"      yaml:"delete,omitempty"`     // DELETE operation
-	Options    *Operation             `json:"options,omitempty"     yaml:"options,omitempty"`    // OPTIONS operation
-	Head       *Operation             `json:"head,omitempty"        yaml:"head,omitempty"`       // HEAD operation
-	Patch      *Operation             `json:"patch,omitempty"       yaml:"patch,omitempty"`      // PATCH operation
-	Parameters []*Parameter           `json:"parameters,omitempty"  yaml:"parameters,omitempty"` // Common parameters
-	Extensions map[string]interface{} `json:"-"           yaml:"-"`                              // Custom extensions (x-*)
+	Ref        string                 `json:"$ref,omitempty"       yaml:"$ref,omitempty"`       // Reference to another PathItem
+	Get        *Operation             `json:"get,omitempty"        yaml:"get,omitempty"`        // GET operation
+	Put        *Operation             `json:"put,omitempty"        yaml:"put,omitempty"`        // PUT operation
+	Post       *Operation             `json:"post,omitempty"       yaml:"post,omitempty"`       // POST operation
+	Delete     *Operation             `json:"delete,omitempty"     yaml:"delete,omitempty"`     // DELETE operation
+	Options    *Operation             `json:"options,omitempty"    yaml:"options,omitempty"`    // OPTIONS operation
+	Head       *Operation             `json:"head,omitempty"       yaml:"head,omitempty"`       // HEAD operation
+	Patch      *Operation             `json:"patch,omitempty"      yaml:"patch,omitempty"`      // PATCH operation
+	Parameters []*Parameter           `json:"parameters,omitempty" yaml:"parameters,omitempty"` // Common parameters
+	Extensions map[string]interface{} `json:"-"                    yaml:"-"`                    // Custom extensions (x-*)
 }
 
 // Operation describes a single API operation on a path.
@@ -142,15 +143,15 @@ type Operation struct {
 	Schemes      []string               `json:"schemes,omitempty"      yaml:"schemes,omitempty"`      // Transfer protocols
 	Deprecated   bool                   `json:"deprecated,omitempty"   yaml:"deprecated,omitempty"`   // Operation is deprecated
 	Security     []SecurityRequirement  `json:"security,omitempty"     yaml:"security,omitempty"`     // Security requirements
-	Extensions   map[string]interface{} `json:"-"                     yaml:"-"`                       // Custom extensions (x-*)
+	Extensions   map[string]interface{} `json:"-"                      yaml:"-"`                      // Custom extensions (x-*)
 }
 
 // Parameter describes a single operation parameter.
 type Parameter struct {
-	Name        string `json:"name"                       yaml:"name"`                  // REQUIRED. Parameter name
-	In          string `json:"in"                         yaml:"in"`                    // REQUIRED. Location: query, header, path, formData, body
-	Description string `json:"description,omitempty"      yaml:"description,omitempty"` // Parameter description
-	Required    bool   `json:"required,omitempty"         yaml:"required,omitempty"`    // Required parameter
+	Name        string `json:"name"                  yaml:"name"`                  // REQUIRED. Parameter name
+	In          string `json:"in"                    yaml:"in"`                    // REQUIRED. Location: query, header, path, formData, body
+	Description string `json:"description,omitempty" yaml:"description,omitempty"` // Parameter description
+	Required    bool   `json:"required,omitempty"    yaml:"required,omitempty"`    // Required parameter
 
 	// For in != "body"
 	Type             string        `json:"type,omitempty"             yaml:"type,omitempty"`             // Type: string, number, integer, boolean, array, file
@@ -173,12 +174,12 @@ type Parameter struct {
 	MultipleOf       *float64      `json:"multipleOf,omitempty"       yaml:"multipleOf,omitempty"`       // Multiple of
 
 	// For in = "body"
-	Schema *Schema `json:"schema,omitempty"           yaml:"schema,omitempty"` // Schema definition
+	Schema *Schema `json:"schema,omitempty" yaml:"schema,omitempty"` // Schema definition
 
 	// Reference
-	Ref string `json:"$ref,omitempty"             yaml:"$ref,omitempty"` // Reference to parameter definition
+	Ref string `json:"$ref,omitempty" yaml:"$ref,omitempty"` // Reference to parameter definition
 
-	Extensions map[string]interface{} `json:"-"                 yaml:"-"` // Custom extensions (x-*)
+	Extensions map[string]interface{} `json:"-" yaml:"-"` // Custom extensions (x-*)
 }
 
 // Items describes the type of items in an array.
@@ -205,46 +206,46 @@ type Items struct {
 
 // Schema represents a data type definition (JSON Schema Draft 4 subset).
 type Schema struct {
-	Ref              string        `json:"$ref,omitempty"                  yaml:"$ref,omitempty"`             // Reference to another schema
-	Type             string        `json:"type,omitempty"                  yaml:"type,omitempty"`             // Type: string, number, integer, boolean, array, object
-	Format           string        `json:"format,omitempty"                yaml:"format,omitempty"`           // Format modifier
-	Title            string        `json:"title,omitempty"                 yaml:"title,omitempty"`            // Schema title
-	Description      string        `json:"description,omitempty"           yaml:"description,omitempty"`      // Schema description
-	Default          interface{}   `json:"default,omitempty"               yaml:"default,omitempty"`          // Default value
-	MultipleOf       *float64      `json:"multipleOf,omitempty"            yaml:"multipleOf,omitempty"`       // Multiple of
-	Maximum          *float64      `json:"maximum,omitempty"               yaml:"maximum,omitempty"`          // Maximum value
-	ExclusiveMaximum bool          `json:"exclusiveMaximum,omitempty"      yaml:"exclusiveMaximum,omitempty"` // Exclusive maximum
-	Minimum          *float64      `json:"minimum,omitempty"               yaml:"minimum,omitempty"`          // Minimum value
-	ExclusiveMinimum bool          `json:"exclusiveMinimum,omitempty"      yaml:"exclusiveMinimum,omitempty"` // Exclusive minimum
-	MaxLength        *int          `json:"maxLength,omitempty"             yaml:"maxLength,omitempty"`        // Maximum string length
-	MinLength        *int          `json:"minLength,omitempty"             yaml:"minLength,omitempty"`        // Minimum string length
-	Pattern          string        `json:"pattern,omitempty"               yaml:"pattern,omitempty"`          // Regex pattern
-	MaxItems         *int          `json:"maxItems,omitempty"              yaml:"maxItems,omitempty"`         // Maximum array items
-	MinItems         *int          `json:"minItems,omitempty"              yaml:"minItems,omitempty"`         // Minimum array items
-	UniqueItems      bool          `json:"uniqueItems,omitempty"           yaml:"uniqueItems,omitempty"`      // Unique array items
-	MaxProperties    *int          `json:"maxProperties,omitempty"         yaml:"maxProperties,omitempty"`    // Maximum object properties
-	MinProperties    *int          `json:"minProperties,omitempty"         yaml:"minProperties,omitempty"`    // Minimum object properties
-	Required         []string      `json:"required,omitempty"              yaml:"required,omitempty"`         // Required properties
-	Enum             []interface{} `json:"enum,omitempty"                  yaml:"enum,omitempty"`             // Enumeration of values
+	Ref              string        `json:"$ref,omitempty"             yaml:"$ref,omitempty"`             // Reference to another schema
+	Type             string        `json:"type,omitempty"             yaml:"type,omitempty"`             // Type: string, number, integer, boolean, array, object
+	Format           string        `json:"format,omitempty"           yaml:"format,omitempty"`           // Format modifier
+	Title            string        `json:"title,omitempty"            yaml:"title,omitempty"`            // Schema title
+	Description      string        `json:"description,omitempty"      yaml:"description,omitempty"`      // Schema description
+	Default          interface{}   `json:"default,omitempty"          yaml:"default,omitempty"`          // Default value
+	MultipleOf       *float64      `json:"multipleOf,omitempty"       yaml:"multipleOf,omitempty"`       // Multiple of
+	Maximum          *float64      `json:"maximum,omitempty"          yaml:"maximum,omitempty"`          // Maximum value
+	ExclusiveMaximum bool          `json:"exclusiveMaximum,omitempty" yaml:"exclusiveMaximum,omitempty"` // Exclusive maximum
+	Minimum          *float64      `json:"minimum,omitempty"          yaml:"minimum,omitempty"`          // Minimum value
+	ExclusiveMinimum bool          `json:"exclusiveMinimum,omitempty" yaml:"exclusiveMinimum,omitempty"` // Exclusive minimum
+	MaxLength        *int          `json:"maxLength,omitempty"        yaml:"maxLength,omitempty"`        // Maximum string length
+	MinLength        *int          `json:"minLength,omitempty"        yaml:"minLength,omitempty"`        // Minimum string length
+	Pattern          string        `json:"pattern,omitempty"          yaml:"pattern,omitempty"`          // Regex pattern
+	MaxItems         *int          `json:"maxItems,omitempty"         yaml:"maxItems,omitempty"`         // Maximum array items
+	MinItems         *int          `json:"minItems,omitempty"         yaml:"minItems,omitempty"`         // Minimum array items
+	UniqueItems      bool          `json:"uniqueItems,omitempty"      yaml:"uniqueItems,omitempty"`      // Unique array items
+	MaxProperties    *int          `json:"maxProperties,omitempty"    yaml:"maxProperties,omitempty"`    // Maximum object properties
+	MinProperties    *int          `json:"minProperties,omitempty"    yaml:"minProperties,omitempty"`    // Minimum object properties
+	Required         []string      `json:"required,omitempty"         yaml:"required,omitempty"`         // Required properties
+	Enum             []interface{} `json:"enum,omitempty"             yaml:"enum,omitempty"`             // Enumeration of values
 
 	// Object properties
-	Properties           map[string]*Schema `json:"properties,omitempty"            yaml:"properties,omitempty"`           // Object properties
-	AdditionalProperties interface{}        `json:"additionalProperties,omitempty"  yaml:"additionalProperties,omitempty"` // Additional properties (bool or *Schema)
+	Properties           map[string]*Schema `json:"properties,omitempty"           yaml:"properties,omitempty"`           // Object properties
+	AdditionalProperties interface{}        `json:"additionalProperties,omitempty" yaml:"additionalProperties,omitempty"` // Additional properties (bool or *Schema)
 
 	// Array items
-	Items *Schema `json:"items,omitempty"                 yaml:"items,omitempty"` // Array items schema
+	Items *Schema `json:"items,omitempty" yaml:"items,omitempty"` // Array items schema
 
 	// Composition
-	AllOf []*Schema `json:"allOf,omitempty"                 yaml:"allOf,omitempty"` // AllOf composition
+	AllOf []*Schema `json:"allOf,omitempty" yaml:"allOf,omitempty"` // AllOf composition
 
 	// Discriminator
-	Discriminator string        `json:"discriminator,omitempty"         yaml:"discriminator,omitempty"` // Discriminator property
-	ReadOnly      bool          `json:"readOnly,omitempty"              yaml:"readOnly,omitempty"`      // Read-only property
-	XML           *XML          `json:"xml,omitempty"                   yaml:"xml,omitempty"`           // XML representation
-	ExternalDocs  *ExternalDocs `json:"externalDocs,omitempty"          yaml:"externalDocs,omitempty"`  // External documentation
-	Example       interface{}   `json:"example,omitempty"               yaml:"example,omitempty"`       // Example value
+	Discriminator string        `json:"discriminator,omitempty" yaml:"discriminator,omitempty"` // Discriminator property
+	ReadOnly      bool          `json:"readOnly,omitempty"      yaml:"readOnly,omitempty"`      // Read-only property
+	XML           *XML          `json:"xml,omitempty"           yaml:"xml,omitempty"`           // XML representation
+	ExternalDocs  *ExternalDocs `json:"externalDocs,omitempty"  yaml:"externalDocs,omitempty"`  // External documentation
+	Example       interface{}   `json:"example,omitempty"       yaml:"example,omitempty"`       // Example value
 
-	Extensions map[string]interface{} `json:"-"                               yaml:"-"` // Custom extensions (x-*)
+	Extensions map[string]interface{} `json:"-" yaml:"-"` // Custom extensions (x-*)
 }
 
 // XML describes XML representation of a schema.
@@ -261,12 +262,12 @@ type Responses map[string]*Response
 
 // Response describes a single response from an API operation.
 type Response struct {
-	Description string                 `json:"description"          yaml:"description"`        // REQUIRED. Response description
-	Schema      *Schema                `json:"schema,omitempty"     yaml:"schema,omitempty"`   // Response schema
-	Headers     map[string]*Header     `json:"headers,omitempty"    yaml:"headers,omitempty"`  // Response headers
-	Examples    map[string]interface{} `json:"examples,omitempty"   yaml:"examples,omitempty"` // Response examples (MIME type → example)
-	Ref         string                 `json:"$ref,omitempty"       yaml:"$ref,omitempty"`     // Reference to response definition
-	Extensions  map[string]interface{} `json:"-"                    yaml:"-"`                  // Custom extensions (x-*)
+	Description string                 `json:"description"        yaml:"description"`        // REQUIRED. Response description
+	Schema      *Schema                `json:"schema,omitempty"   yaml:"schema,omitempty"`   // Response schema
+	Headers     map[string]*Header     `json:"headers,omitempty"  yaml:"headers,omitempty"`  // Response headers
+	Examples    map[string]interface{} `json:"examples,omitempty" yaml:"examples,omitempty"` // Response examples (MIME type → example)
+	Ref         string                 `json:"$ref,omitempty"     yaml:"$ref,omitempty"`     // Reference to response definition
+	Extensions  map[string]interface{} `json:"-"                  yaml:"-"`                  // Custom extensions (x-*)
 }
 
 // Header represents a single HTTP header.

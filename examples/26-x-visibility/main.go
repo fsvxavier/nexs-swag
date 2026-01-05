@@ -6,24 +6,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserPublic represents a public user
+// UserPublic represents a public user.
 type UserPublic struct {
-	ID   int    `json:"id" example:"1"`
-	Name string `json:"name" example:"John Doe"`
+	ID   int    `example:"1"        json:"id"`
+	Name string `example:"John Doe" json:"name"`
 }
 
-// UserPrivate represents internal user details
+// UserPrivate represents internal user details.
 type UserPrivate struct {
-	ID       int    `json:"id" example:"1"`
-	Name     string `json:"name" example:"John Doe"`
-	Email    string `json:"email" example:"john@example.com"`
-	Password string `json:"password" example:"hashed_password"`
-	Role     string `json:"role" example:"admin"`
+	ID       int    `example:"1"                json:"id"`
+	Name     string `example:"John Doe"         json:"name"`
+	Email    string `example:"john@example.com" json:"email"`
+	Password string `example:"hashed_password"  json:"password"`
+	Role     string `example:"admin"            json:"role"`
 }
 
-// ErrorResponse represents an error
+// ErrorResponse represents an error.
 type ErrorResponse struct {
-	Message string `json:"message" example:"Error message"`
+	Message string `example:"Error message" json:"message"`
 }
 
 // @title           X-Visibility Example API
@@ -52,7 +52,7 @@ func main() {
 // @Success      200  {object}  UserPublic
 // @Failure      404  {object}  ErrorResponse
 // @Router       /users/{id} [get]
-// @x-visibility public
+// @x-visibility public.
 func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, UserPublic{ID: 1, Name: "John Doe"})
 }
@@ -67,7 +67,7 @@ func GetUser(c *gin.Context) {
 // @Success      200  {object}  UserPrivate
 // @Failure      404  {object}  ErrorResponse
 // @Router       /admin/users/{id} [get]
-// @x-visibility private
+// @x-visibility private.
 func GetUserAdmin(c *gin.Context) {
 	c.JSON(http.StatusOK, UserPrivate{
 		ID:       1,
@@ -87,7 +87,7 @@ func GetUserAdmin(c *gin.Context) {
 // @Param        user  body      UserPublic  true  "User data"
 // @Success      201   {object}  UserPublic
 // @Failure      400   {object}  ErrorResponse
-// @Router       /users [post]
+// @Router       /users [post].
 func CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, UserPublic{ID: 2, Name: "Jane Doe"})
 }

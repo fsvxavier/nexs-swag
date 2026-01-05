@@ -969,13 +969,15 @@ func GetAdminUser(c *gin.Context) {
 - `@x-visibility private` - Endpoint appears only in `openapi_private.json` or `swagger_private.json`
 - No annotation - Endpoint appears in **both** specifications (shared endpoint)
 
+**Important:** The private specification **includes all public endpoints** in addition to private ones. This ensures that internal/admin users have access to all API functionality.
+
 **Generated Files:**
 ```
 docs/
 ├── openapi_public.json    # Public API specification (OpenAPI 3.x)
-├── openapi_private.json   # Private/Admin API specification (OpenAPI 3.x)
+├── openapi_private.json   # Private/Admin API specification (OpenAPI 3.x) - includes public + private
 ├── swagger_public.json    # Public API specification (Swagger 2.0)
-├── swagger_private.json   # Private API specification (Swagger 2.0)
+├── swagger_private.json   # Private API specification (Swagger 2.0) - includes public + private
 ├── openapi_public.yaml
 ├── openapi_private.yaml
 ├── docs_public.go
@@ -985,10 +987,18 @@ docs/
 **Schema Filtering:**
 
 Schemas are automatically filtered based on usage:
-- Public spec includes only schemas referenced by public endpoints
-- Private spec includes only schemas referenced by private endpoints
+- **Public spec** includes only schemas referenced by public endpoints
+- **Private spec** includes schemas referenced by **both private AND public** endpoints
 - Shared schemas (like `ErrorResponse`) appear where needed
 - Recursive schema dependencies are collected automatically
+
+**Visibility Behavior:**
+
+| Endpoint Annotation | Appears in Public Spec | Appears in Private Spec |
+|---------------------|------------------------|-------------------------|
+| `@x-visibility public` | ✅ Yes | ✅ Yes (private includes public) |
+| `@x-visibility private` | ❌ No | ✅ Yes |
+| No annotation | ✅ Yes | ✅ Yes |
 
 **Use Cases:**
 - Separate public API docs from internal/admin endpoints
