@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/urfave/cli/v2"
@@ -17,15 +18,26 @@ import (
 	"github.com/fsvxavier/nexs-swag/pkg/parser"
 )
 
-const (
-	version = "1.0.7"
-)
+// version is the fallback for builds without module version info (e.g. go build from a checkout).
+// Override at build time with -ldflags "-X main.version=x.y.z".
+var version = "1.0.13"
+
+// appVersion prefers the module version stamped by `go install ...@vX.Y.Z`,
+// so the reported version always matches the installed tag.
+func appVersion() string {
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		if v := bi.Main.Version; v != "" && v != "(devel)" {
+			return strings.TrimPrefix(v, "v")
+		}
+	}
+	return version
+}
 
 func main() {
 	app := &cli.App{
 		Name:    "nexs-swag",
 		Usage:   "Generate OpenAPI specification from Go code comments (supports v2.0, v3.0.x, v3.1.x, v3.2.x)",
-		Version: version,
+		Version: appVersion(),
 		Authors: []*cli.Author{
 			{
 				Name: "Fabricio Xavier",

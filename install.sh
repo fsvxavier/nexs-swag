@@ -6,7 +6,7 @@ echo ""
 # Verificar se Go está instalado
 if ! command -v go &> /dev/null; then
     echo "❌ Go não está instalado"
-    echo "   Instale Go 1.24+ em: https://golang.org/dl/"
+    echo "   Instale Go 1.27.1+ em: https://golang.org/dl/"
     exit 1
 fi
 
