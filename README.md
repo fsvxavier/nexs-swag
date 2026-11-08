@@ -5,7 +5,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/Coverage-80.1%25-brightgreen.svg)](/)
 [![Examples](https://img.shields.io/badge/Examples-27-blue.svg)](examples/)
 
@@ -1257,7 +1257,7 @@ nexs-swag/
 ├── README.md               # This file
 ├── README_pt.md            # Portuguese version
 ├── README_es.md            # Spanish version
-└── LICENSE                 # MIT License
+└── LICENSE                 # Apache License 2.0
 ```
 
 ### Inspiration & Credits
@@ -1323,31 +1323,11 @@ Open an issue with:
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
 
-```
-MIT License
+Copyright 2025 Fabricio S. V. Xavier
 
-Copyright (c) 2024 Fabricio Xavier
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+nexs-swag includes portions derived from [swaggo/swag](https://github.com/swaggo/swag), Copyright (c) 2017 Eason Lin, used under the MIT License. See [NOTICE](NOTICE) for the full third-party notice.
 
 ## Support & Community
 
