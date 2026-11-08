@@ -37,7 +37,7 @@ go run ./cmd/nexs-swag --help
 
 ## Requisitos
 
-- Go 1.24 ou superior
+- Go 1.27.1 ou superior
 - $GOPATH/bin no PATH (para usar após go install)
 
 ### Configurar PATH (se necessário)
@@ -101,7 +101,7 @@ nexs-swag fmt [options]
 
 ## Exemplos
 
-O projeto inclui 21 exemplos completos em [`examples/`](./examples/):
+O projeto inclui 27 exemplos completos em [`examples/`](./examples/):
 
 ```bash
 # Ver todos os exemplos

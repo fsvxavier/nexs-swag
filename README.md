@@ -2,7 +2,7 @@
 
 🌍 **English** • [Português (Brasil)](README_pt.md) • [Español](README_es.md)
 
-[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.27.1+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1.0-6BA539?style=flat&logo=openapiinitiative)](https://spec.openapis.org/oas/v3.1.0)
 [![Swagger](https://img.shields.io/badge/Swagger-2.0-85EA2D?style=flat&logo=swagger)](https://swagger.io/specification/v2/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -42,8 +42,8 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 ### Key Features
 
 - ✅ **100% swaggo/swag compatible** - Drop-in replacement with all annotations and tags
-- ✅ **Multiple OpenAPI versions support** - Generate v2.0.0, v3.0.x, v3.1.x or v3.2.0
-- ✅ **OpenAPI 3.2.0** - Full support for the latest version (QUERY method, streaming, etc)
+- ✅ **Multiple OpenAPI versions support** - Generate v2.0.0, v3.0.x, v3.1.x or v3.2.x (3.2.0, 3.2.1)
+- ✅ **OpenAPI 3.2.x** - Full support for the latest version (QUERY method, streaming, etc)
 - ✅ **OpenAPI 3.1.x** - Compatible with JSON Schema 2020-12, webhooks, and modern features
 - ✅ **OpenAPI 3.0.x** - All versions from 3.0.0 to 3.0.4
 - ✅ **Swagger 2.0** - Complete backward compatibility with legacy systems
@@ -61,7 +61,7 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 
 | Feature | swaggo/swag | nexs-swag |
 |---------|-------------|-----------|
-| OpenAPI 3.2.0 | ❌ | ✅ |
+| OpenAPI 3.2.x | ❌ | ✅ |
 | OpenAPI 3.1.x | ❌ | ✅ |
 | OpenAPI 3.0.x | ❌ | ✅ |
 | Swagger 2.0 | ✅ | ✅ |
@@ -72,7 +72,7 @@ nexs-swag converts Go annotations to OpenAPI 3.1.0 or Swagger 2.0 Specification.
 | Nullable Support | `x-nullable` | Native + `x-nullable` |
 | Test Coverage | ~70% | 80.1% |
 | Examples | ~10 | 25 |
-| Go Version | 1.19+ | 1.23+ |
+| Go Version | 1.19+ | 1.27.1+ |
 
 ## Getting Started
 
@@ -92,7 +92,7 @@ nexs-swag --version
 
 #### Building from Source
 
-Requires [Go 1.23 or newer](https://go.dev/dl/).
+Requires [Go 1.27.1 or newer](https://go.dev/dl/).
 
 ```bash
 git clone https://github.com/fsvxavier/nexs-swag.git
@@ -809,7 +809,7 @@ Generated OpenAPI:
 
 ## OpenAPI 3.2.0 Features
 
-nexs-swag provides full support for OpenAPI 3.2.0, the latest version of the specification. Below are practical examples of the new features.
+nexs-swag provides full support for OpenAPI 3.2.0 and its 3.2.1 patch release (`--openapi-version 3.2.0` or `3.2.1`). Version 3.2.1 adds no new fields; it clarifies the 3.2.0 text, and nexs-swag emits the 3.2 default `jsonSchemaDialect` (`https://spec.openapis.org/oas/3.2/dialect/2025-09-17`) for both. Below are practical examples of the features introduced in 3.2.0.
 
 ### QUERY HTTP Method
 
@@ -1011,7 +1011,7 @@ Schemas are automatically filtered based on usage:
 - ✅ Swagger 2.0
 - ✅ OpenAPI 3.0.x
 - ✅ OpenAPI 3.1.x
-- ✅ OpenAPI 3.2.0
+- ✅ OpenAPI 3.2.x
 
 For a complete example, see [examples/26-x-visibility/](examples/26-x-visibility/) (OpenAPI 3.x) and [examples/27-x-visibility-v2/](examples/27-x-visibility-v2/) (Swagger 2.0).
 
@@ -1031,11 +1031,11 @@ WARN: SecurityScheme.deprecated converted to x-deprecated extension
 WARN: itemSchema for streaming not supported in OpenAPI 3.0.x
 ```
 
-For complete migration details, see [OPENAPI_32_IMPLEMENTATION_STATUS.md](OPENAPI_32_IMPLEMENTATION_STATUS.md).
+For complete migration details, see [MIGRATION_GUIDE_3.1_TO_3.2.md](MIGRATION_GUIDE_3.1_TO_3.2.md).
 
 ## Examples
 
-nexs-swag includes 21 comprehensive, runnable examples. Each example demonstrates specific features and includes a README and run script.
+nexs-swag includes 27 comprehensive, runnable examples. Each example demonstrates specific features and includes a README and run script.
 
 ### Basic Examples
 
@@ -1079,6 +1079,10 @@ nexs-swag includes 21 comprehensive, runnable examples. Each example demonstrate
 | [21-struct-tags](examples/21-struct-tags) | All struct tags | Complete tag reference |
 | [22-openapi-v2](examples/22-openapi-v2) | OpenAPI versioning | Swagger 2.0 & OpenAPI 3.1.0 |
 | [23-recursive-parsing](examples/23-recursive-parsing) | Recursive parsing | parseInternal, exclude, parseDependency |
+| [24-include-types-simple](examples/24-include-types-simple) | Include types (simple) | `--includeTypes` basics |
+| [25-include-types-complex](examples/25-include-types-complex) | Include types (complex) | `--includeTypes` across packages |
+| [26-x-visibility](examples/26-x-visibility) | x-visibility (OpenAPI 3.x) | Public/private spec split |
+| [27-x-visibility-v2](examples/27-x-visibility-v2) | x-visibility (Swagger 2.0) | Public/private spec split |
 
 ### Running Examples
 
@@ -1138,7 +1142,7 @@ $ go test ./pkg/... -cover
 
 - ✅ **0 linter warnings** (golangci-lint with 20+ linters)
 - ✅ **0 race conditions** (tested with `-race` flag)
-- ✅ **22 integration tests** (runnable examples)
+- ✅ **27 integration tests** (runnable examples)
 - ✅ **~8,500 lines of test code**
 - ✅ **Production-ready** (actively maintained)
 - ✅ **100% swaggo/swag compatible**
@@ -1198,7 +1202,7 @@ nexs-swag fmt
 | JSON Schema 2020-12 | ❌ | ✅ | Modern schema |
 | Response headers | Limited | ✅ | Full support |
 | Test coverage | ~70% | 80.1% | Higher quality |
-| Go version | 1.19+ | 1.23+ | Modern Go features |
+| Go version | 1.19+ | 1.27.1+ | Modern Go features |
 
 ### What's Different?
 
@@ -1225,9 +1229,9 @@ nexs-swag fmt
 - **Go Files:** 42 implementation files
 - **Test Files:** 29 test files
 - **Packages:** 9 (converter, format, generator, generator/v2, generator/v3, openapi, openapi/v2, openapi/v3, parser)
-- **Examples:** 23 complete examples
+- **Examples:** 27 complete examples
 - **Test Coverage:** 80.1%
-- **OpenAPI Versions:** 4 (Swagger 2.0, OpenAPI 3.0.x, 3.1.x, 3.2.0)
+- **OpenAPI Versions:** 4 (Swagger 2.0, OpenAPI 3.0.x, 3.1.x, 3.2.x)
 - **Dependencies:** 3 direct dependencies
   - urfave/cli/v2 (CLI framework)
   - golang.org/x/tools (Go AST parsing)
@@ -1249,7 +1253,7 @@ nexs-swag/
 │   │   ├── v2/             # Swagger 2.0 models
 │   │   └── v3/             # OpenAPI 3.x models
 │   └── parser/             # Go code parsing (AST)
-├── examples/               # 22 examples
+├── examples/               # 27 examples
 │   ├── 01-basic/
 │   ├── 02-formats/
 │   └── ...
@@ -1341,131 +1345,3 @@ nexs-swag includes portions derived from [swaggo/swag](https://github.com/swaggo
 **Made with ❤️ for the Go community**
 
 [⬆ Back to top](#nexs-swag)
-
-```go
-// @Header 200 {string} X-Request-ID "Request identifier"
-// @Header 200 {int} X-Rate-Limit "Rate limit"
-// @Header 201 {string} Location "Resource location"
-```
-
-### Múltiplos Content-Types
-
-```go
-// @Accept json,xml,yaml
-// @Produce json,xml,csv,pdf
-// @Success 200 {object} User
-```
-
-## 📚 Exemplos Completos (21 exemplos)
-
-Todos os exemplos estão em [`examples/`](examples/) e incluem:
-
-**Básicos:**
-- `01-basic` - Uso básico do nexs-swag
-- `02-formats` - Múltiplos formatos (JSON, YAML, Go)
-- `03-general-info` - Arquivo de informações gerais
-
-**Avançados:**
-- `04-property-strategy` - Estratégias de naming
-- `05-required-default` - Campos required por padrão
-- `06-exclude` - Exclusão de diretórios
-- `07-tags-filter` - Filtro por tags
-- `08-parse-internal` - Parse de packages internos
-- `09-parse-dependency` - Parse de dependências
-- `10-dependency-level` - Níveis de parse (0-3)
-- `11-parse-golist` - Parse via go list
-- `12-markdown-files` - Markdown como descrições
-- `13-code-examples` - Code samples em 23+ linguagens
-- `14-overrides-file` - Arquivo .swaggo de overrides
-- `15-generated-time` - Timestamp na documentação
-- `16-instance-name` - Nome customizado da instância
-- `17-template-delims` - Delimitadores customizados
-- `18-collection-format` - Formatos de array
-- `19-parse-func-body` - Parse de anotações em funções
-- `20-fmt-command` - Formatação de comentários swagger
-- `21-struct-tags` - Demonstração de 18 struct tags
-
-**Executar exemplos:**
-```bash
-cd examples/01-basic
-./run.sh
-```
-
-## 🔧 Comandos CLI
-
-### init - Gerar Documentação
-
-```bash
-nexs-swag init [opções]
-```
-
-**Opções principais:**
-- `-d, --dir` - Diretório de código Go (default: "./")
-- `-o, --output` - Diretório de saída (default: "./docs")
-- `-f, --format` - Formatos: json, yaml, go (default: "json,yaml,go")
-- `--validate` - Validar especificação (default: true)
-- `--parseDependency` - Parse de dependências (default: false)
-- `--parseInternal` - Parse de packages internos (default: false)
-- `--parseGoList` - Parse via go list (default: true)
-
-**Exemplos:**
-
-```bash
-# Gerar em ./docs
-nexs-swag init -d ./cmd/api -o ./docs
-
-# Apenas JSON
-nexs-swag init -d . -o ./api-docs -f json
-
-# Com dependências (nível 3 - completo)
-nexs-swag init -d . --parseDependency --parseDependencyLevel 3
-
-# Sem validação
-nexs-swag init -d . --validate=false
-```
-
-### fmt - Formatar Comentários
-
-```bash
-nexs-swag fmt [opções]
-```
-
-Formata automaticamente comentários swagger usando AST do Go.
-
-**Exemplo:**
-
-```bash
-# Formatar diretório atual
-nexs-swag fmt -d ./cmd/api
-```
-
-## 📈 Qualidade e Testes
-
-- **Cobertura de Testes:** 80.1% (META: 80% ✅)
-  - pkg/converter: 85.1%
-  - pkg/format: 95.1%
-  - pkg/generator/v2: 80.3%
-  - pkg/generator/v3: 83.3%
-  - pkg/openapi/v2: 92.0%
-  - pkg/openapi/v3: 88.9%
-  - pkg/parser: 84.6%
-- **Total de Testes:** 320+ testes, ~9.200 linhas
-- **Testes de Roundtrip:** V2⇄V3 com integridade garantida
-- **Benchmarks:** 6 benchmarks de performance
-- **Testes Integração:** 23 exemplos funcionais
-- **Race Conditions:** Zero (testado com -race)
-- **CI/CD:** Pronto para integração contínua
-
-## 📖 Documentação Completa
-
-- [README.md](README.md) - Este arquivo (visão geral e início rápido)
-- [INSTALL.md](INSTALL.md) - Guia completo de instalação
-- [PENDENCIAS.md](PENDENCIAS.md) - Status do projeto e roadmap
-- [examples/README.md](examples/README.md) - Guia de exemplos
-
-## 🎯 Compatibilidade
-
-### OpenAPI 3.1.0
-- ✅ JSON Schema 2020-12
-- ✅ Webhooks
-- ✅ Composition (allOf, oneOf, anyOf)
