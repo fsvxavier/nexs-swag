@@ -51,7 +51,8 @@ Versões suportadas: **3.1.0**, **3.1.1**, **3.1.2**
 - **3.1.2**: Patch mais recente com melhorias menores
 
 ### OpenAPI 3.2.0 (Mais Recente)
-- **Versão**: `3.2.0`
+- **Versão**: `3.2.0`, `3.2.1`
+- **3.2.1** (2026-09-10): patch de clarificações, sem campos novos. `jsonSchemaDialect` padrão do 3.2 é `https://spec.openapis.org/oas/3.2/dialect/2025-09-17`
 - **Uso**: `--openapi-version 3.2.0` ou `--ov 3.2`
 - **Características principais** (adições sobre 3.1.x):
   - **Método HTTP QUERY** no Path Item Object
@@ -96,7 +97,8 @@ O sistema aceita versões curtas e as normaliza automaticamente:
 | `3.0.4` | `3.0.4` | OpenAPI 3.0.4 |
 | `3.1`, `3.1.0` | `3.1.0` | OpenAPI 3.1.0 |
 | `3.1.2` | `3.1.2` | OpenAPI 3.1.2 |
-| `3.2`, `3.2.0` | `3.2.0` | OpenAPI 3.2.0 (latest) |
+| `3.2`, `3.2.0` | `3.2.0` | OpenAPI 3.2.0 |
+| `3.2.1` | `3.2.1` | OpenAPI 3.2.1 (latest patch) |
 
 ## Diferenças Importantes por Família de Versões
 
@@ -137,6 +139,7 @@ O sistema valida automaticamente a especificação gerada de acordo com a versã
 
 - [OpenAPI Specification](https://spec.openapis.org/oas/)
 - [v3.2.0](https://spec.openapis.org/oas/v3.2.0.html)
+- [v3.2.1](https://spec.openapis.org/oas/v3.2.1.html)
 - [v3.1.2](https://spec.openapis.org/oas/v3.1.2.html)
 - [v3.0.4](https://spec.openapis.org/oas/v3.0.4.html)
 - [v2.0](https://spec.openapis.org/oas/v2.0.html)

@@ -465,6 +465,12 @@ func TestSetOpenAPIVersion(t *testing.T) {
 			expectedVersion: "3.2.0",
 		},
 		{
+			name:            "Set version 3.2.1",
+			initialVersion:  "3.1.0",
+			setVersion:      "3.2.1",
+			expectedVersion: "3.2.1",
+		},
+		{
 			name:            "Empty version does not update",
 			initialVersion:  "3.1.0",
 			setVersion:      "",
@@ -507,6 +513,24 @@ func TestSetOpenAPIVersion(t *testing.T) {
 				t.Errorf("OpenAPI version = %q, want %q", result.OpenAPI, tt.expectedVersion)
 			}
 		})
+	}
+}
+
+func TestDialectFor(t *testing.T) {
+	t.Parallel()
+	custom := "https://example.com/dialect"
+	tests := []struct{ version, current, want string }{
+		{"3.0.3", dialect31, ""},
+		{"3.1.0", dialect31, dialect31},
+		{"3.2.0", dialect31, dialect32},
+		{"3.2.1", "", dialect32},
+		{"3.2.1", custom, custom},
+		{"3.0.0", custom, custom},
+	}
+	for _, tt := range tests {
+		if got := dialectFor(tt.version, tt.current); got != tt.want {
+			t.Errorf("dialectFor(%q, %q) = %q, want %q", tt.version, tt.current, got, tt.want)
+		}
 	}
 }
 

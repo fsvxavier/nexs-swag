@@ -62,9 +62,30 @@ func (g *Generator) SetTemplateDelims(delims string) {
 }
 
 // SetOpenAPIVersion sets the OpenAPI version for the specification.
-// Supported versions: 3.0.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4, 3.1.0, 3.1.1, 3.1.2, 3.2.0.
+// Supported versions: 3.0.0, 3.0.1, 3.0.2, 3.0.3, 3.0.4, 3.1.0, 3.1.1, 3.1.2, 3.2.0, 3.2.1.
 func (g *Generator) SetOpenAPIVersion(version string) {
 	g.openapiVersion = version
+}
+
+const (
+	dialect31 = "https://spec.openapis.org/oas/3.1/dialect/base"
+	dialect32 = "https://spec.openapis.org/oas/3.2/dialect/2025-09-17"
+)
+
+// dialectFor returns the default jsonSchemaDialect for the target version.
+// Only the parser default (3.1 base) is rewritten; a custom dialect is kept.
+func dialectFor(version, current string) string {
+	if current != "" && current != dialect31 {
+		return current
+	}
+	switch {
+	case strings.HasPrefix(version, "3.0."):
+		return "" // jsonSchemaDialect does not exist in 3.0.x
+	case strings.HasPrefix(version, "3.2."):
+		return dialect32 // OAS 3.2.1 clarifies the 3.2 default dialect
+	default:
+		return current
+	}
 }
 
 // Generate generates the OpenAPI specification files.
@@ -72,6 +93,7 @@ func (g *Generator) Generate() error {
 	// Update spec OpenAPI version if set
 	if g.openapiVersion != "" {
 		g.spec.OpenAPI = g.openapiVersion
+		g.spec.JSONSchemaDialect = dialectFor(g.openapiVersion, g.spec.JSONSchemaDialect)
 	}
 
 	// Create output directory if it doesn't exist
