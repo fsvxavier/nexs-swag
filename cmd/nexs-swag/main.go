@@ -196,7 +196,7 @@ func main() {
 						Name:    "openapi-version",
 						Aliases: []string{"ov"},
 						Value:   "3.1.0",
-						Usage:   "OpenAPI version: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0 (default: 3.1.0)",
+						Usage:   "OpenAPI version: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0-3.2.1 (default: 3.1.0)",
 					},
 				},
 				Action: initAction,
@@ -365,7 +365,7 @@ func main() {
 						Name:    "openapi-version",
 						Aliases: []string{"ov"},
 						Value:   "3.1.0",
-						Usage:   "OpenAPI version: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0 (default: 3.1.0)",
+						Usage:   "OpenAPI version: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0-3.2.1 (default: 3.1.0)",
 					},
 				},
 				Action: initAction,
@@ -431,7 +431,7 @@ func initAction(c *cli.Context) error {
 	// Validate and normalize openapi-version
 	openapiVersion = normalizeOpenAPIVersion(openapiVersion)
 	if openapiVersion == "" {
-		return errors.New("invalid openapi-version. Supported versions: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0")
+		return errors.New("invalid openapi-version. Supported versions: 2.0.0, 3.0.0-3.0.4, 3.1.0-3.1.2, 3.2.0-3.2.1")
 	}
 
 	// Use outputTypes if format is not explicitly set
@@ -604,6 +604,7 @@ func normalizeOpenAPIVersion(version string) string {
 		// OpenAPI 3.2.x (Latest - adds QUERY method, streaming, etc)
 		"3.2":   "3.2.0",
 		"3.2.0": "3.2.0",
+		"3.2.1": "3.2.1",
 	}
 
 	if normalized, ok := supportedVersions[version]; ok {
